@@ -1,101 +1,112 @@
+import requests
 import random
+import os
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
-# Helper function to generate cards
-def generate_cards(bin_prefix, month, year, cvv, amount):
-    cards = []
+# Your Neutrino API credentials
+USER_ID = "dicynukoke"
+API_KEY = "OJHZ7JHQgNYmdS8C6BgNadavoywbHUdENHFOx3YTZctJb0DS"
+
+def calculate_luhn(card_number: str):
+    def digits_of(n):
+        return [int(d) for d in str(n)]
+    digits = digits_of(card_number)
+    checksum = 0
+    odd_even = len(digits) & 1
+    for i, digit in enumerate(digits):
+        if i & 1 ^ odd_even:
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+        checksum += digit
+    return (10 - (checksum % 10)) % 10
+
+def generate_cc(bin: str, month: str, year: str, amount: int = 10):
+    generated_cards = []
     for _ in range(amount):
-        card_number = bin_prefix + ''.join(random.choices("0123456789", k=(16 - len(bin_prefix))))
-        card_cvv = cvv if cvv != 'rnd' else ''.join(random.choices("0123456789", k=3))
-        card_month = month if month != 'rnd' else f"{random.randint(1, 12):02}"
-        card_year = year if year != 'rnd' else str(random.randint(2022, 2035))
-        cards.append(f"{card_number}|{card_month}|{card_year}|{card_cvv}")
-    return cards
+        card_number = bin + ''.join([str(random.randint(0, 9)) for _ in range(16 - len(bin) - 1)])
+        card_number += str(calculate_luhn(card_number))
+        cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
+        generated_cards.append(f"{card_number}|{month}|{year}|{cvv}")
+    return generated_cards
 
-def setup_card_gen_handlers(app: Client):
-    @app.on_message(filters.command("gen") & filters.private)
-    async def gen_handler(client: Client, message: Message):
-        try:
-            # Parse user input
-            args = message.text.split()
-            if len(args) < 2:
-                await message.reply_text("Usage: `/gen <BIN> [Amount]`", parse_mode=ParseMode.MARKDOWN)
-                return
+def check_bin(bin: str):
+    url = 'https://neutrinoapi.net/bin-lookup'
+    data = {
+        'bin-number': bin,
+        'customer-ip': ''
+    }
+    headers = {
+        'User-ID': USER_ID,
+        'API-Key': API_KEY
+    }
+    response = requests.post(url, headers=headers, data=data)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
 
-            bin_prefix = args[1]
-            amount = int(args[2]) if len(args) > 2 else 10
+async def gen_handler(client: Client, message: Message):
+    try:
+        args = message.text.split()
+        if len(args) < 5:
+            await message.reply_text("**Provide a valid BIN at least 6 digits ❌**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            return
+        
+        bin = args[1]
+        month = args[2]
+        year = args[3]
+        amount = int(args[4]) if len(args) > 4 else 10
 
-            # Validate inputs
-            if len(bin_prefix) < 6 or not bin_prefix.isdigit():
-                await message.reply_text("Invalid BIN format. BIN must be at least 6 digits.", parse_mode=ParseMode.MARKDOWN)
-                return
-            if amount <= 0 or amount > 100:
-                await message.reply_text("Invalid amount. Must be between 1 and 100.", parse_mode=ParseMode.MARKDOWN)
-                return
+        if len(bin) < 6:
+            await message.reply_text("**Provide a valid BIN at least 6 digits ❌**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            return
+        
+        bin_info = check_bin(bin)
+        if not bin_info or not bin_info.get('valid', False):
+            await message.reply_text("**Invalid BIN provided ❌**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            return
 
-            # Generate cards
-            cards = generate_cards(bin_prefix, 'rnd', 'rnd', 'rnd', amount)
-            card_list = "\n".join(f"`{card}`" for card in cards)
+        processing_msg = await message.reply_text("**Generating Credit Cards...☑️**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+        generated_cards = generate_cc(bin, month, year, amount)
 
-            # Mock BIN information (replace with actual lookup logic if needed)
-            bank = "N/A"
-            country = "UNITED STATES"
-            emoji = "🇺🇸"
-            bin_info = "N/A - CREDIT - VISA"
+        bank_name = bin_info.get('issuer', 'N/A')
+        country = bin_info.get('country', 'N/A')
+        card_type = bin_info.get('card-type', 'N/A')
+        card_category = bin_info.get('category', 'N/A')
+        card_brand = bin_info.get('brand', 'N/A')
 
-            # Format response
-            response = (
-                f"**𝗕𝗜𝗡** ⇾ {bin_prefix}\n"
-                f"**𝗔𝗺𝗼𝘂𝗻𝘁** ⇾ {amount}\n\n"
-                f"{card_list}\n\n"
-                f"**𝗕𝗮𝗻𝗸**: {bank}\n"
-                f"**𝗖𝗼𝘂𝗻𝘁𝗿𝘆**: {country} {emoji}\n"
-                f"**𝗕𝗜𝗡 𝗜𝗻𝗳𝗼**: {bin_info}"
+        response = f"**𝗕𝗜𝗡 ⇾ {bin}**\n**𝗔𝗺𝗼𝘂𝗻𝘁 ⇾ {amount}**\n\n"
+        response += "```\n" + "\n".join(generated_cards) + "\n```\n\n"
+        response += f"**𝗕𝗮𝗻𝗸:** {bank_name}\n**𝗖𝗼𝘂𝗻𝘁𝗿𝘆:** {country}\n**𝗕𝗜𝗡 𝗜𝗻𝗳𝗼:** {card_category} - {card_type} - {card_brand}"
+
+        if amount <= 10:
+            await message.reply_text(response, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+        else:
+            filename = f"{bin} x {amount}.txt"
+            with open(filename, 'w') as file:
+                file.write("\n".join(generated_cards))
+
+            user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+            user_profile_link = f"https://t.me/{message.from_user.username}"
+            caption = (
+                f"{amount} {card_type} credit card numbers for BIN {bin}\n"
+                "━━━━━━━━━━━━━━━━━━\n"
+                f"**𝗕𝗮𝗻𝗸:** {bank_name}\n"
+                f"**𝗖𝗼𝘂𝗻𝘁𝗿𝘆:** {country}\n"
+                f"**𝗕𝗜𝗡 𝗜𝗻𝗳𝗼:** {card_category} - {card_type} - {card_brand}\n"
+                "━━━━━━━━━━━━━━━━━━\n"
+                f"Generate By: [{user_full_name}]({user_profile_link})"
             )
+            await message.reply_document(document=filename, caption=caption, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            os.remove(filename)
 
-            # Inline button for regeneration
-            buttons = InlineKeyboardMarkup(
-                [[InlineKeyboardButton("🔄 Regenerate", callback_data=f"regen|{bin_prefix}|{amount}")]]
-            )
+        await processing_msg.delete()
+    except Exception as e:
+        await message.reply_text(f"**Error:** {e}\nUsage: /gen [BIN] [MM] [YY] [Amount]", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
-            # Send response
-            await message.reply_text(response, reply_markup=buttons, parse_mode=ParseMode.MARKDOWN)
-        except Exception as e:
-            await message.reply_text(f"Error: {e}", parse_mode=ParseMode.MARKDOWN)
+def setup_card_handlers(app: Client):
+    app.add_handler(filters.command("gen", prefixes=['/', '.']) & filters.private, gen_handler)
 
-    @app.on_callback_query()
-    async def callback_handler(client, callback_query):
-        try:
-            data = callback_query.data
-            if data.startswith("regen"):
-                _, bin_prefix, amount = data.split("|")
-                amount = int(amount)
-
-                # Generate cards
-                cards = generate_cards(bin_prefix, 'rnd', 'rnd', 'rnd', amount)
-                card_list = "\n".join(f"`{card}`" for card in cards)
-
-                # Mock BIN information
-                bank = "N/A"
-                country = "UNITED STATES"
-                emoji = "🇺🇸"
-                bin_info = "N/A - CREDIT - VISA"
-
-                # Format response
-                response = (
-                    f"**𝗕𝗜𝗡** ⇾ {bin_prefix}\n"
-                    f"**𝗔𝗺𝗼𝘂𝗻𝘁** ⇾ {amount}\n\n"
-                    f"{card_list}\n\n"
-                    f"**𝗕𝗮𝗻𝗸**: {bank}\n"
-                    f"**𝗖𝗼𝘂𝗻𝘁𝗿𝘆**: {country} {emoji}\n"
-                    f"**𝗕𝗜𝗡 𝗜𝗻𝗳𝗼**: {bin_info}"
-                )
-
-                # Edit original message
-                await callback_query.message.edit_text(response, reply_markup=callback_query.message.reply_markup, parse_mode=ParseMode.MARKDOWN)
-        except Exception as e:
-            await callback_query.message.reply_text(f"Error: {e}", parse_mode=ParseMode.MARKDOWN)
-
-# To use the handler, call setup_card_gen_handlers(app) in your main script
