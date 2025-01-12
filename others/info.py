@@ -18,8 +18,15 @@ def setup_info_handler(app: Client):
         else:
             username = message.command[1].strip('@')
             try:
-                # Attempt to fetch public user or bot info
+                # Try to get user info
                 user = await client.get_users([username])
+                if not user:
+                    await message.reply_text(
+                        "<b>Invalid username or user not found</b>",
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
                 user = user[0]
                 response = (
                     f"🌟 <b>Full Name:</b> <code>{user.first_name} {user.last_name or ''}</code>\n"
@@ -30,33 +37,27 @@ def setup_info_handler(app: Client):
                 await message.reply_text(response, parse_mode=ParseMode.HTML)
             except (PeerIdInvalid, UsernameNotOccupied):
                 try:
-                    # Attempt to fetch public group/channel info
+                    # Try to get channel or group info
                     chat = await client.get_chat(username)
-                    if chat.username:  # Check if it's public
-                        if chat.type == "channel":
-                            response = (
-                                f"📛 <b>{chat.title}</b>\n"
-                                f"━━━━━━━━━━━━━━━━━━\n"
-                                f"🆔 <b>ID:</b> <code>{chat.id}</code>\n"
-                                f"📌 <b>Type:</b> <code>Channel</code>\n"
-                                f"👥 <b>Member count:</b> <code>{chat.members_count or 'Unknown'}</code>"
-                            )
-                        elif chat.type in ["supergroup", "group"]:
-                            response = (
-                                f"📛 <b>{chat.title}</b>\n"
-                                f"━━━━━━━━━━━━━━━━━━\n"
-                                f"🆔 <b>ID:</b> <code>{chat.id}</code>\n"
-                                f"📌 <b>Type:</b> <code>{'Supergroup' if chat.type == 'supergroup' else 'Group'}</code>\n"
-                                f"👥 <b>Member count:</b> <code>{chat.members_count or 'Unknown'}</code>"
-                            )
-                        else:
-                            response = "<b>Invalid chat type</b>"
-                        await message.reply_text(response, parse_mode=ParseMode.HTML)
-                    else:
-                        await message.reply_text(
-                            "<b>Chat is private. Add the bot to the group/channel to fetch info.</b>",
-                            parse_mode=ParseMode.HTML
+                    if chat.type == "channel":
+                        response = (
+                            f"📛 <b>{chat.title}</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━\n"
+                            f"🆔 <b>ID:</b> <code>{chat.id}</code>\n"
+                            f"📌 <b>Type:</b> <code>Channel</code>\n"
+                            f"👥 <b>Member count:</b> <code>{chat.members_count}</code>"
                         )
+                    elif chat.type in ["supergroup", "group"]:
+                        response = (
+                            f"📛 <b>{chat.title}</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━\n"
+                            f"🆔 <b>ID:</b> <code>{chat.id}</code>\n"
+                            f"📌 <b>Type:</b> <code>{'Supergroup' if chat.type == 'supergroup' else 'Group'}</code>\n"
+                            f"👥 <b>Member count:</b> <code>{chat.members_count}</code>"
+                        )
+                    else:
+                        response = "<b>Invalid chat type</b>"
+                    await message.reply_text(response, parse_mode=ParseMode.HTML)
                 except (ChannelInvalid, PeerIdInvalid):
                     await message.reply_text(
                         "<b>Invalid username or chat not found</b>",
@@ -64,3 +65,5 @@ def setup_info_handler(app: Client):
                     )
                 except Exception as e:
                     await message.reply_text(f"<b>Error:</b> {str(e)}", parse_mode=ParseMode.HTML)
+
+# To use the handler, call setup_info_handler(app) in your main script
