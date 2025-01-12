@@ -45,28 +45,28 @@ setup_ip_handlers(app)
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
-        InlineKeyboardButton("AI Tools", callback_data="ai_tools"),
-        InlineKeyboardButton("Credit Cards", callback_data="credit_cards"),
+        InlineKeyboardButton("🤖AI Tools🤖", callback_data="ai_tools"),
+        InlineKeyboardButton("💳Credit Cards💳", callback_data="credit_cards"),
     ],
     [
-        InlineKeyboardButton("Crypto", callback_data="crypto"),
-        InlineKeyboardButton("Decoders", callback_data="decoders"),
+        InlineKeyboardButton("💲Crypto💲", callback_data="crypto"),
+        InlineKeyboardButton("👨‍💻Decoders👨‍💻", callback_data="decoders"),
     ],
     [
-        InlineKeyboardButton("Downloaders", callback_data="downloaders"),
-        InlineKeyboardButton("Education Utils", callback_data="education_utils"),
+        InlineKeyboardButton("⬇️Downloaders⬇️", callback_data="downloaders"),
+        InlineKeyboardButton("📄Education Utils📄", callback_data="education_utils"),
     ],
     [
-        InlineKeyboardButton("Mail Tools", callback_data="mail_tools"),
-        InlineKeyboardButton("Temp Mail", callback_data="temp_mail"),
+        InlineKeyboardButton("✉️Mail Tools✉️", callback_data="mail_tools"),
+        InlineKeyboardButton("📬Temp Mail📬", callback_data="temp_mail"),
     ],
     [
-        InlineKeyboardButton("String Session", callback_data="string_session"),
-        InlineKeyboardButton("Stripe Keys", callback_data="stripe_keys"),
+        InlineKeyboardButton("🖥String Session🖥", callback_data="string_session"),
+        InlineKeyboardButton("💰Stripe Keys💰", callback_data="stripe_keys"),
     ],
     [
-        InlineKeyboardButton("Others", callback_data="others"),
-        InlineKeyboardButton("Close", callback_data="close"),
+        InlineKeyboardButton("☑️Others☑️", callback_data="others"),
+        InlineKeyboardButton("⚙️Close❌", callback_data="close"),
     ]
 ])
 
