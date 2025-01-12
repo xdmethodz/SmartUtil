@@ -1,18 +1,19 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 # List of owner ids (add your owner ids here)
 OWNERS = [7303810912, 7886711162]  # Replace with actual owner IDs
 
 # Dictionary to track user activity
-USER_ACTIVITY = {}
+USER_ACTIVITY = defaultdict(lambda: {"last_activity": None, "daily": 0, "weekly": 0, "monthly": 0, "yearly": 0})
 
 # Function to update user activity
 def update_user_activity(user_id):
     now = datetime.utcnow()
-    if user_id not in USER_ACTIVITY:
-        USER_ACTIVITY[user_id] = {"last_activity": now, "daily": 0, "weekly": 0, "monthly": 0, "yearly": 0}
+    if USER_ACTIVITY[user_id]["last_activity"] is None:
+        USER_ACTIVITY[user_id]["last_activity"] = now
     USER_ACTIVITY[user_id]["last_activity"] = now
     USER_ACTIVITY[user_id]["daily"] += 1
     USER_ACTIVITY[user_id]["weekly"] += 1
@@ -22,15 +23,15 @@ def update_user_activity(user_id):
 # Function to reset daily, weekly, monthly, and yearly counts
 def reset_user_activity():
     now = datetime.utcnow()
-    for user_id in USER_ACTIVITY:
-        if USER_ACTIVITY[user_id]["last_activity"] < now - timedelta(days=1):
-            USER_ACTIVITY[user_id]["daily"] = 0
-        if USER_ACTIVITY[user_id]["last_activity"] < now - timedelta(weeks=1):
-            USER_ACTIVITY[user_id]["weekly"] = 0
-        if USER_ACTIVITY[user_id]["last_activity"] < now - timedelta(days=30):
-            USER_ACTIVITY[user_id]["monthly"] = 0
-        if USER_ACTIVITY[user_id]["last_activity"] < now - timedelta(days=365):
-            USER_ACTIVITY[user_id]["yearly"] = 0
+    for user_id, activity in USER_ACTIVITY.items():
+        if activity["last_activity"] < now - timedelta(days=1):
+            activity["daily"] = 0
+        if activity["last_activity"] < now - timedelta(weeks=1):
+            activity["weekly"] = 0
+        if activity["last_activity"] < now - timedelta(days=30):
+            activity["monthly"] = 0
+        if activity["last_activity"] < now - timedelta(days=365):
+            activity["yearly"] = 0
 
 # Function to handle all commands to update user activity
 async def command_handler(client: Client, message: Message):
@@ -42,7 +43,7 @@ async def send_handler(client: Client, message: Message):
         return
 
     if len(message.command) == 1:
-        await message.reply_text("**Please Enter The Message To Broadcast 😎**", parse_mode=ParseMode.MARKDOWN)
+        await message.reply_text("**Please Enter The Message To Broadcast 😎**", parse_mode="markdown")
         return
 
     broadcast_message = message.text.split(None, 1)[1]
@@ -60,7 +61,7 @@ async def send_handler(client: Client, message: Message):
 
     keyboard = InlineKeyboardMarkup(buttons) if buttons else None
 
-    processing_msg = await message.reply_text("**Sending Broadcast Everywhere....**", parse_mode=ParseMode.MARKDOWN)
+    processing_msg = await message.reply_text("**Sending Broadcast Everywhere....**", parse_mode="markdown")
 
     sent_count = 0
     for user_id in USER_ACTIVITY.keys():
@@ -71,7 +72,7 @@ async def send_handler(client: Client, message: Message):
             print(f"Failed to send message to {user_id}: {e}")
 
     await processing_msg.delete()
-    await message.reply_text("**Broadcast Successfully Sent**", parse_mode=ParseMode.MARKDOWN)
+    await message.reply_text("**Broadcast Successfully Sent**", parse_mode="markdown")
 
 # Function to handle the /stats command
 async def stats_handler(client: Client, message: Message):
@@ -97,9 +98,9 @@ async def stats_handler(client: Client, message: Message):
 Total Smart Tools Users: {total_users}
 ┗━━━━━━━━━━━━━━━━━━━
 👨‍💻Developer: @abirxdhackz ☑️
-🔄Support: @abir_x_official_Chat ☑️
-🔄Updates: @abir_x_official ☑️
-🖥Server: The server for hosting  ☑️ @Smart_Nexus_Bot ✨ - Toolkit is provided by @abirxdhack. Powered by @abir_x_official ☑️
+Support: @abir_x_official_Chat ☑️
+Updates: @abir_x_official ☑️
+Server: The server for hosting  ☑️ @Smart_Nexus_Bot ✨ - Toolkit is provided by @abirxdhack. Powered by @abir_x_official ☑️
 📝 Language & 🧰 Framework: Python Pyrogram Aiogram Telethon Mixed  ☑️                                                                 
 💾 Databases: MongoDB ☑️
 📛 ᴠᴇʀꜱɪᴏɴ : Latest ☑️
@@ -109,11 +110,10 @@ Total Smart Tools Users: {total_users}
 
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("👨‍💻UpdatesChannel☑️", url="https://t.me/abir_x_official")]])
 
-    await message.reply_text(stats_message, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard)
+    await message.reply_text(stats_message, parse_mode="markdown", reply_markup=keyboard)
 
 def setup_admin_handlers(app: Client):
     """Set up command handlers for the Pyrogram bot."""
-    app.add_handler(filters.command("send") & filters.private, send_handler)
-    app.add_handler(filters.command("stats") & filters.private, stats_handler)
-    app.add_handler(filters.all, command_handler)  # Update user activity for all commands
-
+    app.add_handler(filters.command("send") & filters.private, send_handler, group=1)
+    app.add_handler(filters.command("stats") & filters.private, stats_handler, group=1)
+    app.add_handler(filters.all, command_handler, group=2)  # Update user activity for all commands
