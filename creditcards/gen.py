@@ -10,6 +10,7 @@ USER_ID = "dicynukoke"
 API_KEY = "OJHZ7JHQgNYmdS8C6BgNadavoywbHUdENHFOx3YTZctJb0DS"
 
 def calculate_luhn(card_number: str):
+    """Calculate the Luhn check digit for a card number."""
     def digits_of(n):
         return [int(d) for d in str(n)]
     digits = digits_of(card_number)
@@ -24,6 +25,7 @@ def calculate_luhn(card_number: str):
     return (10 - (checksum % 10)) % 10
 
 def generate_cc(bin: str, month: str, year: str, amount: int = 10):
+    """Generate credit card numbers using the provided BIN, expiration month, year, and amount."""
     generated_cards = []
     for _ in range(amount):
         card_number = bin + ''.join([str(random.randint(0, 9)) for _ in range(16 - len(bin) - 1)])
@@ -33,6 +35,7 @@ def generate_cc(bin: str, month: str, year: str, amount: int = 10):
     return generated_cards
 
 def check_bin(bin: str):
+    """Check and validate BIN details using the Neutrino API."""
     url = 'https://neutrinoapi.net/bin-lookup'
     data = {
         'bin-number': bin,
@@ -49,6 +52,7 @@ def check_bin(bin: str):
         return None
 
 async def gen_handler(client: Client, message: Message):
+    """Handle the /gen and .gen commands to generate credit card numbers."""
     try:
         args = message.text.split()
         if len(args) < 5:
@@ -108,5 +112,6 @@ async def gen_handler(client: Client, message: Message):
         await message.reply_text(f"**Error:** {e}\nUsage: /gen [BIN] [MM] [YY] [Amount]", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
 def setup_card_handlers(app: Client):
+    """Set up command handlers for the Pyrogram bot."""
     app.add_handler(filters.command("gen", prefixes=['/', '.']) & filters.private, gen_handler)
 
