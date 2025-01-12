@@ -52,7 +52,7 @@ def check_bin(bin: str):
         return None
 
 async def gen_handler(client: Client, message: Message):
-    """Handle the /gen and .gen commands to generate credit card numbers."""
+    """Handle the /gen command to generate credit card numbers."""
     try:
         args = message.text.split()
         if len(args) < 5:
@@ -113,5 +113,6 @@ async def gen_handler(client: Client, message: Message):
 
 def setup_card_handlers(app: Client):
     """Set up command handlers for the Pyrogram bot."""
-    app.add_handler(filters.command("gen", prefixes=['/', '.']) & filters.private, gen_handler)
+    app.add_handler(filters.command("gen") & filters.private, gen_handler)
+
 
