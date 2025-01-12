@@ -261,7 +261,7 @@ if call.data in responses:
         [InlineKeyboardButton("Back", callback_data="main_menu")]
     ])
     await call.message.edit_text(
-        f"<b>{responses[call.data][0]}</b>",  # Wrap the text in <b> tags
+        responses[call.data][0],  # text is the first element in the tuple
         parse_mode=ParseMode.HTML,  # Correct way to set parse_mode
         disable_web_page_preview=True,
         reply_markup=back_button
@@ -277,3 +277,4 @@ elif call.data == "close":
 
 print("Bot is running...")
 app.run()
+
