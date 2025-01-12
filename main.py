@@ -15,7 +15,7 @@ from crypto.crypto import setup_crypto_handler
 from others.fake import setup_fake_handler
 from educationutils.education import setup_education_handler
 from aitools.gpt import setup_gpt_handlers 
-from creditcards.gen import setup_card_handlers
+from others.ip import setup_card_handlers
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
