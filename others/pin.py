@@ -38,6 +38,9 @@ class Config:
     MAX_RETRIES = 3
     RETRY_DELAY = 2  # Delay in seconds between retries
 
+    # Ensure the TEMP_DIR exists
+    TEMP_DIR.mkdir(exist_ok=True)
+
 class ProgressTracker:
     def __init__(self, message: Message, file_size: int):
         self.message = message
@@ -146,6 +149,9 @@ class PinterestDownloader:
             try:
                 async with self.session.get(url) as response:
                     if response.status == 200:
+                        # Ensure the directory exists
+                        file_path.parent.mkdir(parents=True, exist_ok=True)
+                        
                         # Use ThreadPoolExecutor for file I/O
                         content = await response.read()
                         await asyncio.get_event_loop().run_in_executor(
