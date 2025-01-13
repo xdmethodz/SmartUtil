@@ -11,7 +11,7 @@ from urllib.parse import unquote
 import json
 import time
 from pyrogram import Client, filters, enums
-from pyrogram.types import Message, ParseMode
+from pyrogram.types import Message
 
 # Configure logging
 logging.basicConfig(
