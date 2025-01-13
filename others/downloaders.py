@@ -78,38 +78,24 @@ async def progress_bar(current, total, status_message, start_time, last_update_t
     except Exception as e:
         print(f"Error updating progress: {e}")
 
-def get_ydl_opts(output_filename: str, format: str) -> dict:
+async def get_ydl_opts(output_filename: str) -> dict:
     """
-    Return yt-dlp options based on the format.
+    Return yt-dlp options.
     """
-    if format == 'video':
-        return {
-            'format': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
-            'outtmpl': output_filename,
-            'cookiefile': YT_COOKIES_PATH,
-            'quiet': True,
-            'noprogress': True,
-            'no_warnings': True,
-            'nocheckcertificate': True,
-            'postprocessors': [{'key': 'FFmpegVideoConvertor', 'preferedformat': 'mp4'}]
-        }
-    elif format == 'audio':
-        return {
-            'format': 'bestaudio/best',
-            'outtmpl': output_filename,
-            'cookiefile': YT_COOKIES_PATH,
-            'quiet': True,
-            'noprogress': True,
-            'no_warnings': True,
-            'nocheckcertificate': True,
-            'postprocessors': [
-                {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}
-            ]
-        }
+    return {
+        'format': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
+        'outtmpl': output_filename,
+        'cookiefile': YT_COOKIES_PATH,
+        'quiet': True,
+        'noprogress': True,
+        'no_warnings': True,
+        'nocheckcertificate': True,
+        'postprocessors': [{'key': 'FFmpegVideoConvertor', 'preferedformat': 'mp4'}]
+    }
 
-async def download_media(url: str, format: str) -> tuple:
+async def download_video(url: str) -> tuple:
     """
-    Download media using yt-dlp, along with its thumbnail.
+    Download a video using yt-dlp, along with its thumbnail.
     """
     if not await validate_url(url):
         return None, "Invalid YouTube URL"
@@ -128,10 +114,10 @@ async def download_media(url: str, format: str) -> tuple:
         thumbnail_url = info.get('thumbnail', None)
 
         safe_title = await sanitize_filename(title)
-        output_path = f"temp_media/{safe_title}.{'mp4' if format == 'video' else 'mp3'}"
+        output_path = f"temp_media/{safe_title}.mp4"
         os.makedirs("temp_media", exist_ok=True)
 
-        opts = get_ydl_opts(output_path, format)
+        opts = await get_ydl_opts(output_path)
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
 
@@ -141,11 +127,11 @@ async def download_media(url: str, format: str) -> tuple:
         file_size = os.path.getsize(output_path)
         if file_size > 2_000_000_000:
             os.remove(output_path)
-            return None, "File exceeds Telegram's 2GB limit."
+            return None, "Video file exceeds Telegram's 2GB limit."
 
         # Download and prepare thumbnail
         thumbnail_path = None
-        if thumbnail_url and format == 'video':
+        if thumbnail_url:
             thumbnail_path = await prepare_thumbnail(thumbnail_url, output_path)
 
         return {
@@ -157,11 +143,9 @@ async def download_media(url: str, format: str) -> tuple:
             'thumbnail_path': thumbnail_path
         }, None
 
-    except yt_dlp.utils.DownloadError as e:
-        print(f"DownloadError: {e}")
-        return None, "Download failed: Media unavailable or restricted"
+    except yt_dlp.utils.DownloadError:
+        return None, "Download failed: Video unavailable or restricted"
     except Exception as e:
-        print(f"Exception: {e}")
         return None, f"An unexpected error occurred: {str(e)}"
 
 async def prepare_thumbnail(thumbnail_url: str, output_path: str) -> str:
@@ -190,11 +174,11 @@ async def prepare_thumbnail(thumbnail_url: str, output_path: str) -> str:
         print(f"Error preparing thumbnail: {e}")
     return None
 
-async def handle_download_request(client, message, url, format):
-    search_message = await message.reply_text("`Searching the media...`", parse_mode=enums.ParseMode.MARKDOWN)
+async def handle_download_request(client, message, url):
+    search_message = await message.reply_text("`Searching the video...`", parse_mode=enums.ParseMode.MARKDOWN)
 
     try:
-        result, error = await download_media(url, format)
+        result, error = await download_video(url)
         if error:
             await search_message.edit(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
             return
@@ -202,63 +186,42 @@ async def handle_download_request(client, message, url, format):
         await search_message.delete()
         downloading_message = await message.reply_text("`Found ☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
 
-        media_path = result['file_path']
+        video_path = result['file_path']
         title = result['title']
         views = result['views']
         duration = result['duration']
         file_size = result['file_size']
         thumbnail_path = result.get('thumbnail_path')
 
-        if format == 'video':
-            media_caption = (
-                f"🎵 **Title:** `{title}`\n"
-                f"━━━━━━━━━━━━━━━━━━━━━\n"
-                f"👁️‍🗨️ **Views:** `{views}` views\n"
-                f"🔗 [Watch On YouTube]({url})\n"
-                f"⏱️ **Duration:** `{duration}`\n"
-                f"━━━━━━━━━━━━━━━━━━━━━\n"
-                f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
-            )
-        else:
-            media_caption = (
-                f"🎵 **Title:** `{title}`\n"
-                f"━━━━━━━━━━━━━━━━━━━━━\n"
-                f"👁️‍🗨️ **Views:** `{views}` views\n"
-                f"🔗 [Listen On YouTube]({url})\n"
-                f"⏱️ **Duration:** `{duration}`\n"
-                f"━━━━━━━━━━━━━━━━━━━━━\n"
-                f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
-            )
+        video_caption = (
+            f"🎵 **Title:** `{title}`\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👁️‍🗨️ **Views:** `{views}` views\n"
+            f"🔗 [Watch On YouTube]({url})\n"
+            f"⏱️ **Duration:** `{duration}`\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+        )
 
         last_update_time = [0]
         start_time = time.time()
 
-        if format == 'video':
-            await client.send_video(
-                chat_id=message.chat.id,
-                video=media_path,
-                caption=media_caption,
-                parse_mode=enums.ParseMode.MARKDOWN,
-                supports_streaming=True,
-                thumb=thumbnail_path,
-                progress=progress_bar,
-                progress_args=(downloading_message, start_time, last_update_time)
-            )
-        else:
-            await client.send_audio(
-                chat_id=message.chat.id,
-                audio=media_path,
-                caption=media_caption,
-                parse_mode=enums.ParseMode.MARKDOWN,
-                progress=progress_bar,
-                progress_args=(downloading_message, start_time, last_update_time)
-            )
+        await client.send_video(
+            chat_id=message.chat.id,
+            video=video_path,
+            caption=video_caption,
+            parse_mode=enums.ParseMode.MARKDOWN,
+            supports_streaming=True,
+            thumb=thumbnail_path,
+            progress=progress_bar,
+            progress_args=(downloading_message, start_time, last_update_time)
+        )
 
         await downloading_message.delete()
 
         # Cleanup
-        if os.path.exists(media_path):
-            os.remove(media_path)
+        if os.path.exists(video_path):
+            os.remove(video_path)
         if thumbnail_path and os.path.exists(thumbnail_path):
             os.remove(thumbnail_path)
 
@@ -276,16 +239,4 @@ def setup_downloader_handler(app: Client):
             if not await validate_url(url):
                 await message.reply_text("**Invalid YouTube URL ❌**", parse_mode=enums.ParseMode.MARKDOWN)
             else:
-                await handle_download_request(client, message, url, 'video')
-
-    @app.on_message(filters.command("song"))
-    async def song_command(client, message):
-        command_parts = message.text.split(maxsplit=1)
-        if len(command_parts) == 1:
-            await message.reply_text("**Please provide a Music Link ❌**", parse_mode=enums.ParseMode.MARKDOWN)
-        else:
-            url = command_parts[1]
-            if not await validate_url(url):
-                await message.reply_text("**Invalid YouTube URL ❌**", parse_mode=enums.ParseMode.MARKDOWN)
-            else:
-                await handle_download_request(client, message, url, 'audio')
+                await handle_download_request(client, message, url)
