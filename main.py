@@ -81,7 +81,7 @@ async def send_start_message(client, message):
     # Animation messages
     animation_message = await message.reply_text("<b>Starting Smart Nexus...</b>", parse_mode=ParseMode.HTML)
     await asyncio.sleep(0.4)  # Use asyncio.sleep instead of sleep
-    await animation_message.edit_text("<b>Preparing Your Experience Please Wait...</b>", parse_mode=ParseMode.HTML)
+    await animation_message.edit_text("<b>Generating Session Keys Please Wait...</b>", parse_mode=ParseMode.HTML)
     await asyncio.sleep(0.4)  # Use asyncio.sleep instead of sleep
     await animation_message.delete()
 
