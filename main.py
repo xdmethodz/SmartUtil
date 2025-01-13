@@ -18,6 +18,7 @@ from aitools.gpt import setup_gpt_handlers
 from others.ip import setup_ip_handlers
 from others.admin import setup_admin_handlers
 from others.downloaders import setup_downloader_handler
+from others.pin import setup_pinterest_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -46,6 +47,7 @@ setup_gpt_handlers(app)
 setup_ip_handlers(app)
 setup_admin_handlers(app)
 setup_downloader_handler(app)
+setup_pinterest_handler(app)
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
