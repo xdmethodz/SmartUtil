@@ -90,9 +90,9 @@ async def send_start_message(client, message):
     # Main welcome message
     start_message = (
         f"<b>Hi — {message.from_user.first_name}! Welcome to this bot</b>\n"
-        "<b>________________________________</b>\n\n"
-        "<b><a href='https://t.me/Smart_Nexus_Bot'>Smart Nexus</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n\n"
-        "<b>________________________________</b>\n\n"
+        "<b>________________________________</b>\n"
+        "<b><a href='https://t.me/Smart_Nexus_Bot'>Smart Nexus</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
+        "<b>________________________________</b>\n"
         "<b>Don't forget to <a href='https://t.me/abir_x_official'>join</a> for updates!</b>"
     )
 
