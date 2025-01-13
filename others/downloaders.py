@@ -8,7 +8,7 @@ import requests
 from PIL import Image
 from typing import Optional
 
-YT_COOKIES_PATH = "/cookies/cookies.txt"
+YT_COOKIES_PATH = "./cookies/cookies.txt"
 
 async def sanitize_filename(title: str) -> str:
     """
