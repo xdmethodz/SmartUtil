@@ -9,3 +9,5 @@ faker==18.9.0
 tgcrypto==1.2.3
 pytesseract
 pillow
+yt-dlp
+ffmpeg
