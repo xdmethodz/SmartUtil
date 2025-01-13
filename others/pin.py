@@ -11,8 +11,8 @@ from urllib.parse import unquote
 import json
 import time
 from pyrogram import Client, filters, enums
-from pyrogram.types import Message
-from pyrogram.enums import ParseMode
+from pyrogram.types import Message, ParseMode
+
 # Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -310,18 +310,18 @@ class PinterestDownloader:
         return None
 
 async def handle_pinterest_request(client, message, url):
-    async with client.bot.download_semaphore:
+    async with client.download_semaphore:
         try:
             # Send initial processing message
             status_msg = await message.reply_text("`Processing your request...`", parse_mode=ParseMode.MARKDOWN)
             
-            pin_id = await client.bot.downloader.extract_pin_id(url)
+            pin_id = await client.downloader.extract_pin_id(url)
             if not pin_id:
                 await status_msg.edit_text('Invalid Pinterest URL. Please send a valid pin URL.')
                 return
             
-            media_data = await client.bot.downloader.download_pool.spawn(
-                client.bot.downloader.get_pin_data(pin_id)
+            media_data = await client.downloader.download_pool.spawn(
+                client.downloader.get_pin_data(pin_id)
             )
             
             if not media_data:
@@ -331,8 +331,8 @@ async def handle_pinterest_request(client, message, url):
             file_path = Config.TEMP_DIR / f"temp_{message.chat.id}_{message.id}_{pin_id}"
             file_path = file_path.with_suffix('.mp4' if media_data.media_type == 'video' else '.jpg')
             
-            success = await client.bot.downloader.download_pool.spawn(
-                client.bot.downloader.download_file(media_data.url, file_path)
+            success = await client.downloader.download_pool.spawn(
+                client.downloader.download_file(media_data.url, file_path)
             )
             
             if not success:
@@ -368,8 +368,8 @@ async def handle_pinterest_request(client, message, url):
                 await status_msg.edit_text('Failed to send media. Please try again later.')
             
             await asyncio.get_event_loop().run_in_executor(
-                client.bot.downloader.file_pool,
-                client.bot.downloader._cleanup_file,
+                client.downloader.file_pool,
+                client.downloader._cleanup_file,
                 file_path
             )
             
@@ -387,4 +387,6 @@ def setup_pinterest_handler(app: Client):
             url = command_parts[1]
             await handle_pinterest_request(client, message, url)
 
-
+    # Link the downloader and semaphore to the app for access in handlers
+    app.downloader = PinterestDownloader()
+    app.download_semaphore = asyncio.Semaphore(Config.MAX_CONCURRENT_DOWNLOADS)
