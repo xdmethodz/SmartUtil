@@ -14,6 +14,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
+
 # Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -35,6 +36,7 @@ class Config:
     MAX_CONCURRENT_DOWNLOADS = 500
     DOWNLOAD_TIMEOUT = 60
     MAX_RETRIES = 3
+    RETRY_DELAY = 2  # Delay in seconds between retries
 
 class ProgressTracker:
     def __init__(self, message: Message, file_size: int):
@@ -136,7 +138,7 @@ class PinterestDownloader:
                 if attempt == Config.MAX_RETRIES - 1:
                     logger.error(f"Failed to extract pin ID after {Config.MAX_RETRIES} attempts: {e}")
                     raise
-                await asyncio.sleep(1)
+                await asyncio.sleep(Config.RETRY_DELAY)
 
     async def download_file(self, url: str, file_path: Path) -> bool:
         """Download file with retry logic"""
@@ -157,7 +159,7 @@ class PinterestDownloader:
                 if attempt == Config.MAX_RETRIES - 1:
                     logger.error(f"Failed to download file after {Config.MAX_RETRIES} attempts: {e}")
                     return False
-                await asyncio.sleep(1)
+                await asyncio.sleep(Config.RETRY_DELAY)
         return False
     
     @staticmethod
@@ -174,11 +176,14 @@ class PinterestDownloader:
 
     async def get_pin_data(self, pin_id: str) -> Optional[PinterestMedia]:
         """Get pin data using webpage method"""
-        try:
-            return await self.get_data_from_webpage(pin_id)
-        except Exception as e:
-            logger.error(f"Error getting pin data: {e}")
-            return None
+        for attempt in range(Config.MAX_RETRIES):
+            try:
+                return await self.get_data_from_webpage(pin_id)
+            except Exception as e:
+                if attempt == Config.MAX_RETRIES - 1:
+                    logger.error(f"Error getting pin data after {Config.MAX_RETRIES} attempts: {e}")
+                    return None
+                await asyncio.sleep(Config.RETRY_DELAY)
 
     async def get_data_from_api(self, pin_id: str) -> Optional[PinterestMedia]:
         """Get highest quality image data from Pinterest's API"""
@@ -321,9 +326,7 @@ async def handle_pinterest_request(client, message, url):
                 await status_msg.edit_text('Invalid Pinterest URL. Please send a valid pin URL.')
                 return
             
-            media_data = await client.downloader.download_pool.spawn(
-                client.downloader.get_pin_data(pin_id)
-            )
+            media_data = await client.downloader.get_pin_data(pin_id)
             
             if not media_data:
                 await status_msg.edit_text('Could not find media in this Pinterest link.')
