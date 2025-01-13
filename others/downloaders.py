@@ -157,9 +157,11 @@ async def download_media(url: str, format: str) -> tuple:
             'thumbnail_path': thumbnail_path
         }, None
 
-    except yt_dlp.utils.DownloadError:
+    except yt_dlp.utils.DownloadError as e:
+        print(f"DownloadError: {e}")
         return None, "Download failed: Media unavailable or restricted"
     except Exception as e:
+        print(f"Exception: {e}")
         return None, f"An unexpected error occurred: {str(e)}"
 
 async def prepare_thumbnail(thumbnail_url: str, output_path: str) -> str:
