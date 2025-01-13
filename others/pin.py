@@ -14,7 +14,6 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
-
 # Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -173,6 +172,15 @@ class PinterestDownloader:
         """Write file to disk (runs in thread pool)"""
         with open(file_path, 'wb') as f:
             f.write(content)
+
+    @staticmethod
+    def _cleanup_file(file_path: Path):
+        """Cleanup file from disk"""
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            logger.error(f"Cleanup error: {e}")
 
     def get_highest_quality_image(self, image_url: str) -> str:
         """Convert image URL to highest quality version"""
