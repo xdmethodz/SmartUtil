@@ -183,9 +183,8 @@ async def handle_download_request(client, message, url):
             await search_message.edit(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
             return
 
-        new_message_text = "`Found ☑️ Downloading...`"
-        if search_message.text != new_message_text:
-            await search_message.edit(new_message_text, parse_mode=enums.ParseMode.MARKDOWN)
+        await search_message.delete()
+        downloading_message = await message.reply_text("`Found ☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
 
         video_path = result['file_path']
         title = result['title']
@@ -215,10 +214,10 @@ async def handle_download_request(client, message, url):
             supports_streaming=True,
             thumb=thumbnail_path,
             progress=progress_bar,
-            progress_args=(search_message, start_time, last_update_time)
+            progress_args=(downloading_message, start_time, last_update_time)
         )
 
-        await search_message.delete()
+        await downloading_message.delete()
 
         # Cleanup
         if os.path.exists(video_path):
