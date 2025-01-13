@@ -259,23 +259,24 @@ async def handle_callback_query(client, callback_query):
         ),
     }
 
-    if call.data in responses:
-        back_button = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Back", callback_data="main_menu")]
-        ])
-        await call.message.edit_text(
-            responses[call.data][0],  # text is the first element in the tuple
-            parse_mode=ParseMode.HTML,  # Correct way to set parse_mode
-            disable_web_page_preview=True,
-            reply_markup=back_button
-        )
-    elif call.data == "main_menu":
-        await call.message.edit_text(
-            "Here are the Smart Nexus 🤖 Options:",
-            reply_markup=main_menu_keyboard
-        )
-    elif call.data == "close":
-        await call.message.delete()
+if call.data in responses:
+    back_button = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Back", callback_data="main_menu")]
+    ])
+    await call.message.edit_text(
+        responses[call.data][0],  # text is the first element in the tuple
+        parse_mode=ParseMode.HTML,  # Correct way to set parse_mode
+        disable_web_page_preview=True,
+        reply_markup=back_button
+    )
+elif call.data == "main_menu":
+    await call.message.edit_text(
+        "<b>Here are the Smart Nexus 🤖 Options:</b>",  # Make it bold
+        parse_mode=ParseMode.HTML,  # Ensure parse_mode is set to HTML
+        reply_markup=main_menu_keyboard
+    )
+elif call.data == "close":
+    await call.message.delete()
 
 print("Bot is running...")
-app.run() 
+app.run()
