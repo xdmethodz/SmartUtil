@@ -271,7 +271,7 @@ if call.data in responses:
     )
 elif call.data == "main_menu":
     await call.message.edit_text(
-        "<b>Here are the Smart Nexus 🤖 Options:</b>",  # Make it bold
+        "<b>Here are the Smart Nexus 🤖 Options:👇</b>",  # Make it bold
         parse_mode=ParseMode.HTML,  # Ensure parse_mode is set to HTML
         reply_markup=main_menu_keyboard
     )
