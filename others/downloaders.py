@@ -108,6 +108,7 @@ async def download_video(url: str) -> tuple:
             return None, "Could not fetch video information"
 
         title = info.get('title', 'Unknown Title')
+        views = info.get('view_count', 0)
         duration = info.get('duration', 0)
         duration_str = await format_duration(duration)
         thumbnail_url = info.get('thumbnail', None)
@@ -136,6 +137,7 @@ async def download_video(url: str) -> tuple:
         return {
             'file_path': output_path,
             'title': title,
+            'views': views,
             'duration': duration_str,
             'file_size': await format_size(file_size),
             'thumbnail_path': thumbnail_path
@@ -173,24 +175,31 @@ async def prepare_thumbnail(thumbnail_url: str, output_path: str) -> str:
     return None
 
 async def handle_download_request(client, message, url):
-    status_message = await message.reply_text("⏳ Preparing your video...", parse_mode=enums.ParseMode.MARKDOWN)
+    search_message = await message.reply_text("`Searching the video...`", parse_mode=enums.ParseMode.MARKDOWN)
 
     try:
         result, error = await download_video(url)
         if error:
-            await status_message.edit(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
+            await search_message.edit(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
             return
+
+        await search_message.edit("`Found ☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
 
         video_path = result['file_path']
         title = result['title']
+        views = result['views']
         duration = result['duration']
         file_size = result['file_size']
         thumbnail_path = result.get('thumbnail_path')
 
         video_caption = (
-            f"🎥 **{title}**\n"
-            f"⏱ **Duration:** {duration}\n"
-            f"📦 **Size:** {file_size}"
+            f"🎵 **Title:** `{title}`\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👁️‍🗨️ **Views:** `{views}` views\n"
+            f"🔗 [Watch On YouTube]({url})\n"
+            f"⏱️ **Duration:** `{duration}`\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
         )
 
         last_update_time = [0]
@@ -200,13 +209,14 @@ async def handle_download_request(client, message, url):
             chat_id=message.chat.id,
             video=video_path,
             caption=video_caption,
+            parse_mode=enums.ParseMode.MARKDOWN,
             supports_streaming=True,
             thumb=thumbnail_path,
             progress=progress_bar,
-            progress_args=(status_message, start_time, last_update_time)
+            progress_args=(search_message, start_time, last_update_time)
         )
 
-        await status_message.delete()
+        await search_message.delete()
 
         # Cleanup
         if os.path.exists(video_path):
@@ -215,7 +225,7 @@ async def handle_download_request(client, message, url):
             os.remove(thumbnail_path)
 
     except Exception as e:
-        await status_message.edit(f"❌ An error occurred: {str(e)}", parse_mode=enums.ParseMode.MARKDOWN)
+        await search_message.edit(f"❌ An error occurred: {str(e)}", parse_mode=enums.ParseMode.MARKDOWN)
 
 def setup_downloader_handler(app: Client):
     @app.on_message(filters.command(["video", "yt"]))
