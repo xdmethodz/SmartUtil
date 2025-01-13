@@ -387,6 +387,4 @@ def setup_pinterest_handler(app: Client):
             url = command_parts[1]
             await handle_pinterest_request(client, message, url)
 
-    # Link the bot instance to the app for access in handlers
-    app.bot = PinterestBot()
-    app.bot.app = app
+
