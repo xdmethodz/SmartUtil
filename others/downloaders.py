@@ -78,7 +78,7 @@ async def progress_bar(current, total, status_message, start_time, last_update_t
     except Exception as e:
         print(f"Error updating progress: {e}")
 
-async def get_ydl_opts(output_filename: str, format: str) -> dict:
+def get_ydl_opts(output_filename: str, format: str) -> dict:
     """
     Return yt-dlp options based on the format.
     """
@@ -131,7 +131,7 @@ async def download_media(url: str, format: str) -> tuple:
         output_path = f"temp_media/{safe_title}.{'mp4' if format == 'video' else 'mp3'}"
         os.makedirs("temp_media", exist_ok=True)
 
-        opts = await get_ydl_opts(output_path, format)
+        opts = get_ydl_opts(output_path, format)
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
 
