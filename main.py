@@ -98,7 +98,7 @@ async def send_start_message(client, message):
         start_message,
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup([  # Inline keyboard for main menu
-            [InlineKeyboardButton("⚙️Main Menu", callback_data="main_menu")]
+            [InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")]
         ]),
         disable_web_page_preview=True,
     )
