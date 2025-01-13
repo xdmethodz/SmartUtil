@@ -183,7 +183,9 @@ async def handle_download_request(client, message, url):
             await search_message.edit(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
             return
 
-        await search_message.edit("`Found ☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
+        new_message_text = "`Found ☑️ Downloading...`"
+        if search_message.text != new_message_text:
+            await search_message.edit(new_message_text, parse_mode=enums.ParseMode.MARKDOWN)
 
         video_path = result['file_path']
         title = result['title']
