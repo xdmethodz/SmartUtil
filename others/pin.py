@@ -12,7 +12,7 @@ import json
 import time
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message
-
+from pyrogram.enums import ParseMode
 # Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
