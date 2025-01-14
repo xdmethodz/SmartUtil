@@ -11,4 +11,4 @@ pytesseract
 pillow
 yt-dlp
 ffmpeg
-spotify
+spotipy
