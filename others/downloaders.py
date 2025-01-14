@@ -148,6 +148,77 @@ async def download_video(url: str) -> tuple:
     except Exception as e:
         return None, f"An unexpected error occurred: {str(e)}"
 
+async def get_audio_opts(output_filename: str) -> dict:
+    """
+    Return yt-dlp options for audio download.
+    """
+    return {
+        'format': 'bestaudio/best',
+        'outtmpl': f'{output_filename}.%(ext)s',
+        'cookiefile': YT_COOKIES_PATH,
+        'quiet': True,
+        'noprogress': True,
+        'no_warnings': True,
+        'nocheckcertificate': True,
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }]
+    }
+
+async def download_audio(url: str) -> tuple:
+    """
+    Download audio from YouTube using yt-dlp.
+    """
+    if not await validate_url(url):
+        return None, "Invalid YouTube URL"
+
+    try:
+        with yt_dlp.YoutubeDL({'quiet': True, 'cookiefile': YT_COOKIES_PATH}) as ydl:
+            info = ydl.extract_info(url, download=False)
+
+        if not info:
+            return None, "Could not fetch video information"
+
+        title = info.get('title', 'Unknown Title')
+        duration = info.get('duration', 0)
+        duration_str = await format_duration(duration)
+
+        safe_title = await sanitize_filename(title)
+        base_path = f"temp_media/{safe_title}"
+        os.makedirs("temp_media", exist_ok=True)
+
+        opts = await get_audio_opts(base_path)
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([url])
+
+        output_path = f"{base_path}.mp3"
+        if not os.path.exists(output_path):
+            possible_files = [f for f in os.listdir("temp_media") if f.startswith(safe_title)]
+            if possible_files:
+                original_file = os.path.join("temp_media", possible_files[0])
+                if os.path.exists(original_file):
+                    return None, f"File exists but conversion failed: {original_file}"
+            return None, "Download failed: File not created"
+
+        file_size = os.path.getsize(output_path)
+        if file_size > 2_000_000_000:
+            os.remove(output_path)
+            return None, "Audio file exceeds Telegram's 2GB limit."
+
+        return {
+            'file_path': output_path,
+            'title': title,
+            'duration': duration_str,
+            'file_size': await format_size(file_size)
+        }, None
+
+    except yt_dlp.utils.DownloadError as e:
+        return None, f"Download failed: {str(e)}"
+    except Exception as e:
+        return None, f"An unexpected error occurred: {str(e)}"
+
 async def prepare_thumbnail(thumbnail_url: str, output_path: str) -> str:
     """
     Download and prepare the thumbnail image.
@@ -228,6 +299,63 @@ async def handle_download_request(client, message, url):
     except Exception as e:
         await search_message.edit(f"❌ An error occurred: {str(e)}", parse_mode=enums.ParseMode.MARKDOWN)
 
+async def handle_audio_request(client, message):
+    query = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else None
+
+    if not query:
+        await message.reply_text("**Please provide a Music Link ❌**", parse_mode=enums.ParseMode.MARKDOWN)
+        return
+
+    status_message = await message.reply_text("`Searching the audio...`", parse_mode=enums.ParseMode.MARKDOWN)
+
+    if not await validate_url(query):
+        await status_message.edit("`Searching for the song...`", parse_mode=enums.ParseMode.MARKDOWN)
+        video_url = await search_youtube(query)
+        if not video_url:
+            await status_message.edit("❌ No matching videos found. Please try a different search term.")
+            return
+        await status_message.edit("`Found the video! Starting download...`", parse_mode=enums.ParseMode.MARKDOWN)
+    else:
+        video_url = query
+
+    result, error = await download_audio(video_url)
+    if error:
+        await status_message.edit(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
+        return
+
+    audio_path = result['file_path']
+    title = result['title']
+    duration = result['duration']
+    file_size = result['file_size']
+
+    audio_caption = (
+        f"🎵 **Title:** `{title}`\n"
+        f"⏱️ **Duration:** `{duration}`\n"
+        f"📦 **Size:** `{file_size}`"
+    )
+
+    try:
+        last_update_time = [0]
+        start_time = time.time()
+
+        await client.send_audio(
+            chat_id=message.chat.id,
+            audio=audio_path,
+            caption=audio_caption,
+            title=title,
+            performer="YouTube Downloader",
+            parse_mode=enums.ParseMode.MARKDOWN,
+            progress=progress_bar,
+            progress_args=(status_message, start_time, last_update_time)
+        )
+
+        os.remove(audio_path)
+        await status_message.delete()
+    except Exception as e:
+        await status_message.edit(f"❌ An error occurred during upload: {str(e)}")
+        if os.path.exists(audio_path):
+            os.remove(audio_path)
+
 def setup_downloader_handler(app: Client):
     @app.on_message(filters.command(["video", "yt"]))
     async def video_command(client, message):
@@ -240,3 +368,32 @@ def setup_downloader_handler(app: Client):
                 await message.reply_text("**Invalid YouTube URL ❌**", parse_mode=enums.ParseMode.MARKDOWN)
             else:
                 await handle_download_request(client, message, url)
+
+    @app.on_message(filters.command("song"))
+    async def song_command(client, message):
+        await handle_audio_request(client, message)
+
+async def search_youtube(query: str) -> Optional[str]:
+    """
+    Search YouTube for the first audio result matching the query.
+    """
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'default_search': 'ytsearch1:',
+        'nooverwrites': True,
+        'cookiefile': YT_COOKIES_PATH,
+        'no_warnings': True,
+        'quiet': True,
+        'no_color': True,
+        'simulate': True,
+    }
+    
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(query, download=False)
+            if 'entries' in info and info['entries']:
+                return info['entries'][0]['webpage_url']
+    except Exception as e:
+        print(f"YouTube search error: {e}")
+    
+    return None
