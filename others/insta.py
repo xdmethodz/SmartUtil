@@ -85,6 +85,10 @@ async def handle_instagram_request(client, message, url):
         if os.path.exists(video_path):
             os.remove(video_path)
         if os.path.exists(output_directory):
+            for file in os.listdir(output_directory):
+                file_path = os.path.join(output_directory, file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
             os.rmdir(output_directory)
 
     except Exception as e:
