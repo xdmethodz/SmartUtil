@@ -4,36 +4,41 @@ import instaloader
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 from typing import Optional
+import re
+import traceback
 
 # Initialize Instaloader
 L = instaloader.Instaloader()
 
 async def sanitize_filename(title: str) -> str:
     """Sanitize file name by removing invalid characters."""
-    import re
     title = re.sub(r'[<>:"/\\|?*]', '', title)
     title = title.replace(' ', '_')
     return f"{title[:50]}_{int(time.time())}"
 
 async def validate_instagram_url(url: str) -> bool:
     """Validate if the provided URL is a valid Instagram link for reels or posts."""
-    import re
     pattern = r"https://www\.instagram\.com/(reel|p)/[a-zA-Z0-9_-]+/?"
     return re.match(pattern, url) is not None
 
 async def download_instagram_video(url: str, output_directory: str) -> Optional[str]:
     """Download Instagram video using Instaloader."""
     try:
-        post = instaloader.Post.from_shortcode(L.context, url.split('/')[-2])
+        # Extract shortcode safely
+        shortcode = url.rstrip('/').split('/')[-1]
+        post = instaloader.Post.from_shortcode(L.context, shortcode)
+
+        # Download post
         L.download_post(post, target=output_directory)
-        video_path = None
+
+        # Find downloaded .mp4 file
         for file in os.listdir(output_directory):
             if file.endswith('.mp4'):
-                video_path = os.path.join(output_directory, file)
-                break
-        return video_path
+                return os.path.join(output_directory, file)
+        return None
     except Exception as e:
         print(f"Error downloading Instagram video: {e}")
+        traceback.print_exc()
         return None
 
 async def handle_instagram_request(client, message, url):
@@ -86,13 +91,12 @@ async def handle_instagram_request(client, message, url):
             os.remove(video_path)
         if os.path.exists(output_directory):
             for file in os.listdir(output_directory):
-                file_path = os.path.join(output_directory, file)
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
+                os.remove(os.path.join(output_directory, file))
             os.rmdir(output_directory)
 
     except Exception as e:
         await status_message.edit(f"❌ An error occurred: {str(e)}")
+        traceback.print_exc()
 
 async def progress_bar(current, total, status_message, start_time, last_update_time):
     """Display a progress bar for uploads."""
@@ -106,7 +110,7 @@ async def progress_bar(current, total, status_message, start_time, last_update_t
     # Throttle updates: Only update if at least 2 seconds have passed since the last update
     if time.time() - last_update_time[0] < 2:
         return
-    last_update_time[0] = time.time()  # Update the last update time
+    last_update_time[0] = time.time()
 
     text = (
         f"📥 Upload Progress 📥\n\n"
@@ -127,3 +131,9 @@ def setup_instagram_handler(app: Client):
         command_parts = message.text.split(maxsplit=1)
         url = command_parts[1] if len(command_parts) > 1 else None
         await handle_instagram_request(client, message, url)
+
+# Initialize and run the bot
+app = Client("instagram_bot")
+setup_instagram_handler(app)
+app.run()
+
