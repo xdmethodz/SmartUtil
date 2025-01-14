@@ -6,7 +6,7 @@ from PIL import Image
 from pyrogram import Client, filters
 from pyrogram.types import Message
 import google.generativeai as genai
-
+from pyrogram.handlers import MessageHandler
 # API key and model configuration
 API_KEY = "AIzaSyAZRdV_C9xJj1xBwyiJgiNhkzhEVS-XoFk"
 MODEL_NAME = "models/text-bison-001"  # Replace with a valid model name
@@ -80,5 +80,5 @@ async def generate_from_image(client: Client, message: Message):
 
 def setup_gemini_handler(app: Client):
     """Sets up handlers for the AI commands."""
-    app.add_handler(filters.command("gem"), gemi_handler)
-    app.add_handler(filters.command("imgai"), generate_from_image)
+    app.add_handler(MessageHandler(gemi_handler, filters.command("gem")))
+    app.add_handler(MessageHandler(generate_from_image, filters.command("imgai")))
