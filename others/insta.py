@@ -21,15 +21,15 @@ async def validate_instagram_url(url: str) -> bool:
     pattern = r"https://www\.instagram\.com/(reel|p)/[a-zA-Z0-9_-]+/?"
     return re.match(pattern, url) is not None
 
-async def download_instagram_video(url: str, output_filename: str) -> Optional[str]:
+async def download_instagram_video(url: str, output_directory: str) -> Optional[str]:
     """Download Instagram video using Instaloader."""
     try:
         post = instaloader.Post.from_shortcode(L.context, url.split('/')[-2])
-        L.download_post(post, target=output_filename)
+        L.download_post(post, target=output_directory)
         video_path = None
-        for file in os.listdir(output_filename):
+        for file in os.listdir(output_directory):
             if file.endswith('.mp4'):
-                video_path = os.path.join(output_filename, file)
+                video_path = os.path.join(output_directory, file)
                 break
         return video_path
     except Exception as e:
@@ -48,7 +48,6 @@ async def handle_instagram_request(client, message, url):
     status_message = await message.reply_text("`Processing Your Request...`", parse_mode=enums.ParseMode.MARKDOWN)
 
     try:
-        # Generate a safe title for the output directory
         safe_title = await sanitize_filename("instagram_video")
         output_directory = f"temp_media/{safe_title}"
         os.makedirs(output_directory, exist_ok=True)
@@ -61,7 +60,7 @@ async def handle_instagram_request(client, message, url):
 
         await status_message.delete()
 
-        downloading_message = await message.reply_text("`Found ☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
+        downloading_message = await message.reply_text("`Found☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
 
         video_caption = (
             f"🎵 **Downloaded By:** [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
