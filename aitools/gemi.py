@@ -1,103 +1,75 @@
 import os
-import requests
-import json
-from pyrogram import Client, filters, enums
+import io
+import base64
+import logging
+import PIL.Image
 from pyrogram.types import Message
-from google.cloud import vision
-from io import BytesIO
-from PIL import Image
+import google.generativeai as genai
+from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 
-# Define the API URL and your API Key for Gemini
-API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-API_KEY = "AIzaSyAZRdV_C9xJj1xBwyiJgiNhkzhEVS-XoFk"  # Replace with your actual API key
+# Hardcoded API key and model name
+API_KEY = "AIzaSyAZRdV_C9xJj1xBwyiJgiNhkzhEVS-XoFk"
+MODEL_NAME = "gemini-1.5-flash:generateContent"
 
-# Initialize Google Cloud Vision client
-vision_client = vision.ImageAnnotatorClient()
+genai.configure(api_key=API_KEY)
 
-async def fetch_gemini_response(prompt: str) -> str:
-    """Fetch response from Gemini API."""
-    data = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt}
-                ]
-            }
-        ]
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    response = requests.post(f"{API_URL}?key={API_KEY}", headers=headers, json=data)
-    
-    if response.status_code == 200:
-        result = response.json()
-        try:
-            return result['candidates'][0]['content']['parts'][0]['text']
-        except (IndexError, KeyError) as e:
-            return f"Error parsing response: {e}\nResponse content: {json.dumps(result, indent=4)}"
-    else:
-        return f"Error: {response.status_code}\n{response.text}"
+model = genai.GenerativeModel(MODEL_NAME)
 
-async def analyze_image(image_content: bytes) -> str:
-    """Analyze image using Google Vision API and return description."""
-    image = vision.Image(content=image_content)
-    response = vision_client.label_detection(image=image)
-    
-    if response.error.message:
-        raise Exception(f"{response.error.message}")
-    
-    labels = [label.description for label in response.label_annotations]
-    return ", ".join(labels)
-
-async def handle_gemini_request(client, message, prompt):
-    if not prompt:
-        await message.reply_text("**Please provide a prompt for Gemini response ❌**", parse_mode=enums.ParseMode.MARKDOWN)
-        return
-    
-    status_message = await message.reply_text("**Generating Gemini response ⚡️**", parse_mode=enums.ParseMode.MARKDOWN)
-    
+async def gemi_handler(client: Client, message: Message):
+    loading_message = None
     try:
-        response_text = await fetch_gemini_response(prompt)
-        await status_message.delete()
-        await message.reply_text(response_text, parse_mode=enums.ParseMode.MARKDOWN)
-    except Exception as e:
-        await status_message.edit(f"❌ An error occurred: {str(e)}", parse_mode=enums.ParseMode.MARKDOWN)
+        loading_message = await message.reply_text("**Generating response, please wait...**")
 
-async def handle_gemini_image_request(client, message, prompt):
+        if len(message.text.strip()) <= 5:
+            await message.reply_text("**Provide a prompt after the command.**")
+            return
+
+        prompt = message.text.split(maxsplit=1)[1]
+        response = model.generate_content(prompt)
+
+        response_text = response.text
+        if len(response_text) > 4000:
+            parts = [response_text[i:i + 4000] for i in range(0, len(response_text), 4000)]
+            for part in parts:
+                await message.reply_text(part)
+        else:
+            await message.reply_text(response_text)
+
+    except Exception as e:
+        await message.reply_text(f"**An error occurred: {str(e)}**")
+    finally:
+        if loading_message:
+            await loading_message.delete()
+
+async def generate_from_image(client: Client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.photo:
-        await message.reply_text("**Please reply to a photo for response ❌**", parse_mode=enums.ParseMode.MARKDOWN)
+        await message.reply_text("**Please reply to a photo for a response.**")
         return
-    
-    status_message = await message.reply_text("**Processing the image and generating response ⚡️**", parse_mode=enums.ParseMode.MARKDOWN)
-    
+
+    prompt = message.command[1] if len(message.command) > 1 else message.reply_to_message.caption or "Describe this image."
+
+    processing_message = await message.reply_text("**Processing the image and generating response ⚡️**")
+
     try:
-        # Download the image
-        photo = message.reply_to_message.photo
-        file = await client.download_media(photo.file_id, in_memory=True)
-        image_content = file.read()
-        
-        # Analyze the image
-        image_description = await analyze_image(image_content)
-        
-        # Generate a response using Gemini API
-        full_prompt = f"{prompt} Image description: {image_description}"
-        response_text = await fetch_gemini_response(full_prompt)
-        
-        await status_message.delete()
-        await message.reply_text(response_text, parse_mode=enums.ParseMode.MARKDOWN)
+        img_data = await client.download_media(message.reply_to_message, in_memory=True)
+        img = PIL.Image.open(io.BytesIO(img_data.getbuffer()))
+
+        # Ensure the image is in a format supported by the model (e.g., base64 encoded string)
+        img_buffer = io.BytesIO()
+        img.save(img_buffer, format='PNG')
+        img_str = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+
+        response = model.generate_content([prompt, img_str])
+        response_text = response.text
+
+        await message.reply_text(response_text, parse_mode=None)
     except Exception as e:
-        await status_message.edit(f"❌ An error occurred: {str(e)}", parse_mode=enums.ParseMode.MARKDOWN)
+        logging.error(f"Error during image analysis: {e}")
+        await message.reply_text("**An error occurred. Please try again.**")
+    finally:
+        await processing_message.delete()
 
 def setup_gemini_handler(app: Client):
-    @app.on_message(filters.command("gemi"))
-    async def gemini_command(client, message):
-        command_parts = message.text.split(maxsplit=1)
-        prompt = command_parts[1] if len(command_parts) > 1 else None
-        await handle_gemini_request(client, message, prompt)
-
-    @app.on_message(filters.command("imgai"))
-    async def gemini_image_command(client, message):
-        command_parts = message.text.split(maxsplit=1)
-        prompt = command_parts[1] if len(command_parts) > 1 else ""
-        await handle_gemini_image_request(client, message, prompt)
+    app.add_handler(filters.command("gem")(gemi_handler))
+    app.add_handler(filters.command("imgai")(generate_from_image))
