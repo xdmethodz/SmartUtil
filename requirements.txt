@@ -12,3 +12,4 @@ pillow
 yt-dlp
 ffmpeg
 spotipy
+instaloader
