@@ -107,7 +107,7 @@ async def stats_handler(client: Client, message: Message):
     yearly_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(days=365))
     total_users = len(USER_ACTIVITY)
 
-    stats_message = f"""➠ 📊 ｢Bot Live Statistics 」 📊
+    stats_message = f"""➠ 📊 ｢Smart Tool ⚙️ Bot Live Statistics 」 📊
 ━━━━━━━━━━━━━━━━
 ☑️1 Day: {daily_users} users were active☑️
 ☑️1 Week: {weekly_users} users were active☑️
