@@ -80,5 +80,5 @@ async def generate_from_image(client: Client, message: Message):
 
 def setup_gemini_handler(app: Client):
     """Sets up handlers for the AI commands."""
-    app.add_handler(filters.command("gem")(gemi_handler))
-    app.add_handler(filters.command("imgai")(generate_from_image))
+    app.add_handler(filters.command("gem"), gemi_handler)
+    app.add_handler(filters.command("imgai"), generate_from_image)
