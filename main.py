@@ -51,6 +51,7 @@ setup_admin_handlers(app)
 setup_downloader_handler(app)
 setup_pinterest_handler(app)
 setup_dl_handlers(app)
+setup_spotify_handler(app)
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
