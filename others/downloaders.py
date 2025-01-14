@@ -182,6 +182,7 @@ async def download_audio(url: str) -> tuple:
             return None, "Could not fetch video information"
 
         title = info.get('title', 'Unknown Title')
+        views = info.get('view_count', 0)
         duration = info.get('duration', 0)
         duration_str = await format_duration(duration)
 
@@ -210,6 +211,7 @@ async def download_audio(url: str) -> tuple:
         return {
             'file_path': output_path,
             'title': title,
+            'views': views,
             'duration': duration_str,
             'file_size': await format_size(file_size)
         }, None
@@ -325,13 +327,18 @@ async def handle_audio_request(client, message):
 
     audio_path = result['file_path']
     title = result['title']
+    views = result['views']
     duration = result['duration']
     file_size = result['file_size']
 
     audio_caption = (
         f"🎵 **Title:** `{title}`\n"
+        f"━━━━━━━━━━━━━━━━━━━━━\n"
+        f"👁️‍🗨️ **Views:** `{views}` views\n"
+        f"🔗 [Listen On YouTube]({video_url})\n"
         f"⏱️ **Duration:** `{duration}`\n"
-        f"📦 **Size:** `{file_size}`"
+        f"━━━━━━━━━━━━━━━━━━━━━\n"
+        f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     )
 
     try:
