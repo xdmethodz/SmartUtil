@@ -131,9 +131,3 @@ def setup_instagram_handler(app: Client):
         command_parts = message.text.split(maxsplit=1)
         url = command_parts[1] if len(command_parts) > 1 else None
         await handle_instagram_request(client, message, url)
-
-# Initialize and run the bot
-app = Client("instagram_bot")
-setup_instagram_handler(app)
-app.run()
-
