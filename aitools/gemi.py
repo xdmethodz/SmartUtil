@@ -25,7 +25,10 @@ async def fetch_gemini_response(prompt: str) -> str:
     
     if response.status_code == 200:
         result = response.json()
-        return result['contents'][0]['parts'][0]['text']
+        try:
+            return result['contents'][0]['parts'][0]['text']
+        except (IndexError, KeyError):
+            return "Error: Unexpected response format."
     else:
         return f"Error: {response.status_code}\n{response.text}"
 
