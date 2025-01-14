@@ -25,7 +25,7 @@ from others.spotify import setup_spotify_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
-BOT_TOKEN = "8014443928:AAEJsqHjY--nOrufJnPEVo_0z4J0Ot5A2EA"  # Replace with your Bot Token
+BOT_TOKEN = "7941865929:AAFh8u_6r7FCEAG564vZ3bvvdphZ-QRFBPg"  # Replace with your Bot Token
 
 # Initialize the app client
 app = Client(
@@ -87,7 +87,7 @@ async def send_start_message(client, message):
     chat_id = message.chat.id
 
     # Animation messages
-    animation_message = await message.reply_text("<b>Starting Smart Nexus...</b>", parse_mode=ParseMode.HTML)
+    animation_message = await message.reply_text("<b>Starting Smart Tool ⚙️...</b>", parse_mode=ParseMode.HTML)
     await asyncio.sleep(0.4)  # Use asyncio.sleep instead of sleep
     await animation_message.edit_text("<b>Generating Session Keys Please Wait...</b>", parse_mode=ParseMode.HTML)
     await asyncio.sleep(0.4)  # Use asyncio.sleep instead of sleep
@@ -97,7 +97,7 @@ async def send_start_message(client, message):
     start_message = (
         f"<b>Hi — {message.from_user.first_name}! Welcome to this bot</b>\n"
         "<b>________________________________</b>\n"
-        "<b><a href='https://t.me/Smart_Nexus_Bot'>Smart Nexus</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
+        "<b><a href='https://t.me/Smart_Nexus_Bot'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
         "<b>________________________________</b>\n"
         "<b>Don't forget to <a href='https://t.me/abir_x_official'>join</a> for updates!</b>"
     )
@@ -116,18 +116,18 @@ async def handle_callback_query(client, callback_query):
     call = callback_query
     responses = {
         "ai_tools": (
-            "Smart Nexus Ai-Tool Usage Cmds\n"
+            "Smart Tool ⚙️ Ai-Tool Usage Cmds\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /gpt - Ask a question to ChatGPT 3.5\n"
             "➢ /gpt4 - Ask a question to ChatGPT 4\n"
             "➢ /gem - Ask a question to Gemini Ai\n"
             "➢ /imgai - Image analysis that can read image\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "credit_cards": (
-            "Smart Nexus Credit Cards Related Commands\n"
+            "Smart Tool ⚙️ Credit Cards Related Commands\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /gen - CC Generator\n"
             "➢ /bin - Check BIN\n"
@@ -142,11 +142,11 @@ async def handle_callback_query(client, callback_query):
             "➢ /adbin - Filter Specific BIN CARDS From Combo\n"
             "➢ /rmbin - Remove Specific BIN Cards From Combo\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "decoders": (
-            "Smart Nexus All Encode & Decode Commands\n"
+            "Smart Tool ⚙️ All Encode & Decode Commands\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /b64en [text] - Base64 encode\n"
             "➢ /b64de [text] - Base64 decode\n"
@@ -163,11 +163,11 @@ async def handle_callback_query(client, callback_query):
             "➢ /tsm [text] - Transform to small letters\n"
             "➢ /wc [text] - Count words\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "downloaders": (
-            "Smart Nexus Downloader Commands\n"
+            "Smart Tool ⚙️ Downloader Commands\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /fb - Download Facebook Video\n"
             "➢ /pin - Download Pinterest Video\n"
@@ -176,73 +176,73 @@ async def handle_callback_query(client, callback_query):
             "➢ /video - Download Youtube Video\n"
             "➢ /song - Download Youtube Video as Mp3 Format\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "education_utils": (
-            "Smart Nexus Educational Cmds\n"
+            "Smart Tool ⚙️ Educational Cmds\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /spell [Words] - For Fixing Word Spelling\n"
             "➢ /gra [Sentence]  - For Fixing Grammatical Issues\n"
             "➢ /syn [Word]  - For check synonyms and antonyms\n"
             "➢ /prn [Word]  - For check pronunciation\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "mail_tools": (
-            "Smart Nexus Mail - Tools\n"
+            "Smart Tool ⚙️ Mail - Tools\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /fmail - Filter/Extract Mails\n"
             "➢ /fpass - Filter/Extract Mail - Pass\n"
             "➢ /scrmail - Mail-Pass Scrape target GC\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "temp_mail": (
-            "Smart Nexus TempMail Commands\n"
+            "Smart Tool ⚙️ TempMail Commands\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /tmail - Command for Generate Random Mail with Pass\n"
             "➢ /tmail [username]:[pass] - For Generate a Specific Mail with a Password\n"
             "➢ /cmail [mail token] - For Check Recent 10 Mails\n\n"
             "✨ Note : When you generate a mail pass, then you will receive a mail token. With the token, you can check 10 recent mails each mail has a different token. So keep it privately.\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "string_session": (
-            "Smart Nexus String_Session\n"
+            "Smart Tool ⚙️ String_Session\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /pyro - PyroGram Telegram String Session\n"
             "➢ /tele - TeleThon Telegram String Session\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "stripe_keys": (
-            "Smart Nexus Stripe Key Related Commands\n"
+            "Smart Tool ⚙️ Stripe Key Related Commands\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /sk - Get Information about SK\n"
             "➢ /skinfo - SK Checker Live/Dead\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "crypto": (
-            "Smart Nexus Crypto Related Commands\n"
+            "Smart Tool ⚙️ Crypto Related Commands\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /price -[token name] Real-Time Token Prices\n"
             "➢ /p2p to get Latest P2P Trades Currency BDT\n"
             "➢ /gainers - Cryptos with highest price increases for potential profits\n"
             "➢ /losers - Cryptos with largest price drops for potential buy opportunities\n"
-            "✨ Note : Smart Nexus uses the Binance API to fetch the latest price, p2p, gainers & losers data for cryptocurrency\n"
+            "✨ Note : Smart Tool ⚙️ uses the Binance API to fetch the latest price, p2p, gainers & losers data for cryptocurrency\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "others": (
-            "Smart Nexus Other Commands\n"
+            "Smart Tool ⚙️ Other Commands\n"
             "━━━━━━━━━━━━━━━━\n"
             "➢ /ip - Get IP Information\n"
             "➢ /px - HTTP/HTTPS Proxy Checker\n"
@@ -262,7 +262,7 @@ async def handle_callback_query(client, callback_query):
             "➢ /q - Generate a Sticker\n"
             "➢ /kang - Kang Any Image, Sticker, or Animated Sticker\n"
             "━━━━━━━━━━━━━━━━\n"
-            "For Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
+            "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
     }
@@ -279,7 +279,7 @@ async def handle_callback_query(client, callback_query):
         )
     elif call.data == "main_menu":
         await call.message.edit_text(
-            "Here are the Smart Nexus 🤖 Options:",
+            "Here are the Smart Tool ⚙️ Options:",
             reply_markup=main_menu_keyboard
         )
     elif call.data == "close":
