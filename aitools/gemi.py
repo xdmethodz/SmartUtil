@@ -24,9 +24,9 @@ async def fetch_gemini_response(prompt: str) -> str:
     response = requests.post(f"{API_URL}?key={API_KEY}", headers=headers, json=data)
     
     if response.status_code == 200:
+        result = response.json()
         try:
-            result = response.json()
-            return result['contents'][0]['parts'][0]['text']
+            return result['candidates'][0]['content']['parts'][0]['text']
         except (IndexError, KeyError) as e:
             return f"Error parsing response: {e}\nResponse content: {json.dumps(result, indent=4)}"
     else:
