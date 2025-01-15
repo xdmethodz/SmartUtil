@@ -5,8 +5,10 @@ import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
+
 def get_bin_info(bin):
-    response = requests.get(f"https://data.handyapi.com/bin/{bin}")
+    headers = {'Referer': 'your-domain'}
+    response = requests.get(f"https://data.handyapi.com/bin/{bin}", headers=headers)
     if response.status_code == 200:
         return response.json()
     return None
@@ -19,7 +21,7 @@ def generate_credit_card(bin, month, year, amount):
         cards.append(f"{card}|{month}|{year}|{cvv}")
     return cards
 
-def setup_gen_handlers(app: Client):
+def setup_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]))
     async def generate_handler(client: Client, message: Message):
         user_input = message.text.split(maxsplit=1)
@@ -30,17 +32,15 @@ def setup_gen_handlers(app: Client):
         user_input = user_input[1]
 
         # Validate the input format
-        match = re.match(r"(\d{6,})\|(\d{2})\|(\d{4})\s*(\d+)?", user_input)
+        match = re.match(r"(\d{6,})\|(\d{2})\|(\d{2,4})\s*(\d+)?", user_input)
         if not match:
             await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
             return
 
         bin, month, year, amount = match.groups()
+        bin = bin[:6]  # Take only the first 6 digits of the BIN
+        year = year if len(year) == 4 else f"20{year}"  # Convert 2-digit year to 4-digit year
         amount = int(amount) if amount else 10
-
-        if len(bin) < 6:
-            await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
-            return
 
         # Fetch BIN info
         bin_info = get_bin_info(bin)
@@ -64,7 +64,10 @@ def setup_gen_handlers(app: Client):
         if amount <= 10:
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
-            await message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN)
+            reply_markup = InlineKeyboardMarkup(
+                [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}")]]
+            )
+            await message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         else:
             # Save cards to a file if amount is greater than 10
             file_name = f"{bin} x {amount}.txt"
@@ -78,5 +81,22 @@ def setup_gen_handlers(app: Client):
 
             await message.reply_document(document=file_name, caption=caption, parse_mode=ParseMode.MARKDOWN)
             os.remove(file_name)
+
+    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6})\|(\d{2})\|(\d{4})\|(\d+)"))
+    async def regenerate_callback(client: Client, callback_query):
+        _, bin, month, year, amount = callback_query.data.split('|')
+        amount = int(amount)
+
+        # Generate new credit cards
+        cards = generate_credit_card(bin, month, year, amount)
+        card_text = "\n".join([f"`{card}`" for card in cards])
+
+        response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}"
+        reply_markup = InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}")]]
+        )
+
+        await callback_query.message.edit_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+        await callback_query.answer("Generated new cards successfully!")
 
     return app
