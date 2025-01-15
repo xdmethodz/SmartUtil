@@ -27,7 +27,7 @@ def parse_input(user_input):
     year = random.randint(2024, 2029)
     amount = 10
 
-    match = re.match(r"(\d{6,})(\d{0,10}[xX]{0,4})\|(\d{2})\|(\d{2,4})\s*(\d+)?", user_input)
+    match = re.match(r"(\d{6,})(\d{0,10}[xX]{0,4})\|?(\d{2})?\|?(\d{2,4})?\s*(\d+)?", user_input)
     if match:
         bin, suffix, month, year, amount = match.groups()
         bin = bin + ''.join([str(random.randint(0, 9)) if x in 'xX' else x for x in suffix])
@@ -47,7 +47,7 @@ def setup_handlers(app: Client):
         user_input = user_input[1]
         bin, month, year, amount = parse_input(user_input)
 
-        if len(bin) < 6:
+        if not bin or len(bin) < 6:
             await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
             return
 
