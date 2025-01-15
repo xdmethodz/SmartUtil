@@ -19,7 +19,7 @@ def generate_credit_card(bin, month, year, amount):
         cards.append(f"{card}|{month}|{year}|{cvv}")
     return cards
 
-def setup_handlers(app: Client):
+def setup_gen_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]))
     async def generate_handler(client: Client, message: Message):
         user_input = message.text.split(maxsplit=1)
