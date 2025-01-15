@@ -54,7 +54,7 @@ def setup_handlers(app: Client):
         # Fetch BIN info
         bin_info = get_bin_info(bin[:6])
         if not bin_info or bin_info.get("Status") != "SUCCESS":
-            await message.reply_text("**Invalid bin provided❌**")
+            await message.reply_text("**Invalid BIN provided❌**")
             return
 
         bank = bin_info.get("Issuer", "Unknown")
@@ -73,10 +73,7 @@ def setup_handlers(app: Client):
         if amount <= 10:
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
-            callback_data = f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country_name}|{card_scheme}|{card_type}"
-            if len(callback_data) > 64:
-                await message.reply_text("**Callback data too long. Please shorten your input.**")
-                return
+            callback_data = f"regenerate|{bin}|{month}|{year}|{amount}"
 
             reply_markup = InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Regenerate", callback_data=callback_data)]]
@@ -101,10 +98,21 @@ def setup_handlers(app: Client):
                 if os.path.exists(file_name):
                     os.remove(file_name)
 
-    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6,16})\|(\d{2})\|(\d{4})\|(\d+)\|(.+?)\|(.+?)\|(.+?)\|(.+?)"))
+    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6,16})\|(\d{2})\|(\d{4})\|(\d+)"))
     async def regenerate_callback(client: Client, callback_query):
-        _, bin, month, year, amount, bank, country_name, card_scheme, card_type = callback_query.data.split('|')
+        _, bin, month, year, amount = callback_query.data.split('|')
         amount = int(amount)
+
+        # Fetch BIN info again
+        bin_info = get_bin_info(bin[:6])
+        if not bin_info or bin_info.get("Status") != "SUCCESS":
+            await callback_query.answer("BIN info retrieval failed!", show_alert=True)
+            return
+
+        bank = bin_info.get("Issuer", "Unknown")
+        country_name = bin_info["Country"].get("Name", "Unknown")
+        card_type = bin_info.get("Type", "Unknown")
+        card_scheme = bin_info.get("Scheme", "Unknown")
 
         # Generate new credit cards
         cards = generate_credit_card(bin, month, year, amount)
@@ -112,11 +120,13 @@ def setup_handlers(app: Client):
 
         bin_info_text = f"**Bank:** `{bank}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
         response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
+
         reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country_name}|{card_scheme}|{card_type}")]]
+            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}")]]
         )
 
         await callback_query.message.edit_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         await callback_query.answer("Generated new cards successfully!")
 
     return app
+
