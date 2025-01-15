@@ -21,6 +21,17 @@ def generate_credit_card(bin, month, year, amount):
         cards.append(f"{card}|{month}|{year}|{cvv}")
     return cards
 
+def parse_input(user_input):
+    """
+    Parse user input for BIN, month, year, and amount.
+    """
+    parts = user_input.split()
+    bin = parts[0] if len(parts) > 0 else None
+    month = parts[1] if len(parts) > 1 else f"{random.randint(1, 12):02}"
+    year = parts[2] if len(parts) > 2 else str(random.randint(2024, 2029))
+    amount = int(parts[3]) if len(parts) > 3 and parts[3].isdigit() else 10
+    return bin, month, year, amount
+
 def setup_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]) & (filters.private | filters.group))
     async def generate_handler(client: Client, message: Message):
