@@ -3,8 +3,8 @@ import re
 import requests
 import random
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
-
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.enums import ParseMode
 def get_bin_info(bin):
     response = requests.get(f"https://data.handyapi.com/bin/{bin}")
     if response.status_code == 200:
