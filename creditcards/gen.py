@@ -37,7 +37,7 @@ def parse_input(user_input):
     return bin, month, year, amount
 
 def setup_handlers(app: Client):
-    @app.on_message(filters.command(["gen", ".gen"]))
+    @app.on_message(filters.command(["gen", ".gen"]) & (filters.private | filters.group))
     async def generate_handler(client: Client, message: Message):
         user_input = message.text.split(maxsplit=1)
         if len(user_input) == 1:
@@ -129,4 +129,3 @@ def setup_handlers(app: Client):
         await callback_query.answer("Generated new cards successfully!")
 
     return app
-
