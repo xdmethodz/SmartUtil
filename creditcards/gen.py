@@ -5,6 +5,7 @@ import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
+
 def get_bin_info(bin):
     headers = {'Referer': 'your-domain'}
     response = requests.get(f"https://data.handyapi.com/bin/{bin}", headers=headers)
@@ -63,8 +64,13 @@ def setup_handlers(app: Client):
         if amount <= 10:
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
+            callback_data = f"regenerate|{bin}|{month}|{year}|{amount}"
+            if len(callback_data) > 64:
+                await message.reply_text("**Callback data too long. Please shorten your input.**")
+                return
+
             reply_markup = InlineKeyboardMarkup(
-                [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country}|{card_scheme}|{card_type}")]]
+                [[InlineKeyboardButton("Regenerate", callback_data=callback_data)]]
             )
             await message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         else:
@@ -81,19 +87,24 @@ def setup_handlers(app: Client):
             await message.reply_document(document=file_name, caption=caption, parse_mode=ParseMode.MARKDOWN)
             os.remove(file_name)
 
-    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6})\|(\d{2})\|(\d{4})\|(\d+)\|(.+?)\|(.+?)\|(.+?)\|(.+?)"))
+    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6})\|(\d{2})\|(\d{4})\|(\d+)"))
     async def regenerate_callback(client: Client, callback_query):
-        _, bin, month, year, amount, bank, country, card_scheme, card_type = callback_query.data.split('|')
+        _, bin, month, year, amount = callback_query.data.split('|')
         amount = int(amount)
 
         # Generate new credit cards
         cards = generate_credit_card(bin, month, year, amount)
         card_text = "\n".join([f"`{card}`" for card in cards])
 
+        bank = bin_info.get("Issuer", "Unknown")
+        country = bin_info["Country"].get("Name", "Unknown")
+        card_type = bin_info.get("Type", "Unknown")
+        card_scheme = bin_info.get("Scheme", "Unknown")
         bin_info_text = f"**Bank:** {bank}\n**Country:** {country}\n**BIN Info:** {card_scheme.upper()} - {card_type.upper()}"
+
         response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
         reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country}|{card_scheme}|{card_type}")]]
+            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}")]]
         )
 
         await callback_query.message.edit_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
