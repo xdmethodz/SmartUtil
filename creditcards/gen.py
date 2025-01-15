@@ -5,32 +5,12 @@ import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
-
 def get_bin_info(bin):
     headers = {'Referer': 'your-domain'}
     response = requests.get(f"https://data.handyapi.com/bin/{bin}", headers=headers)
     if response.status_code == 200:
         return response.json()
     return None
-
-def generate_credit_card(bin, month, year, amount):
-    cards = []
-    for _ in range(amount):
-        card = bin + ''.join([str(random.randint(0, 9)) for _ in range(16 - len(bin))])
-        cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
-        cards.append(f"{card}|{month}|{year}|{cvv}")
-    return cards
-
-def parse_input(user_input):
-    """
-    Parse user input for BIN, month, year, and amount.
-    """
-    parts = user_input.split()
-    bin = parts[0] if len(parts) > 0 else None
-    month = parts[1] if len(parts) > 1 else f"{random.randint(1, 12):02}"
-    year = parts[2] if len(parts) > 2 else str(random.randint(2024, 2029))
-    amount = int(parts[3]) if len(parts) > 3 and parts[3].isdigit() else 10
-    return bin, month, year, amount
 
 def setup_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]) & (filters.private | filters.group))
@@ -140,57 +120,5 @@ def setup_handlers(app: Client):
         await progress_message.delete()
         await message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN)
 
-    @app.on_message(filters.command(["mgen", ".mgen"]) & (filters.private | filters.group))
-    async def mgen_handler(client: Client, message: Message):
-        user_input = message.text.split(maxsplit=1)
-        if len(user_input) == 1:
-            await message.reply_text("**Wrong args ❌\nUse /mgen [bin1] [bin2] .. [amount]**")
-            return
-
-        user_input = user_input[1]
-        parts = user_input.split()
-        if len(parts) < 2:
-            await message.reply_text("**Wrong args ❌\nUse /mgen [bin1] [bin2] .. [amount]**")
-            return
-
-        bins = parts[:-1]
-        try:
-            amount = int(parts[-1])
-        except ValueError:
-            await message.reply_text("**The last argument must be a valid amount. Use /mgen [bin1] [bin2] .. [amount]**")
-            return
-
-        total_cards = []
-        used_bins = []
-
-        for bin in bins:
-            if len(bin) < 6:
-                await message.reply_text(f"**Invalid BIN provided: {bin}❌**")
-                return
-
-            bin = bin[:6]  # Use the first 6 digits
-            cards = generate_credit_card(bin, f"{random.randint(1, 12):02}", random.randint(2024, 2029), amount)
-            total_cards.extend(cards)
-            used_bins.append(f"`{bin}`")
-
-        # Save cards to a file
-        file_name = "Smart Tool ⚙️ Multigen.txt"
-        try:
-            with open(file_name, "w") as file:
-                file.write("\n".join(total_cards))
-
-            caption = (
-                f"🔥 Generated {len(total_cards)} credit card numbers from all BIN 🔥\n"
-                f"━━━━━━━━━━━━━━━━━━\n"
-                f"🏦 BINS: {' • '.join(used_bins)}\n"
-                f"━━━━━━━━━━━━━━━━━━"
-            )
-
-            await message.reply_document(document=file_name, caption=caption, parse_mode=ParseMode.MARKDOWN)
-        except Exception as e:
-            await message.reply_text(f"**Failed to save or send document: {str(e)}**")
-        finally:
-            if os.path.exists(file_name):
-                os.remove(file_name)
-
     return app
+
