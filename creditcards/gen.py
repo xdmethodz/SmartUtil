@@ -2,7 +2,6 @@ import os
 import re
 import requests
 import random
-import emoji
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
@@ -21,9 +20,6 @@ def generate_credit_card(bin, month, year, amount):
         cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
         cards.append(f"{card}|{month}|{year}|{cvv}")
     return cards
-
-def get_country_flag(country_code):
-    return ''.join(emoji.emojize(f":regional_indicator_{char}:") for char in country_code.lower())
 
 def setup_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]))
@@ -53,12 +49,10 @@ def setup_handlers(app: Client):
             return
 
         bank = bin_info.get("Issuer", "Unknown")
-        country = bin_info["Country"].get("Name", "Unknown")
-        country_code = bin_info["Country"].get("A2", "Unknown")
+        country_name = bin_info["Country"].get("Name", "Unknown")
         card_type = bin_info.get("Type", "Unknown")
         card_scheme = bin_info.get("Scheme", "Unknown")
-        country_flag = get_country_flag(country_code)
-        bin_info_text = f"**Bank:** {bank}\n**Country:** {country} {country_flag}\n**BIN Info:** {card_scheme.upper()} - {card_type.upper()}"
+        bin_info_text = f"**Bank:** `{bank}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
 
         # Notify user that the bot is generating cards
         progress_message = await message.reply_text("**Generating Credit Cards...☑️**")
@@ -70,7 +64,7 @@ def setup_handlers(app: Client):
         if amount <= 10:
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
-            callback_data = f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country}|{country_code}|{card_scheme}|{card_type}"
+            callback_data = f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country_name}|{card_scheme}|{card_type}"
             if len(callback_data) > 64:
                 await message.reply_text("**Callback data too long. Please shorten your input.**")
                 return
@@ -93,20 +87,19 @@ def setup_handlers(app: Client):
             await message.reply_document(document=file_name, caption=caption, parse_mode=ParseMode.MARKDOWN)
             os.remove(file_name)
 
-    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6})\|(\d{2})\|(\d{4})\|(\d+)\|(.+?)\|(.+?)\|(.+?)\|(.+?)\|(.+?)"))
+    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6})\|(\d{2})\|(\d{4})\|(\d+)\|(.+?)\|(.+?)\|(.+?)\|(.+?)"))
     async def regenerate_callback(client: Client, callback_query):
-        _, bin, month, year, amount, bank, country, country_code, card_scheme, card_type = callback_query.data.split('|')
+        _, bin, month, year, amount, bank, country_name, card_scheme, card_type = callback_query.data.split('|')
         amount = int(amount)
 
         # Generate new credit cards
         cards = generate_credit_card(bin, month, year, amount)
         card_text = "\n".join([f"`{card}`" for card in cards])
 
-        country_flag = get_country_flag(country_code)
-        bin_info_text = f"**Bank:** {bank}\n**Country:** {country} {country_flag}\n**BIN Info:** {card_scheme.upper()} - {card_type.upper()}"
+        bin_info_text = f"**Bank:** `{bank}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
         response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
         reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country}|{country_code}|{card_scheme}|{card_type}")]]
+            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country_name}|{card_scheme}|{card_type}")]]
         )
 
         await callback_query.message.edit_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
