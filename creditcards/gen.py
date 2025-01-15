@@ -5,7 +5,6 @@ import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
-
 def get_bin_info(bin):
     headers = {'Referer': 'your-domain'}
     response = requests.get(f"https://data.handyapi.com/bin/{bin}", headers=headers)
@@ -44,15 +43,15 @@ def setup_handlers(app: Client):
 
         # Fetch BIN info
         bin_info = get_bin_info(bin)
-        if not bin_info:
+        if not bin_info or bin_info.get("Status") != "SUCCESS":
             await message.reply_text("**Invalid bin provided❌**")
             return
 
-        bank = bin_info.get("bank", "Unknown")
-        country = bin_info.get("country", "Unknown")
-        card_type = bin_info.get("type", "Unknown")
-        card_brand = bin_info.get("brand", "Unknown")
-        bin_info_text = f"**Bank:** {bank}\n**Country:** {country}\n**BIN Info:** {card_type.upper()} - {card_brand.upper()}"
+        bank = bin_info.get("Issuer", "Unknown")
+        country = bin_info["Country"].get("Name", "Unknown")
+        card_type = bin_info.get("Type", "Unknown")
+        card_scheme = bin_info.get("Scheme", "Unknown")
+        bin_info_text = f"**Bank:** {bank}\n**Country:** {country}\n**BIN Info:** {card_scheme.upper()} - {card_type.upper()}"
 
         # Notify user that the bot is generating cards
         progress_message = await message.reply_text("**Generating Credit Cards...☑️**")
@@ -65,7 +64,7 @@ def setup_handlers(app: Client):
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
             reply_markup = InlineKeyboardMarkup(
-                [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}")]]
+                [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country}|{card_scheme}|{card_type}")]]
             )
             await message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         else:
@@ -77,23 +76,24 @@ def setup_handlers(app: Client):
             await progress_message.delete()
             user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
             user_link = f"[{user_full_name}](tg://user?id={message.from_user.id})"
-            caption = f"{amount} {card_type.upper()} {card_brand.upper()} credit card numbers for BIN {bin}\n━━━━━━━━━━━━━━━━━━\n{bin_info_text}\n━━━━━━━━━━━━━━━━━━\nGenerate By: {user_link}"
+            caption = f"{amount} {card_scheme.upper()} {card_type.upper()} credit card numbers for BIN {bin}\n━━━━━━━━━━━━━━━━━━\n{bin_info_text}\n━━━━━━━━━━━━━━━━━━\nGenerate By: {user_link}"
 
             await message.reply_document(document=file_name, caption=caption, parse_mode=ParseMode.MARKDOWN)
             os.remove(file_name)
 
-    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6})\|(\d{2})\|(\d{4})\|(\d+)"))
+    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6})\|(\d{2})\|(\d{4})\|(\d+)\|(.+?)\|(.+?)\|(.+?)\|(.+?)"))
     async def regenerate_callback(client: Client, callback_query):
-        _, bin, month, year, amount = callback_query.data.split('|')
+        _, bin, month, year, amount, bank, country, card_scheme, card_type = callback_query.data.split('|')
         amount = int(amount)
 
         # Generate new credit cards
         cards = generate_credit_card(bin, month, year, amount)
         card_text = "\n".join([f"`{card}`" for card in cards])
 
-        response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}"
+        bin_info_text = f"**Bank:** {bank}\n**Country:** {country}\n**BIN Info:** {card_scheme.upper()} - {card_type.upper()}"
+        response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
         reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}")]]
+            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}|{bank}|{country}|{card_scheme}|{card_type}")]]
         )
 
         await callback_query.message.edit_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
