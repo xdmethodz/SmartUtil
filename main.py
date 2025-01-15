@@ -22,6 +22,7 @@ from others.pin import setup_pinterest_handler
 from others.dl import setup_dl_handlers
 from others.spotify import setup_spotify_handler
 from others.kang import setup_handlers
+from creditcards.gen import setup_handlers
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
