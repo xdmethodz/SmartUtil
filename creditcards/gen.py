@@ -5,7 +5,6 @@ import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
-
 def get_bin_info(bin):
     headers = {'Referer': 'your-domain'}
     response = requests.get(f"https://data.handyapi.com/bin/{bin}", headers=headers)
@@ -16,10 +15,28 @@ def get_bin_info(bin):
 def generate_credit_card(bin, month, year, amount):
     cards = []
     for _ in range(amount):
-        card = bin + ''.join([str(random.randint(0, 9)) for _ in range(12-len(bin))])
+        card = bin + ''.join([str(random.randint(0, 9)) for _ in range(16-len(bin))])
         cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
         cards.append(f"{card}|{month}|{year}|{cvv}")
     return cards
+
+def parse_input(user_input):
+    # Default values
+    bin = None
+    month = f"{random.randint(1, 12):02}"
+    year = random.randint(2024, 2029)
+    amount = 10
+
+    # Check for BIN, month, year, and amount in the input
+    match = re.match(r"(\d{6,})(\d{0,10}[xX]{0,4})\|?(\d{2})?\|?(\d{2,4})?\s*(\d+)?", user_input)
+    if match:
+        bin, suffix, month, year, amount = match.groups()
+        bin = bin + ''.join([str(random.randint(0, 9)) if x in 'xX' else x for x in suffix])
+        month = month if month else f"{random.randint(1, 12):02}"
+        year = f"20{year}" if year and len(year) == 2 else (year if year else random.randint(2024, 2029))
+        amount = int(amount) if amount else 10
+        
+    return bin, month, year, amount
 
 def setup_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]))
@@ -30,20 +47,14 @@ def setup_handlers(app: Client):
             return
         
         user_input = user_input[1]
+        bin, month, year, amount = parse_input(user_input)
 
-        # Validate the input format
-        match = re.match(r"(\d{6,})\|(\d{2})\|(\d{2,4})\s*(\d+)?", user_input)
-        if not match:
+        if len(bin) < 6:
             await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
             return
 
-        bin, month, year, amount = match.groups()
-        bin = bin[:6]  # Take only the first 6 digits of the BIN
-        year = year if len(year) == 4 else f"20{year}"  # Convert 2-digit year to 4-digit year
-        amount = int(amount) if amount else 10
-
         # Fetch BIN info
-        bin_info = get_bin_info(bin)
+        bin_info = get_bin_info(bin[:6])
         if not bin_info or bin_info.get("Status") != "SUCCESS":
             await message.reply_text("**Invalid bin provided❌**")
             return
@@ -87,7 +98,7 @@ def setup_handlers(app: Client):
             await message.reply_document(document=file_name, caption=caption, parse_mode=ParseMode.MARKDOWN)
             os.remove(file_name)
 
-    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6})\|(\d{2})\|(\d{4})\|(\d+)\|(.+?)\|(.+?)\|(.+?)\|(.+?)"))
+    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6,16})\|(\d{2})\|(\d{4})\|(\d+)\|(.+?)\|(.+?)\|(.+?)\|(.+?)"))
     async def regenerate_callback(client: Client, callback_query):
         _, bin, month, year, amount, bank, country_name, card_scheme, card_type = callback_query.data.split('|')
         amount = int(amount)
