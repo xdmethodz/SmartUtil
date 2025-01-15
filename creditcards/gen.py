@@ -4,7 +4,8 @@ import requests
 import random
 import emoji
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.enums import ParseMode
 
 def get_bin_info(bin):
     headers = {'Referer': 'your-domain'}
