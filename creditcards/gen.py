@@ -1,118 +1,82 @@
+import os
+import re
 import requests
 import random
-import os
 from pyrogram import Client, filters
-from pyrogram.types import Message
-from pyrogram.enums import ParseMode
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
-# Your Neutrino API credentials
-USER_ID = "dicynukoke"
-API_KEY = "OJHZ7JHQgNYmdS8C6BgNadavoywbHUdENHFOx3YTZctJb0DS"
-
-def calculate_luhn(card_number: str):
-    """Calculate the Luhn check digit for a card number."""
-    def digits_of(n):
-        return [int(d) for d in str(n)]
-    digits = digits_of(card_number)
-    checksum = 0
-    odd_even = len(digits) & 1
-    for i, digit in enumerate(digits):
-        if i & 1 ^ odd_even:
-            digit *= 2
-            if digit > 9:
-                digit -= 9
-        checksum += digit
-    return (10 - (checksum % 10)) % 10
-
-def generate_cc(bin: str, month: str, year: str, amount: int = 10):
-    """Generate credit card numbers using the provided BIN, expiration month, year, and amount."""
-    generated_cards = []
-    for _ in range(amount):
-        card_number = bin + ''.join([str(random.randint(0, 9)) for _ in range(16 - len(bin) - 1)])
-        card_number += str(calculate_luhn(card_number))
-        cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
-        generated_cards.append(f"{card_number}|{month}|{year}|{cvv}")
-    return generated_cards
-
-def check_bin(bin: str):
-    """Check and validate BIN details using the Neutrino API."""
-    url = 'https://neutrinoapi.net/bin-lookup'
-    data = {
-        'bin-number': bin,
-        'customer-ip': ''
-    }
-    headers = {
-        'User-ID': USER_ID,
-        'API-Key': API_KEY
-    }
-    response = requests.post(url, headers=headers, data=data)
+def get_bin_info(bin):
+    response = requests.get(f"https://data.handyapi.com/bin/{bin}")
     if response.status_code == 200:
         return response.json()
-    else:
-        return None
+    return None
 
-async def gen_handler(client: Client, message: Message):
-    """Handle the /gen command to generate credit card numbers."""
-    try:
-        args = message.text.split()
-        if len(args) < 5:
-            await message.reply_text("**Provide a valid BIN at least 6 digits ❌**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+def generate_credit_card(bin, month, year, amount):
+    cards = []
+    for _ in range(amount):
+        card = bin + ''.join([str(random.randint(0, 9)) for _ in range(12-len(bin))])
+        cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
+        cards.append(f"{card}|{month}|{year}|{cvv}")
+    return cards
+
+def setup_handlers(app: Client):
+    @app.on_message(filters.command(["gen", ".gen"]))
+    async def generate_handler(client: Client, message: Message):
+        user_input = message.text.split(maxsplit=1)
+        if len(user_input) == 1:
+            await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
             return
         
-        bin = args[1]
-        month = args[2]
-        year = args[3]
-        amount = int(args[4]) if len(args) > 4 else 10
+        user_input = user_input[1]
+
+        # Validate the input format
+        match = re.match(r"(\d{6,})\|(\d{2})\|(\d{4})\s*(\d+)?", user_input)
+        if not match:
+            await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
+            return
+
+        bin, month, year, amount = match.groups()
+        amount = int(amount) if amount else 10
 
         if len(bin) < 6:
-            await message.reply_text("**Provide a valid BIN at least 6 digits ❌**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-            return
-        
-        bin_info = check_bin(bin)
-        if not bin_info or not bin_info.get('valid', False):
-            await message.reply_text("**Invalid BIN provided ❌**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
             return
 
-        processing_msg = await message.reply_text("**Generating Credit Cards...☑️**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-        generated_cards = generate_cc(bin, month, year, amount)
+        # Fetch BIN info
+        bin_info = get_bin_info(bin)
+        if not bin_info:
+            await message.reply_text("**Invalid bin provided❌**")
+            return
 
-        bank_name = bin_info.get('issuer', 'N/A')
-        country = bin_info.get('country', 'N/A')
-        card_type = bin_info.get('card-type', 'N/A')
-        card_category = bin_info.get('category', 'N/A')
-        card_brand = bin_info.get('brand', 'N/A')
+        bank = bin_info.get("bank", "Unknown")
+        country = bin_info.get("country", "Unknown")
+        card_type = bin_info.get("type", "Unknown")
+        card_brand = bin_info.get("brand", "Unknown")
+        bin_info_text = f"**Bank:** {bank}\n**Country:** {country}\n**BIN Info:** {card_type.upper()} - {card_brand.upper()}"
 
-        response = f"**𝗕𝗜𝗡 ⇾ {bin}**\n**𝗔𝗺𝗼𝘂𝗻𝘁 ⇾ {amount}**\n\n"
-        response += "```\n" + "\n".join(generated_cards) + "\n```\n\n"
-        response += f"**𝗕𝗮𝗻𝗸:** {bank_name}\n**𝗖𝗼𝘂𝗻𝘁𝗿𝘆:** {country}\n**𝗕𝗜𝗡 𝗜𝗻𝗳𝗼:** {card_category} - {card_type} - {card_brand}"
+        # Notify user that the bot is generating cards
+        progress_message = await message.reply_text("**Generating Credit Cards...☑️**")
+
+        # Generate credit cards
+        cards = generate_credit_card(bin, month, year, amount)
+        card_text = "\n".join([f"`{card}`" for card in cards])
 
         if amount <= 10:
-            await message.reply_text(response, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            await progress_message.delete()
+            response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
+            await message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN)
         else:
-            filename = f"{bin} x {amount}.txt"
-            with open(filename, 'w') as file:
-                file.write("\n".join(generated_cards))
+            # Save cards to a file if amount is greater than 10
+            file_name = f"{bin} x {amount}.txt"
+            with open(file_name, "w") as file:
+                file.write("\n".join(cards))
 
+            await progress_message.delete()
             user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
-            user_profile_link = f"https://t.me/{message.from_user.username}"
-            caption = (
-                f"{amount} {card_type} credit card numbers for BIN {bin}\n"
-                "━━━━━━━━━━━━━━━━━━\n"
-                f"**𝗕𝗮𝗻𝗸:** {bank_name}\n"
-                f"**𝗖𝗼𝘂𝗻𝘁𝗿𝘆:** {country}\n"
-                f"**𝗕𝗜𝗡 𝗜𝗻𝗳𝗼:** {card_category} - {card_type} - {card_brand}\n"
-                "━━━━━━━━━━━━━━━━━━\n"
-                f"Generate By: [{user_full_name}]({user_profile_link})"
-            )
-            await message.reply_document(document=filename, caption=caption, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-            os.remove(filename)
+            user_link = f"[{user_full_name}](tg://user?id={message.from_user.id})"
+            caption = f"{amount} {card_type.upper()} {card_brand.upper()} credit card numbers for BIN {bin}\n━━━━━━━━━━━━━━━━━━\n{bin_info_text}\n━━━━━━━━━━━━━━━━━━\nGenerate By: {user_link}"
 
-        await processing_msg.delete()
-    except Exception as e:
-        await message.reply_text(f"**Error:** {e}\nUsage: /gen [BIN] [MM] [YY] [Amount]", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            await message.reply_document(document=file_name, caption=caption, parse_mode=ParseMode.MARKDOWN)
+            os.remove(file_name)
 
-def setup_card_handlers(app: Client):
-    """Set up command handlers for the Pyrogram bot."""
-    app.add_handler(filters.command("gen") & filters.private, gen_handler)
-
-
+    return app
