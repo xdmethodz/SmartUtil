@@ -108,7 +108,7 @@ async def send_start_message(client, message):
     await message.reply_text(
         start_message,
         parse_mode=ParseMode.HTML,
-        reply_markup=InlineKeyboardMarkup([  # Inline keyboard for main menu
+        reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")],
             [InlineKeyboardButton("🔄 Updates", url="https://t.me/abir_x_official"),
              InlineKeyboardButton("ℹ️ About Me", callback_data="about_me")]
@@ -288,7 +288,7 @@ async def handle_callback_query(client, callback_query):
 
     if call.data in responses:
         back_button = InlineKeyboardMarkup([
-            [InlineKeyboardButton("⬅️ Back", callback_data="start_message")]
+            [InlineKeyboardButton("⬅️ Back", callback_data="main_menu" if call.data != "about_me" else "start_message")]
         ])
         await call.message.edit_text(
             responses[call.data][0],  # text is the first element in the tuple
