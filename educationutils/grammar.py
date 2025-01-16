@@ -1,6 +1,7 @@
 import requests
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
+from pyrogram.handlers import MessageHandler
 
 async def check_grammar(text):
     url = "https://api.languagetool.org/v2/check"
@@ -29,4 +30,4 @@ async def grammar_check(client: Client, message):
         await message.reply_text(f"`{corrected_text}`", parse_mode=ParseMode.MARKDOWN)
 
 def setup_gra_handler(app: Client):
-    app.add_handler(filters.command("gra")(grammar_check))
+    app.add_handler(MessageHandler(grammar_check, filters.command("gra")))
