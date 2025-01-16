@@ -4,10 +4,10 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Define your privacy policy text
 PRIVACY_POLICY = """
-<b>Privacy Policy for Smart Nexus</b>
+<b>Privacy Policy for Smart Tool ⚙️</b>
 ━━━━━━━━━━━━━━━━━
 
-Welcome to Smart Nexus, the ultimate toolkit on Telegram, offering a variety of features to simplify your tasks. By using Smart Nexus, you agree to the terms and conditions of this policy.
+Welcome to Smart Tool ⚙️, the ultimate toolkit on Telegram, offering a variety of features to simplify your tasks. By using Smart Tool ⚙️, you agree to the terms and conditions of this policy.
 
 <b>Information We Collect</b>
 
@@ -28,7 +28,7 @@ Welcome to Smart Nexus, the ultimate toolkit on Telegram, offering a variety of 
 
    - We use security measures to protect your information. 100% Secure All Info.
 
-Thank you for using Smart Nexus. We are committed to protecting your privacy and ensuring an enjoyable experience with our bot.
+Thank you for using Smart Tool ⚙️. We are committed to protecting your privacy and ensuring an enjoyable experience with our bot.
 """
 
 def setup_privacy_handler(app: Client):
