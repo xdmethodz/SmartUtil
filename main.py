@@ -22,7 +22,7 @@ from others.pin import setup_pinterest_handler
 from others.dl import setup_dl_handlers
 from others.spotify import setup_spotify_handler
 from creditcards.gen import setup_handlers
-from creditcards.mix import setup_mgen_handlers
+
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -41,7 +41,7 @@ setup_decoders_handler(app)
 setup_privacy_handler(app)
 setup_yth_handler(app)
 setup_info_handler(app)
-setup_time_handler (app)
+setup_time_handler(app)
 setup_binance_handler(app)
 setup_temp_mail_handler(app)
 setup_crypto_handler(app)
@@ -55,7 +55,7 @@ setup_pinterest_handler(app)
 setup_dl_handlers(app)
 setup_spotify_handler(app)
 setup_handlers(app)
-setup_mgen_handlers(app)
+
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
@@ -87,6 +87,7 @@ main_menu_keyboard = InlineKeyboardMarkup([
 @app.on_message(filters.command("start") & filters.private)
 async def send_start_message(client, message):
     chat_id = message.chat.id
+    full_name = f"{message.from_user.first_name} {message.from_user.last_name}" if message.from_user.last_name else message.from_user.first_name
 
     # Animation messages
     animation_message = await message.reply_text("<b>Starting Smart Tool ⚙️...</b>", parse_mode=ParseMode.HTML)
@@ -97,7 +98,7 @@ async def send_start_message(client, message):
 
     # Main welcome message
     start_message = (
-        f"<b>Hi — {message.from_user.first_name}! Welcome to this bot</b>\n"
+        f"<b>Hi — {full_name}! Welcome to this bot</b>\n"
         "<b>________________________________</b>\n"
         "<b><a href='https://t.me/Smart_Nexus_Bot'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
         "<b>________________________________</b>\n"
@@ -108,7 +109,9 @@ async def send_start_message(client, message):
         start_message,
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup([  # Inline keyboard for main menu
-            [InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")]
+            [InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")],
+            [InlineKeyboardButton("🔄 Updates", url="https://t.me/abir_x_official"),
+             InlineKeyboardButton("ℹ️ About Me", callback_data="about_me")]
         ]),
         disable_web_page_preview=True,
     )
@@ -267,11 +270,25 @@ async def handle_callback_query(client, callback_query):
             "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
+        "about_me": (
+            "<b>Name:</b> Smart Util ⚙️\n"
+            "<b>Version:</b> 3.0 (Beta Testing) 🛠\n\n"
+            "<b>Development Team:</b>\n"
+            "- <b>Creator:</b> <a href='https://t.me/abirxdhackz'>⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻</a>\n"
+            "- <b>Contributor:</b> <a href='https://t.me/hmm_Smokie'>HMM٭SMOKIE 🤝</a>\n\n"
+            "<b>Technical Stack:</b>\n"
+            "- <b>Language:</b> Python 🐍\n"
+            "- <b>Libraries:</b> Aiogram, Pyrogram 📚\n"
+            "- <b>Database:</b> MongoDB 🗄\n"
+            "- <b>Hosting:</b> Hostinger 🌐\n\n"
+            "<b>About:</b> The all-in-one Telegram toolkit for seamless education, AI, downloads, and more!",
+            {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
+        ),
     }
 
     if call.data in responses:
         back_button = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Back", callback_data="main_menu")]
+            [InlineKeyboardButton("⬅️ Back", callback_data="start_message")]
         ])
         await call.message.edit_text(
             responses[call.data][0],  # text is the first element in the tuple
@@ -286,6 +303,28 @@ async def handle_callback_query(client, callback_query):
         )
     elif call.data == "close":
         await call.message.delete()
+    elif call.data == "start_message":
+        full_name = f"{call.message.from_user.first_name} {call.message.from_user.last_name}" if call.message.from_user.last_name else call.message.from_user.first_name
+
+        # Main welcome message
+        start_message = (
+            f"<b>Hi — {full_name}! Welcome to this bot</b>\n"
+            "<b>________________________________</b>\n"
+            "<b><a href='https://t.me/Smart_Nexus_Bot'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
+            "<b>________________________________</b>\n"
+            "<b>Don't forget to <a href='https://t.me/abir_x_official'>join</a> for updates!</b>"
+        )
+
+        await call.message.edit_text(
+            start_message,
+            parse_mode=ParseMode.HTML,
+            reply_markup=InlineKeyboardMarkup([  # Inline keyboard for main menu
+                [InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")],
+                [InlineKeyboardButton("🔄 Updates", url="https://t.me/abir_x_official"),
+                 InlineKeyboardButton("ℹ️ About Me", callback_data="about_me")]
+            ]),
+            disable_web_page_preview=True,
+        )
 
 print("Bot is running...")
 app.run()
