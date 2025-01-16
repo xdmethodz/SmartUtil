@@ -4,10 +4,11 @@ from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 from pyrogram.handlers import MessageHandler
 from spellchecker import SpellChecker
-from gtts import gTTS
+from PyDictionary import PyDictionary
 
-# Initialize the spell checker
+# Initialize the spell checker and dictionary
 spell = SpellChecker()
+dictionary = PyDictionary()
 
 async def check_grammar(text):
     url = "https://api.languagetool.org/v2/check"
@@ -54,45 +55,32 @@ async def spell_check(client: Client, message):
         await checking_message.delete()
         await message.reply_text(f"`{corrected_word}`", parse_mode=ParseMode.MARKDOWN)
 
-# Dictionary API key directly included in the script
-api_key = "4097542e-560f-4c5d-8e2e-bb2d343c2dd8"
-
 async def fetch_pronunciation_info(word):
-    # Use the dictionary API with the directly included API key
-    url = f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={api_key}"
-    response = requests.get(url)
-    
-    # Check if the response is successful
-    if response.status_code != 200:
-        return None
-    
-    try:
-        result = response.json()
-    except ValueError:
+    # Use PyDictionary to fetch word information
+    meaning = dictionary.meaning(word)
+    if meaning is None:
         return None
 
-    # Parse the result to get the required information
     pronunciation_info = {
         "word": word.capitalize(),
-        "breakdown": "",  # You will need to parse this from the API response
-        "pronunciation": "",  # You will need to parse this from the API response
-        "stems": [],  # You will need to parse this from the API response
-        "definition": ""  # You will need to parse this from the API response
+        "breakdown": word,  # Placeholder, PyDictionary does not provide breakdown
+        "pronunciation": "",  # Placeholder, PyDictionary does not provide IPA pronunciation
+        "stems": list(meaning.keys()),
+        "definition": "; ".join([f"{k}: {', '.join(v)}" for k, v in meaning.items()])
     }
-
-    # Example parsing (this will depend on the actual API response structure)
-    if result and isinstance(result, list) and 'meta' in result[0]:
-        pronunciation_info['breakdown'] = result[0]['hwi']['hw']
-        pronunciation_info['pronunciation'] = result[0]['hwi']['prs'][0]['mw']
-        pronunciation_info['stems'] = result[0]['meta']['stems']
-        pronunciation_info['definition'] = result[0]['shortdef'][0]
 
     return pronunciation_info
 
 async def generate_pronunciation_audio(word):
-    tts = gTTS(text=word, lang='en')
+    # Use provided text-to-speech URL for generating pronunciation audio
+    audio_url = f"https://text-to-speech.manzoor76b.workers.dev/?text={word}"
     audio_filename = f"Smart Tool ⚙️ {word}.mp3"
-    tts.save(audio_filename)
+    
+    # Download the audio file
+    response = requests.get(audio_url)
+    with open(audio_filename, 'wb') as f:
+        f.write(response.content)
+    
     return audio_filename
 
 async def pronunciation_check(client: Client, message):
