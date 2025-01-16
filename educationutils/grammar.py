@@ -61,7 +61,15 @@ async def fetch_pronunciation_info(word):
     # Use the dictionary API with the directly included API key
     url = f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={api_key}"
     response = requests.get(url)
-    result = response.json()
+    
+    # Check if the response is successful
+    if response.status_code != 200:
+        return None
+    
+    try:
+        result = response.json()
+    except ValueError:
+        return None
 
     # Parse the result to get the required information
     pronunciation_info = {
@@ -97,6 +105,13 @@ async def pronunciation_check(client: Client, message):
 
         # Fetch pronunciation information
         pronunciation_info = await fetch_pronunciation_info(word)
+        
+        # Handle case where pronunciation info could not be fetched
+        if pronunciation_info is None:
+            await checking_message.delete()
+            await message.reply_text("**Could not fetch pronunciation information. Please try again later.**", parse_mode=ParseMode.MARKDOWN)
+            return
+
         audio_filename = await generate_pronunciation_audio(word)
 
         caption = (f"Word: {pronunciation_info['word']}\n"
