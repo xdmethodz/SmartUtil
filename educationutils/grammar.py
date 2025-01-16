@@ -75,7 +75,11 @@ async def fetch_pronunciation_info(word):
     stems = [meaning['partOfSpeech'] for meaning in data['meanings']]
 
     # Get audio link if available
-    audio_link = data['phonetics'][0]['audio'] if data['phonetics'] and 'audio' in data['phonetics'][0] else None
+    audio_link = None
+    for phonetic in data['phonetics']:
+        if phonetic['audio']:
+            audio_link = phonetic['audio']
+            break
 
     pronunciation_info = {
         "word": word.capitalize(),
