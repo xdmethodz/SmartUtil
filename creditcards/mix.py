@@ -5,7 +5,6 @@ import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
-
 def get_bin_info(bin):
     headers = {'Referer': 'your-domain'}
     response = requests.get(f"https://data.handyapi.com/bin/{bin}", headers=headers)
@@ -71,11 +70,12 @@ def setup_mgen_handlers(app: Client):
         
         bins = user_input[:-1]
         amount = int(user_input[-1])
-        total_cards = amount * len(bins)
+        total_cards_per_bin = amount
+        total_cards = total_cards_per_bin * len(bins)
         
         cards = []
         for bin in bins:
-            cards += generate_credit_card(bin[:6], amount)
+            cards += generate_credit_card(bin[:6], total_cards_per_bin)
 
         file_name = "Smart Tool ⚙️ Multigen.txt"
         try:
