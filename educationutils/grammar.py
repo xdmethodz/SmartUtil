@@ -4,11 +4,9 @@ from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 from pyrogram.handlers import MessageHandler
 from spellchecker import SpellChecker
-from PyDictionary import PyDictionary
 
-# Initialize the spell checker and dictionary
+# Initialize the spell checker
 spell = SpellChecker()
-dictionary = PyDictionary()
 
 async def check_grammar(text):
     url = "https://api.languagetool.org/v2/check"
@@ -56,32 +54,39 @@ async def spell_check(client: Client, message):
         await message.reply_text(f"`{corrected_word}`", parse_mode=ParseMode.MARKDOWN)
 
 async def fetch_pronunciation_info(word):
-    # Use PyDictionary to fetch word information
-    meaning = dictionary.meaning(word)
-    if meaning is None:
+    # Use FreeDictionaryAPI to fetch word information
+    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+    response = requests.get(url)
+    
+    # Check if the response is successful
+    if response.status_code != 200:
         return None
+    
+    try:
+        result = response.json()
+    except ValueError:
+        return None
+
+    if not result or isinstance(result, dict):
+        return None
+
+    data = result[0]
+    definition = data['meanings'][0]['definitions'][0]['definition']
+    stems = [meaning['partOfSpeech'] for meaning in data['meanings']]
+
+    # Get audio link if available
+    audio_link = data['phonetics'][0]['audio'] if data['phonetics'] and 'audio' in data['phonetics'][0] else None
 
     pronunciation_info = {
         "word": word.capitalize(),
-        "breakdown": word,  # Placeholder, PyDictionary does not provide breakdown
-        "pronunciation": "",  # Placeholder, PyDictionary does not provide IPA pronunciation
-        "stems": list(meaning.keys()),
-        "definition": "; ".join([f"{k}: {', '.join(v)}" for k, v in meaning.items()])
+        "breakdown": word,  # Placeholder, FreeDictionaryAPI does not provide breakdown
+        "pronunciation": "",  # Placeholder, FreeDictionaryAPI does not provide IPA pronunciation
+        "stems": stems,
+        "definition": definition,
+        "audio_link": audio_link  # Add audio link to info
     }
 
     return pronunciation_info
-
-async def generate_pronunciation_audio(word):
-    # Use provided text-to-speech URL for generating pronunciation audio
-    audio_url = f"https://text-to-speech.manzoor76b.workers.dev/?text={word}"
-    audio_filename = f"Smart Tool ⚙️ {word}.mp3"
-    
-    # Download the audio file
-    response = requests.get(audio_url)
-    with open(audio_filename, 'wb') as f:
-        f.write(response.content)
-    
-    return audio_filename
 
 async def pronunciation_check(client: Client, message):
     user_input = message.text.split(maxsplit=1)  # Split the message text
@@ -100,7 +105,13 @@ async def pronunciation_check(client: Client, message):
             await message.reply_text("**Could not fetch pronunciation information. Please try again later.**", parse_mode=ParseMode.MARKDOWN)
             return
 
-        audio_filename = await generate_pronunciation_audio(word)
+        audio_filename = None
+        if pronunciation_info['audio_link']:
+            audio_filename = f"Smart Tool ⚙️ {word}.mp3"
+            # Download the audio file
+            response = requests.get(pronunciation_info['audio_link'])
+            with open(audio_filename, 'wb') as f:
+                f.write(response.content)
 
         caption = (f"Word: {pronunciation_info['word']}\n"
                    f"- Breakdown: {pronunciation_info['breakdown']}\n"
@@ -108,15 +119,18 @@ async def pronunciation_check(client: Client, message):
                    f"Word Stems:\n{', '.join(pronunciation_info['stems'])}\n\n"
                    f"Definition:\n{pronunciation_info['definition']}")
 
-        # Send the audio file with caption
-        await client.send_audio(
-            chat_id=message.chat.id,
-            audio=audio_filename,
-            caption=caption
-        )
+        # Send the audio file with caption if audio is available
+        if audio_filename:
+            await client.send_audio(
+                chat_id=message.chat.id,
+                audio=audio_filename,
+                caption=caption
+            )
+            # Delete the temporary audio file
+            os.remove(audio_filename)
+        else:
+            await message.reply_text(caption, parse_mode=ParseMode.MARKDOWN)
 
-        # Delete the temporary audio file
-        os.remove(audio_filename)
         await checking_message.delete()
 
 def setup_eng_handler(app: Client):
