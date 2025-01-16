@@ -2,6 +2,10 @@ import requests
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 from pyrogram.handlers import MessageHandler
+from spellchecker import SpellChecker
+
+# Initialize the spell checker
+spell = SpellChecker()
 
 async def check_grammar(text):
     url = "https://api.languagetool.org/v2/check"
@@ -30,12 +34,12 @@ async def grammar_check(client: Client, message):
         await message.reply_text(f"`{corrected_text}`", parse_mode=ParseMode.MARKDOWN)
 
 async def check_spelling(word):
-    # Here we use an example API for spell checking (replace with an actual API)
-    url = f"https://api.spellchecker.com/check?word={word}"
-    response = requests.get(url)
-    result = response.json()
-    # Assuming the API returns a JSON object with 'corrected' field
-    corrected_word = result.get('corrected', word)
+    # Use Pyspellchecker to check spelling
+    misspelled = spell.unknown([word])
+    if misspelled:
+        corrected_word = spell.correction(list(misspelled)[0])
+    else:
+        corrected_word = word
     return corrected_word
 
 async def spell_check(client: Client, message):
