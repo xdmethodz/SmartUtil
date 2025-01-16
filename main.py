@@ -22,7 +22,7 @@ from others.pin import setup_pinterest_handler
 from others.dl import setup_dl_handlers
 from others.spotify import setup_spotify_handler
 from creditcards.gen import setup_handlers
-
+from educationutils import setup_gra_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -55,7 +55,7 @@ setup_pinterest_handler(app)
 setup_dl_handlers(app)
 setup_spotify_handler(app)
 setup_handlers(app)
-
+setup_gra_handler(app)
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
