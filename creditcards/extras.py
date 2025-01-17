@@ -20,13 +20,9 @@ async def process_file(file_path, bin_number, command):
         content = file.readlines()
 
     if command == '/adbin':
-        matched_cards = filter_bin(content, bin_number)
-        unmatched_cards = remove_bin(content, bin_number)
+        return filter_bin(content, bin_number)
     elif command == '/rmbin':
-        matched_cards = remove_bin(content, bin_number)
-        unmatched_cards = filter_bin(content, bin_number)
-
-    return matched_cards, unmatched_cards
+        return remove_bin(content, bin_number)
 
 async def handle_bin_commands(client, message: Message):
     args = message.text.split()
@@ -49,9 +45,9 @@ async def handle_bin_commands(client, message: Message):
         return
 
     file_path = await message.reply_to_message.download()
-    matched_cards, unmatched_cards = await process_file(file_path, bin_number, command)
+    processed_cards = await process_file(file_path, bin_number, command)
     
-    if not matched_cards:
+    if not processed_cards:
         await message.reply_text(f"<b>No credit card details found with BIN {bin_number}.</b>")
         os.remove(file_path)
         return
@@ -61,11 +57,11 @@ async def handle_bin_commands(client, message: Message):
     user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
     user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
     
-    remaining_cards = "\n".join(f"`{line.strip()}`" for line in unmatched_cards)
+    formatted_cards = "\n".join(f"`{line.strip()}`" for line in processed_cards)
     response_message = (
-        f"<b>Here are the remaining cards:</b>\n\n"
-        f"{remaining_cards}\n\n"
-        f"<b>Total Remaining Cards:</b> <code>{len(unmatched_cards)}</code>\n"
+        f"<b>Here are the {'filtered' if command == '/adbin' else 'remaining'} cards:</b>\n\n"
+        f"{formatted_cards}\n\n"
+        f"<b>Total Cards:</b> <code>{len(processed_cards)}</code>\n"
         f"<b>Filter By:</b> {user_link}"
     )
 
