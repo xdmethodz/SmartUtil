@@ -39,8 +39,8 @@ async def handle_fmail_command(client, message: Message):
         os.remove(file_path)
         return
 
-    formatted_emails = "\n".join(emails)
-    response_message = f"```\n{formatted_emails}\n```"
+    formatted_emails = '\n'.join(f'`{email}`' for email in emails)
+    response_message = f"{formatted_emails}"
 
     await temp_msg.delete()
     await message.reply_text(response_message, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
@@ -66,8 +66,8 @@ async def handle_fpass_command(client, message: Message):
         os.remove(file_path)
         return
 
-    formatted_email_passes = "\n".join(email_passes)
-    response_message = f"```\n{formatted_email_passes}\n```"
+    formatted_email_passes = '\n'.join(f'`{email_pass}`' for email_pass in email_passes)
+    response_message = f"{formatted_email_passes}"
 
     await temp_msg.delete()
     await message.reply_text(response_message, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
