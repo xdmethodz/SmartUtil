@@ -61,18 +61,15 @@ async def handle_bin_commands(client, message: Message):
     user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
     user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
     
-    filtered_cards = "\n".join(f"`{line.strip()}`" for line in matched_cards)
     remaining_cards = "\n".join(f"`{line.strip()}`" for line in unmatched_cards)
     response_message = (
-        f"<b>Here are the filtered cards:</b>\n\n"
-        f"{filtered_cards}\n\n"
         f"<b>Here are the remaining cards:</b>\n\n"
         f"{remaining_cards}\n\n"
-        f"<b>Total Cards:</b> <code>{len(matched_cards) + len(unmatched_cards)}</code>\n"
+        f"<b>Total Remaining Cards:</b> <code>{len(unmatched_cards)}</code>\n"
         f"<b>Filter By:</b> {user_link}"
     )
 
-    await message.reply_text(response_message, parse_mode=ParseMode.HTML)
+    await message.reply_text(response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
     os.remove(file_path)
 
