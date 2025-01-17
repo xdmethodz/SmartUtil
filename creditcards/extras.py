@@ -1,6 +1,6 @@
 import re
 import os
-from pyrogram import Client, filters
+from pyrogram import Client, filters, handlers
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
@@ -73,4 +73,4 @@ async def handle_bin_commands(client, message: Message):
     os.remove(file_path)
 
 def setup_bin_handlers(app: Client):
-    app.add_handler(filters.command(["adbin", "rmbin"])(handle_bin_commands))
+    app.add_handler(handlers.MessageHandler(handle_bin_commands, filters.command(["adbin", "rmbin"])))
