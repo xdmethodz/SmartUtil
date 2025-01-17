@@ -21,7 +21,6 @@ from others.downloaders import setup_downloader_handler
 from others.pin import setup_pinterest_handler
 from others.dl import setup_dl_handlers
 from others.spotify import setup_spotify_handler
-from creditcards.gen import setup_handlers
 from educationutils.grammar import setup_eng_handler
 from creditcards.gen import setup_credit_handlers
 # Replace these with your actual API details
