@@ -91,7 +91,7 @@ async def handle_callback_query(client, callback_query):
     await callback_query.answer("No functionality for this callback.", show_alert=True)
 
 # Setup handlers
-def setup_handlers(app: Client):
+def setup_filter_handlers(app: Client):
     app.add_handler(handlers.MessageHandler(handle_fcc_command, filters.command("fcc")))
     app.add_handler(handlers.MessageHandler(handle_topbin_command, filters.command("topbin")))
     app.add_handler(handlers.CallbackQueryHandler(handle_callback_query))
