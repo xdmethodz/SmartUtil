@@ -57,10 +57,10 @@ async def handle_bin_commands(client, message: Message):
     user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
     user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
     
-    formatted_cards = "\n".join(f"`{line.strip()}`" for line in processed_cards)
+    formatted_cards = "\n".join(line.strip() for line in processed_cards)
     response_message = (
         f"<b>Here are the {'filtered' if command == '/adbin' else 'remaining'} cards:</b>\n\n"
-        f"{formatted_cards}\n\n"
+        f"```\n{formatted_cards}\n```\n\n"
         f"<b>Total Cards:</b> <code>{len(processed_cards)}</code>\n"
         f"<b>Filter By:</b> {user_link}"
     )
