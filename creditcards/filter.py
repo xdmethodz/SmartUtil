@@ -87,6 +87,6 @@ async def handle_topbin_command(client, message: Message):
     os.remove(file_path)
 
 # Setup handlers
-def setup_handlers(app: Client):
+def setup_filter_handlers(app: Client):
     app.add_handler(handlers.MessageHandler(handle_fcc_command, filters.command("fcc")))
     app.add_handler(handlers.MessageHandler(handle_topbin_command, filters.command("topbin")))
