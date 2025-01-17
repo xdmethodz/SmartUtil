@@ -26,7 +26,7 @@ from creditcards.gen import setup_credit_handlers
 from creditcards.db import setup_db_handlers
 from creditcards.extras import setup_bin_handlers
 from creditcards.filter import setup_filter_handlers
-from educationutils import setup_mail_handlers
+from educationutils.mail import setup_mail_handlers
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
