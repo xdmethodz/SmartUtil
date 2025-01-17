@@ -54,7 +54,6 @@ setup_downloader_handler(app)
 setup_pinterest_handler(app)
 setup_dl_handlers(app)
 setup_spotify_handler(app)
-setup_handlers(app)
 setup_eng_handler(app)
 setup_credit_handlers(app)
 # Inline keyboard for the main menu
