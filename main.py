@@ -24,6 +24,7 @@ from others.spotify import setup_spotify_handler
 from educationutils.grammar import setup_eng_handler
 from creditcards.gen import setup_credit_handlers
 from creditcards.db import setup_db_handlers
+from creditcards.extras import setup_bin_handlers
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -58,6 +59,7 @@ setup_spotify_handler(app)
 setup_eng_handler(app)
 setup_credit_handlers(app)
 setup_db_handlers(app)
+setup_bin_handlers(app)
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
