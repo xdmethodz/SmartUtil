@@ -40,6 +40,10 @@ async def handle_bin_commands(client, message: Message):
         await message.reply_text("<b>⚠️ BIN number must be 6 digits.</b>")
         return
 
+    if not message.reply_to_message:
+        await message.reply_text("<b>⚠️ Please reply to a valid .txt file.</b>")
+        return
+
     if not message.reply_to_message.document or not message.reply_to_message.document.file_name.endswith('.txt'):
         await message.reply_text("<b>⚠️ Please reply to a valid .txt file.</b>")
         return
