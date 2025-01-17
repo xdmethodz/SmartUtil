@@ -164,7 +164,7 @@ def setup_credit_handlers(app: Client):
 
         await message.reply_text(bin_info_text, parse_mode=ParseMode.MARKDOWN)
 
-    @app.on_message(filters.command("mgen") & (filters.private | filters.group))
+    @app.on_message(filters.command("mgn") & (filters.private | filters.group))
     async def multigen_handler(client: Client, message: Message):
         user_input = message.text.split()
         if len(user_input) < 3:
