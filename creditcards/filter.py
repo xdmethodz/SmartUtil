@@ -15,7 +15,8 @@ async def extrapolate_cc(bin_number, amount=5):
 async def fetch_bin_info(bin_number):
     """Fetch BIN information from the API."""
     url = f"https://data.handyapi.com/bin/{bin_number}"
-    response = requests.get(url)
+    headers = {'Referer': 'your-domain'}
+    response = requests.get(url, headers=headers)
     if response.status_code == 200:
         return response.json()
     return None
@@ -47,9 +48,9 @@ async def handle_extrapolate_command(client, message: Message):
     bin_info = await fetch_bin_info(bin_number)
 
     if bin_info:
-        bank = bin_info.get("bank", "Unknown Bank")
-        country = bin_info.get("country", "Unknown Country")
-        card_info = f"{bin_info.get('scheme', 'Unknown')} - {bin_info.get('type', 'Unknown')} - {bin_info.get('brand', 'Unknown')}"
+        bank = bin_info.get("Issuer", "Unknown Bank")
+        country = bin_info.get("Country", {}).get("Name", "Unknown Country")
+        card_info = f"{bin_info.get('Scheme', 'Unknown')} - {bin_info.get('Type', 'Unknown')} - {bin_info.get('CardTier', 'Unknown')}"
     else:
         bank = "Unknown Bank"
         country = "Unknown Country"
@@ -150,9 +151,9 @@ async def handle_callback_query(client, callback_query):
         bin_info = await fetch_bin_info(bin_number)
 
         if bin_info:
-            bank = bin_info.get("bank", "Unknown Bank")
-            country = bin_info.get("country", "Unknown Country")
-            card_info = f"{bin_info.get('scheme', 'Unknown')} - {bin_info.get('type', 'Unknown')} - {bin_info.get('brand', 'Unknown')}"
+            bank = bin_info.get("Issuer", "Unknown Bank")
+            country = bin_info.get("Country", {}).get("Name", "Unknown Country")
+            card_info = f"{bin_info.get('Scheme', 'Unknown')} - {bin_info.get('Type', 'Unknown')} - {bin_info.get('CardTier', 'Unknown')}"
         else:
             bank = "Unknown Bank"
             country = "Unknown Country"
@@ -169,8 +170,9 @@ async def handle_callback_query(client, callback_query):
             f"<b>𝗕𝗜𝗡 𝗜𝗻𝗳𝗼:</b> {card_info}"
         )
 
-        # Edit the original message with the new data
-        await callback_query.message.edit_text(response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True, reply_markup=callback_query.message.reply_markup)
+        # Only edit the message if the new response is different
+        if response_message != callback_query.message.text:
+            await callback_query.message.edit_text(response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True, reply_markup=callback_query.message.reply_markup)
 
 def setup_filter_handlers(app: Client):
     app.add_handler(handlers.MessageHandler(handle_extrapolate_command, filters.command(["extp"])))
