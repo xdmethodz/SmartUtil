@@ -175,7 +175,7 @@ async def handle_callback_query(client, callback_query):
             await callback_query.answer("No changes detected to regenerate.", show_alert=True)
 
 # Setup handlers
-def setup_handlers(app: Client):
+def setup_filter_handlers(app: Client):
     app.add_handler(handlers.MessageHandler(handle_extrapolate_command, filters.command("extp")))
     app.add_handler(handlers.MessageHandler(handle_fcc_command, filters.command("fcc")))
     app.add_handler(handlers.MessageHandler(handle_topbin_command, filters.command("topbin")))
