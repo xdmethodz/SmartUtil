@@ -139,7 +139,7 @@ async def handle_callback_query(client, callback_query):
             "➢ /scr - CC Scrape\n"
             "➢ /fcc - For Filter CCS\n"
             "➢ /extp - CC Extrapolate\n"
-            "➢ /mgen - Multi CC Generator\n"
+            "➢ /mgn - Multi CC Generator\n"
             "➢ /mc - Multi CC Scrape\n"
             "➢ /topbin - Find Top BIN From Combo\n"
             "➢ /binbank - Find BIN Database By Bank Name\n"
