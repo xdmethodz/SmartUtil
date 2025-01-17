@@ -57,11 +57,12 @@ def setup_credit_handlers(app: Client):
             await message.reply_text("**Invalid BIN provided❌**")
             return
 
-        bank = bin_info.get("Issuer", "Unknown")
+        bank = bin_info.get("Issuer")
         country_name = bin_info["Country"].get("Name", "Unknown")
         card_type = bin_info.get("Type", "Unknown")
         card_scheme = bin_info.get("Scheme", "Unknown")
-        bin_info_text = f"**Bank:** `{bank}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
+        bank_text = bank.upper() if bank else "Unknown"
+        bin_info_text = f"**Bank:** `{bank_text}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
 
         # Notify user that the bot is generating cards
         progress_message = await message.reply_text("**Generating Credit Cards...☑️**")
@@ -109,16 +110,17 @@ def setup_credit_handlers(app: Client):
             await callback_query.answer("BIN info retrieval failed!", show_alert=True)
             return
 
-        bank = bin_info.get("Issuer", "Unknown")
+        bank = bin_info.get("Issuer")
         country_name = bin_info["Country"].get("Name", "Unknown")
         card_type = bin_info.get("Type", "Unknown")
         card_scheme = bin_info.get("Scheme", "Unknown")
+        bank_text = bank.upper() if bank else "Unknown"
 
         # Generate new credit cards
         cards = generate_credit_card(bin, month, year, amount)
         card_text = "\n".join([f"`{card}`" for card in cards])
 
-        bin_info_text = f"**Bank:** `{bank}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
+        bin_info_text = f"**Bank:** `{bank_text}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
         response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
 
         reply_markup = InlineKeyboardMarkup(
@@ -151,20 +153,21 @@ def setup_credit_handlers(app: Client):
         card_type = bin_info.get("Type", "Unknown")
         card_scheme = bin_info.get("Scheme", "Unknown")
         country_emoji = bin_info["Country"].get("Emoji", "")
+        bank_text = bank.upper() if bank else "Unknown"
 
         bin_info_text = (
             f"**🔍 BIN Details 📋**\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"• **BIN:** `{bin}`\n"
             f"• **INFO:** {card_scheme.upper()} - {card_type.upper()}\n"
-            f"• **BANK:** {bank.upper()}\n"
+            f"• **BANK:** {bank_text}\n"
             f"• **COUNTRY:** {country_name.upper()} {country_emoji}\n"
             f"━━━━━━━━━━━━━━━━━━"
         )
 
         await message.reply_text(bin_info_text, parse_mode=ParseMode.MARKDOWN)
 
-    @app.on_message(filters.command("mgn") & (filters.private | filters.group))
+    @app.on_message(filters.command("mgen") & (filters.private | filters.group))
     async def multigen_handler(client: Client, message: Message):
         user_input = message.text.split()
         if len(user_input) < 3:
