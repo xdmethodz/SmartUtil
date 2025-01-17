@@ -36,7 +36,7 @@ def parse_input(user_input):
         
     return bin, month, year, amount
 
-def setup_handlers(app: Client):
+def setup_credit_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]) & (filters.private | filters.group))
     async def generate_handler(client: Client, message: Message):
         user_input = message.text.split(maxsplit=1)
@@ -127,5 +127,79 @@ def setup_handlers(app: Client):
 
         await callback_query.message.edit_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         await callback_query.answer("Generated new cards successfully!")
+
+    @app.on_message(filters.command("bin") & (filters.private | filters.group))
+    async def bin_handler(client: Client, message: Message):
+        user_input = message.text.split(maxsplit=1)
+        if len(user_input) == 1:
+            await message.reply_text("**Provide a valid BIN (6 digits) ❌**")
+            return
+
+        bin = user_input[1][:6]  # Take the first 6 digits as BIN
+
+        # Fetch BIN info
+        progress_message = await message.reply_text("**Fetching Bin Details...**")
+        bin_info = get_bin_info(bin)
+        await progress_message.delete()
+
+        if not bin_info or bin_info.get("Status") != "SUCCESS":
+            await message.reply_text("**Invalid BIN provided❌**")
+            return
+
+        bank = bin_info.get("Issuer", "Unknown")
+        country_name = bin_info["Country"].get("Name", "Unknown")
+        card_type = bin_info.get("Type", "Unknown")
+        card_scheme = bin_info.get("Scheme", "Unknown")
+        country_emoji = bin_info["Country"].get("Emoji", "")
+
+        bin_info_text = (
+            f"**🔍 BIN Details 📋**\n"
+            f"━━━━━━━━━━━━━━━━━━\n"
+            f"• **BIN:** `{bin}`\n"
+            f"• **INFO:** {card_scheme.upper()} - {card_type.upper()}\n"
+            f"• **BANK:** {bank.upper()}\n"
+            f"• **COUNTRY:** {country_name.upper()} {country_emoji}\n"
+            f"━━━━━━━━━━━━━━━━━━"
+        )
+
+        await message.reply_text(bin_info_text, parse_mode=ParseMode.MARKDOWN)
+
+    @app.on_message(filters.command("mgen") & (filters.private | filters.group))
+    async def multigen_handler(client: Client, message: Message):
+        user_input = message.text.split()
+        if len(user_input) < 3:
+            await message.reply_text("**Wrong args ❌**\nUse `/mgen [bin1] [bin2] .. [amount]`", parse_mode=ParseMode.MARKDOWN)
+            return
+
+        bins = user_input[1:-1]
+        amount = int(user_input[-1])
+
+        if any(len(bin) < 6 for bin in bins):
+            await message.reply_text("**Each BIN should be at least 6 digits ❌**")
+            return
+
+        total_cards = []
+        for bin in bins:
+            cards = generate_credit_card(bin[:6], f"{random.randint(1, 12):02}", random.randint(2024, 2029), amount)
+            total_cards.extend(cards)
+
+        file_name = "Smart Tool ⚙️ Multigen.txt"
+        try:
+            with open(file_name, "w") as file:
+                file.write("\n".join(total_cards))
+
+            caption = (
+                f"**🔥 Generated {len(total_cards)} credit card numbers from all BIN 🔥**\n"
+                f"━━━━━━━━━━━━━━━━━━\n"
+                f"🏦 **BINS:**\n" + "\n".join([f"• `{bin}`" for bin in bins]) + '\n'
+                f"━━━━━━━━━━━━━━━━━━"
+            )
+
+            await message.reply_document(document=file_name, caption=caption, parse_mode=ParseMode.MARKDOWN)
+        except Exception as e:
+            await message.reply_text(f"**Failed to save or send document: {str(e)}**")
+        finally:
+            if os.path.exists(file_name):
+                os.remove(file_name)
 
     return app
