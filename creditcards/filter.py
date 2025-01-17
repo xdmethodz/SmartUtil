@@ -8,17 +8,6 @@ from pyrogram import Client, filters, handlers
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
-# Function to extrapolate credit card numbers
-async def extrapolate_cc(bin_number, amount=5):
-    """Generate extrapolated credit card numbers using a BIN."""
-    extrapolated_ccs = []
-    for _ in range(amount):
-        # Append a random, valid-looking sequence to the BIN
-        random_digits = ''.join([str(random.randint(0, 9)) for _ in range(10)])
-        cc_number = f"{bin_number}{random_digits}"
-        extrapolated_ccs.append(cc_number)
-    return extrapolated_ccs
-
 # Function to fetch BIN information
 async def fetch_bin_info(bin_number):
     """Fetch BIN information from the API."""
@@ -35,51 +24,6 @@ async def filter_valid_cc(content):
     valid_cc_pattern = re.compile(r'^\d{16}\|\d{2}\|\d{4}\|\d{3}$')
     valid_ccs = [line.strip() for line in content if valid_cc_pattern.match(line.strip())]
     return valid_ccs
-
-# Command to handle extrapolation
-async def handle_extrapolate_command(client, message: Message):
-    args = message.text.split()
-    if len(args) != 2:
-        await message.reply_text("<b>⚠️ Please provide a BIN.</b>", parse_mode=ParseMode.HTML)
-        return
-
-    bin_number = args[1]
-    if not re.match(r'^\d{6}$', bin_number):
-        await message.reply_text("<b>⚠️ BIN number must be 6 digits.</b>", parse_mode=ParseMode.HTML)
-        return
-
-    # Temporary message
-    temp_msg = await message.reply_text("<b>Extrapolating In Progress...</b>", parse_mode=ParseMode.HTML)
-    await asyncio.sleep(1)
-    await temp_msg.delete()
-
-    # Extrapolate CC data and fetch BIN info
-    extrapolated_ccs = await extrapolate_cc(bin_number)
-    bin_info = await fetch_bin_info(bin_number)
-
-    bank = bin_info.get("Issuer", "Unknown Bank") if bin_info else "Unknown Bank"
-    country = bin_info.get("Country", {}).get("Name", "Unknown Country") if bin_info else "Unknown Country"
-    card_info = (
-        f"{bin_info.get('Scheme', 'Unknown')} - {bin_info.get('Type', 'Unknown')} - {bin_info.get('CardTier', 'Unknown')}"
-        if bin_info else "Unknown"
-    )
-
-    formatted_ccs = "\n".join(extrapolated_ccs)
-    response_message = (
-        f"<b>𝗘𝘅𝘁𝗿𝗮𝗽 ⇾ {bin_number}</b>\n"
-        f"<b>𝗔𝗺𝗼𝘂𝗻𝘁 ⇾ 5</b>\n\n"
-        f"<code>{formatted_ccs}</code>\n\n"
-        f"<b>𝗕𝗮𝗻𝗸:</b> {bank}\n"
-        f"<b>𝗖𝗼𝘂𝗻𝘁𝗿𝘆:</b> {country}\n"
-        f"<b>𝗕𝗜𝗡 𝗜𝗻𝗳𝗼:</b> {card_info}"
-    )
-
-    regenerate_button = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate_{bin_number}")]]
-    )
-    await message.reply_text(
-        response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True, reply_markup=regenerate_button
-    )
 
 # Command to filter credit card details from a file
 async def handle_fcc_command(client, message: Message):
@@ -142,41 +86,12 @@ async def handle_topbin_command(client, message: Message):
     await message.reply_text(response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
     os.remove(file_path)
 
-# Callback query handler for regenerating extrapolated CCs
+# Callback query handler
 async def handle_callback_query(client, callback_query):
-    data = callback_query.data
-    if data.startswith("regenerate_"):
-        bin_number = data.split("_")[1]
-        extrapolated_ccs = await extrapolate_cc(bin_number)
-        bin_info = await fetch_bin_info(bin_number)
-
-        bank = bin_info.get("Issuer", "Unknown Bank") if bin_info else "Unknown Bank"
-        country = bin_info.get("Country", {}).get("Name", "Unknown Country") if bin_info else "Unknown Country"
-        card_info = (
-            f"{bin_info.get('Scheme', 'Unknown')} - {bin_info.get('Type', 'Unknown')} - {bin_info.get('CardTier', 'Unknown')}"
-            if bin_info else "Unknown"
-        )
-
-        formatted_ccs = "\n".join(extrapolated_ccs)
-        response_message = (
-            f"<b>𝗘𝘅𝘁𝗿𝗮𝗽 ⇾ {bin_number}</b>\n"
-            f"<b>𝗔𝗺𝗼𝘂𝗻𝘁 ⇾ 5</b>\n\n"
-            f"<code>{formatted_ccs}</code>\n\n"
-            f"<b>𝗕𝗮𝗻𝗸:</b> {bank}\n"
-            f"<b>𝗖𝗼𝘂𝗻𝘁𝗿𝘆:</b> {country}\n"
-            f"<b>𝗕𝗜𝗡 𝗜𝗻𝗳𝗼:</b> {card_info}"
-        )
-
-        try:
-            await callback_query.message.edit_text(
-                response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True, reply_markup=callback_query.message.reply_markup
-            )
-        except Exception:
-            await callback_query.answer("No changes detected to regenerate.", show_alert=True)
+    await callback_query.answer("No functionality for this callback.", show_alert=True)
 
 # Setup handlers
-def setup_filter_handlers(app: Client):
-    app.add_handler(handlers.MessageHandler(handle_extrapolate_command, filters.command("extp")))
+def setup_handlers(app: Client):
     app.add_handler(handlers.MessageHandler(handle_fcc_command, filters.command("fcc")))
     app.add_handler(handlers.MessageHandler(handle_topbin_command, filters.command("topbin")))
     app.add_handler(handlers.CallbackQueryHandler(handle_callback_query))
