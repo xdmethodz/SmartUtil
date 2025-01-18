@@ -8,7 +8,10 @@ import io
 from bs4 import BeautifulSoup
 import json
 import yt_dlp
+
+# Path to your YouTube cookies file
 YT_COOKIES_PATH = "./cookies/cookies.txt"
+
 # Function to get IP information
 def get_ip_info(ip: str) -> str:
     url = f"https://ipinfo.io/{ip}/json"
@@ -146,7 +149,7 @@ async def ytag_handler(client: Client, message: Message):
         'quiet': True,
         'skip_download': True,
         'force_generic_extractor': True,
-        'cookiefile': 'YT_COOKIES_PATH',  # Path to your cookie file
+        'cookiefile': YT_COOKIES_PATH,  # Correct path to your cookie file
     }
 
     try:
