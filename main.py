@@ -38,8 +38,8 @@ API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
 BOT_TOKEN = "7941865929:AAFh8u_6r7FCEAG564vZ3bvvdphZ-QRFBPg"  # Replace with your Bot Token
 SESSION_STRING = "BQFUUx8AIOGtbkhVKxLdX3dt-9CnwJcmV5rn0JniKJEnW7n7CDbDXJCLyFOq4vXV4Z8i9WEKiG5atWlPFx2Wl-qm3SUidbNAliV99kUaYLsyT2gaLep1CGiYBYbSIqtVOKqIVO164dvW2_TnndpuRBKIbzDCi8P6Ve4OcJyjfxMceTfkj6oIly1m1R2mo9Wz2DI9GVKGqmyGHRkU7B5KzvzT0Ow6wvZpFLfufERFzBD6E30_85FSPecP9VmLto1dWsEyiKMpMuKUoonhDOt5u6MHx8MLfyMfxUqCDHeitYHyggbmrqWPF5-jsRKVeKk7O0Ky43uwTeA2vlXMkkHQBFZQqn9v9QAAAAG-VM9QAA"
 # Initialize the bot client
-bot = Client(
-    "bot_session",
+app = Client(
+    "app_session",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
