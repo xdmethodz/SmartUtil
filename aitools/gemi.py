@@ -53,7 +53,7 @@ def setup_gem_handler(app: Client):
 
         prompt = message.command[1] if len(message.command) > 1 else message.reply_to_message.caption or "Describe this image."
 
-        processing_message = await message.reply_text("**Generating response, please wait...**")
+        processing_message = await message.reply_text("**Processing the image and generating response ⚡️**")
 
         try:
             img_data = await client.download_media(message.reply_to_message, in_memory=True)
