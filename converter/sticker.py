@@ -58,7 +58,8 @@ async def handle_quote_command(client: Client, message: Message):
                 parse_mode=ParseMode.MARKDOWN
             )
         else:
-            await message.reply_text("**Failed to generate sticker. API response is missing 'result' key.**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            error_message = response.get('error', 'Unknown error occurred')
+            await message.reply_text(f"**Failed to generate sticker. API response error: {error_message}**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
     except requests.RequestException as e:
         logging.error(f"Request failed: {e}")
