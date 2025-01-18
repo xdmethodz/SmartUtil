@@ -50,11 +50,11 @@ class URLDownloader:
                 with open(os.path.join(page_folder, 'page.html'), 'wb') as file:
                     file.write(self.soup.prettify('utf-8'))
                 
-                self._zip_folder(page_folder, url)
-                return True
+                zip_path = self._zip_folder(page_folder, url)
+                return zip_path
         except Exception as e:
             print(f"> save_page(): Create files failed: {str(e)}")
-            return False
+            return None
 
     async def _soup_find_and_save(self, session, url, page_folder, tag_to_find='img', inner='src'):
         """Save specified tag_to_find objects in the page_folder."""
@@ -73,7 +73,7 @@ class URLDownloader:
         """Download and save a resource."""
         try:
             filename = re.sub(r'\W+', '.', os.path.basename(res[inner]))
-            if tag_to_find == 'link' and (not any(ext in filename for ext in self.link_type)):
+            if inner == 'href' and (not any(ext in filename for ext in self.link_type)):
                 filename += '.html'
 
             file_url = urljoin(url, res.get(inner))
@@ -92,7 +92,7 @@ class URLDownloader:
         """Zip the folder."""
         sanitized_url = re.sub(r'\W+', '_', url)
         zip_name = f"Smart Tool ⚙️ ({sanitized_url}).zip"
-        zip_path = os.path.join(folder_path, zip_name)
+        zip_path = os.path.join("downloads", zip_name)
 
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(folder_path):
@@ -121,9 +121,9 @@ async def download_web_source(client: Client, message: Message):
         # Download the webpage components
         downloader = URLDownloader()
         page_folder = os.path.join("downloads", urlparse(url).netloc)
-        if await downloader.save_page(url, page_folder):
-            zip_path = downloader._zip_folder(page_folder, url)
+        zip_path = await downloader.save_page(url, page_folder)
 
+        if zip_path:
             # Send the zip file to the user
             user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
             user_profile_link = f"https://t.me/{message.from_user.username}"
