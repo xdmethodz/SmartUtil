@@ -1,8 +1,12 @@
 import requests
 import base64
+import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 async def handle_quote_command(client: Client, message: Message):
     if len(message.command) <= 1:
@@ -37,18 +41,28 @@ async def handle_quote_command(client: Client, message: Message):
         ]
     }
 
-    response = requests.post('https://bot.lyo.su/quote/generate', json=json).json()
-    buffer = base64.b64decode(response['result']['image'].encode('utf-8'))
-    sticker_path = 'Quotly.png'
-    with open(sticker_path, 'wb') as f:
-        f.write(buffer)
+    try:
+        response = requests.post('https://bot.lyo.su/quote/generate', json=json).json()
+        logging.info(f"API Response: {response}")
 
-    await client.send_photo(
-        chat_id=message.chat.id,
-        photo=sticker_path,
-        caption="Here is your quote sticker!",
-        parse_mode=ParseMode.MARKDOWN
-    )
+        if 'result' in response:
+            buffer = base64.b64decode(response['result']['image'].encode('utf-8'))
+            sticker_path = 'Quotly.png'
+            with open(sticker_path, 'wb') as f:
+                f.write(buffer)
+
+            await client.send_photo(
+                chat_id=message.chat.id,
+                photo=sticker_path,
+                caption="Here is your quote sticker!",
+                parse_mode=ParseMode.MARKDOWN
+            )
+        else:
+            await message.reply_text("**Failed to generate sticker. API response is missing 'result' key.**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+
+    except requests.RequestException as e:
+        logging.error(f"Request failed: {e}")
+        await message.reply_text("**Failed to generate sticker. There was an error with the API request.**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
 def setup_quote_handler(app: Client):
     @app.on_message(filters.command("q") & filters.private)
