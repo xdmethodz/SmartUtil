@@ -1,4 +1,4 @@
-import requests  # Correct import here
+import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
@@ -7,8 +7,8 @@ import pytesseract
 import io
 from bs4 import BeautifulSoup
 import json
-import urllib.parse as par
-
+import yt_dlp
+YT_COOKIES_PATH = "./cookies/cookies.txt"
 # Function to get IP information
 def get_ip_info(ip: str) -> str:
     url = f"https://ipinfo.io/{ip}/json"
@@ -133,58 +133,35 @@ async def ocr_handler(client: Client, message: Message):
     await fetching_msg.delete()
     await message.reply_text(response, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
-# Function to extract YouTube video tags
-def walker(keyword):    
-    search = {'search_query': keyword}
-    url = 'https://www.youtube.com/results?{}'.format(par.urlencode(search))
-    
-    # Fetch the search results page
-    content = requests.get(url)
-    soup = BeautifulSoup(content.content, 'html.parser')
-    
-    # Find all video links on the search results page
-    a_tags = soup.findAll("a", attrs={"class": "yt-uix-sessionlink spf-link", "aria-hidden": "true"})
-    for tag in a_tags:
-        if "/watch" in tag['href']:
-            yield tag['href']
-
-def tag_extractor(url):
-    # Fetch the video page
-    content = requests.get(url)
-    soup = BeautifulSoup(content.content, 'html.parser')
-    
-    # Extract the tags from the video page
-    for script in soup.findAll('script'):
-        if 'keywords' in str(script):    
-            start_ind = str(script).index('keywords')
-            start_ind += 10
-            rest_out = str(str(script)[start_ind:])
-            end_ind = rest_out.index(']')
-            final = rest_out[:end_ind+1]
-            final = final.replace('\\', '')
-            final = final.replace(':', '')
-            return json.loads(final)
-
+# Function to extract YouTube video tags using yt-dlp
 async def ytag_handler(client: Client, message: Message):
     if len(message.command) <= 1:
-        await message.reply_text("**Please provide a URL. Usage: /ytag [URL]**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+        await message.reply_text("**Please provide a YouTube URL. Usage: /ytag [URL]**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
         return
 
-    keyword = message.command[1]
+    url = message.command[1]
     fetching_msg = await message.reply_text("**Processing Your Request...**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     
-    final = []
-    for link in walker(keyword):
-        url = 'https://www.youtube.com' + link
-        out = tag_extractor(url)
-        if out is not None:
-            final += out
+    ydl_opts = {
+        'quiet': True,
+        'skip_download': True,
+        'force_generic_extractor': True,
+        'cookiefile': 'YT_COOKIES_PATH',  # Path to your cookie file
+    }
 
-    if not final:
-        response = "**Sorry No Tags Available For This Video**"
-    else:
-        tags_str = "\n".join([f"`{tag}`" for tag in final])
-        response = f"**Your Requested Video Tags ✅**\n━━━━━━━━━━━━━━━━\n{tags_str}"
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=False)
+            tags = info_dict.get('tags', [])
+
+        if not tags:
+            response = "**Sorry, no tags available for this video.**"
+        else:
+            tags_str = "\n".join([f"`{tag}`" for tag in tags])
+            response = f"**Your Requested Video Tags ✅**\n━━━━━━━━━━━━━━━━\n{tags_str}"
+
+    except Exception as e:
+        response = f"**An error occurred: {str(e)}**"
 
     await fetching_msg.delete()
     await message.reply_text(response, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
