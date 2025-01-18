@@ -46,7 +46,8 @@ async def capture_screenshot(client: Client, message: Message):
         os.remove(screenshot_path)
 
     except Exception as e:
-        await message.reply_text(f"**An error occurred: {str(e).replace('_', '\\_')}**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+        error_message = "**An error occurred: {}**".format(str(e).replace('_', '\\_'))
+        await message.reply_text(error_message, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
         await capturing_msg.delete()
 
 def setup_ss_handler(app: Client):
