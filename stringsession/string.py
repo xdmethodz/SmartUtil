@@ -2,6 +2,8 @@ import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
+from telethon import TelegramClient
+from telethon.errors import ApiIdInvalidError, ApiIdPublishedFloodError
 
 user_data = {}
 
@@ -70,7 +72,7 @@ def setup_string_handler(app):
             await message.reply_text("**Send Your API Hash**", reply_markup=restart_close_buttons)
         elif data["api_hash"] is None:
             data["api_hash"] = message.text
-            if validate_api_credentials(data["api_id"], data["api_hash"]):
+            if await validate_api_credentials(data["api_id"], data["api_hash"]):
                 await message.reply_text("**Send Your Phone Number**\n[Example: +880xxxxxxxxxx]", reply_markup=restart_close_buttons)
             else:
                 await message.reply_text("**API ID & API Hash are wrong. Please start again**", reply_markup=restart_close_buttons)
@@ -92,9 +94,14 @@ def setup_string_handler(app):
             session_string = generate_session_string(data["api_id"], data["api_hash"], data["phone_number"], data["otp"], data["2fa"])
             await save_session_string(client, message, data, session_string)
 
-    def validate_api_credentials(api_id, api_hash):
-        # Implement your validation logic here
-        return True
+    async def validate_api_credentials(api_id, api_hash):
+        try:
+            client = TelegramClient('anon', api_id, api_hash)
+            await client.connect()
+            await client.disconnect()
+            return True
+        except (ApiIdInvalidError, ApiIdPublishedFloodError):
+            return False
 
     def account_requires_2fa(phone_number):
         # Implement your logic to check if 2FA is required
