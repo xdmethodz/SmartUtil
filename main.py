@@ -29,6 +29,7 @@ from creditcards.filter import setup_filter_handlers
 from educationutils.mail import setup_mail_handlers
 from aitools.gemi import setup_gem_handler
 from converter.converter import setup_aud_handler
+from converter.down import setup_ws_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -68,6 +69,7 @@ setup_filter_handlers(app)
 setup_mail_handlers(app)
 setup_gem_handler(app)
 setup_aud_handler(app)
+setup_ws_handler(app)
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
