@@ -11,7 +11,9 @@ def take_screenshot(url, output_path):
         'crop-w': '1920',
         'crop-h': '1080'
     }
-    imgkit.from_url(url, output_path, options=options)
+    # Path to wkhtmltoimage executable
+    config = imgkit.config(wkhtmltoimage='/usr/local/bin/wkhtmltoimage')
+    imgkit.from_url(url, output_path, options=options, config=config)
 
 async def capture_screenshot(client: Client, message: Message):
     # Check if the user provided a URL
