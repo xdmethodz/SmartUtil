@@ -308,7 +308,7 @@ async def handle_callback_query(client, callback_query):
         ),
     }
 
-    if call.data in responses:
+if call.data in responses:
         back_button = InlineKeyboardMarkup([
             [InlineKeyboardButton("⬅️ Back", callback_data="main_menu" if call.data != "about_me" else "start_message")]
         ])
@@ -340,9 +340,10 @@ async def handle_callback_query(client, callback_query):
         await call.message.edit_text(
             start_message,
             parse_mode=ParseMode.HTML,
-            reply_markup=[InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")],
-            [InlineKeyboardButton("🔄 Updates", url="https://t.me/abir_x_official"),
-             InlineKeyboardButton("ℹ️ About Me", callback_data="about_me")]
+            reply_markup=InlineKeyboardMarkup([  # Inline keyboard for main menu
+                [InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")],
+                [InlineKeyboardButton("🔄 Updates", url="https://t.me/abir_x_official"),
+                 InlineKeyboardButton("ℹ️ About Me", callback_data="about_me")]
             ]),
             disable_web_page_preview=True,
         )
