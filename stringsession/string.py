@@ -1,269 +1,123 @@
-import time
+import asyncio
 from pyrogram import Client, filters
-from pyrogram.enums import ParseMode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from telethon import TelegramClient
-from telethon.sessions import StringSession
-from pyrogram.errors import (
-    ApiIdInvalid,
-    PhoneNumberInvalid,
-    PhoneCodeInvalid,
-    PhoneCodeExpired,
-    SessionPasswordNeeded,
-    PasswordHashInvalid,
-)
-from telethon.errors import (
-    ApiIdInvalidError,
-    PhoneNumberInvalidError,
-    PhoneCodeInvalidError,
-    PhoneCodeExpiredError,
-    SessionPasswordNeededError,
-    PasswordHashInvalidError,
-)
+from pyrogram.enums import ParseMode
 
-# Constants for timeouts
-TIMEOUT_OTP = 600  # 10 minutes
-TIMEOUT_2FA = 300  # 5 minutes
+user_data = {}
 
-sessions = {}
+def setup_string_handler(app):
+    # Inline keyboard for start and close
+    start_close_buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Start", callback_data="start_session")],
+        [InlineKeyboardButton("Close", callback_data="close_session")]
+    ])
 
-def setup_string_handler(app: Client):
-    @app.on_message(filters.command("pyro") & filters.private)
-    def pyro_command(client, message):
-        proceed_session(client, message, telethon=False)
+    # Inline keyboard for restart and close
+    restart_close_buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Restart", callback_data="restart_session")],
+        [InlineKeyboardButton("Close", callback_data="close_session")]
+    ])
 
-    @app.on_message(filters.command("tele") & filters.private)
-    def tele_command(client, message):
-        proceed_session(client, message, telethon=True)
-
-    def proceed_session(client, message, telethon=False):
-        session_type = "Telethon" if telethon else "Pyrogram"
-        sessions[message.chat.id] = {"type": session_type}
-        message.reply(
-            f"**Welcome to the {session_type} session setup!**\n"
-            "**━━━━━━━━━━━━━━━━━**\n"
-            "**This is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.**\n\n"
-            "**Note: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.**",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("Start", callback_data=f"start_{session_type.lower()}"),
-                InlineKeyboardButton("Close", callback_data="close")
-            ]])
+    async def send_start_message(client, message, command):
+        await message.reply_text(
+            f"Welcome to the {command.capitalize()} session setup!\n"
+            "━━━━━━━━━━━━━━━━━\n"
+            "This is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.\n\n"
+            "Note: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.",
+            reply_markup=start_close_buttons
         )
 
-    @app.on_callback_query(filters.regex(r"^start_(pyrogram|telethon)"))
-    def on_start_callback(client, callback_query):
-        session_type = callback_query.data.split('_')[1]
-        callback_query.message.edit_text(
-            "<b>Send Your API ID</b>",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("Restart", callback_data=f"restart_{session_type}"),
-                InlineKeyboardButton("Close", callback_data="close")
-            ]]),
-            parse_mode=ParseMode.HTML
-        )
-        sessions[callback_query.message.chat.id]["stage"] = "api_id"
+    @app.on_message(filters.command(["pyro", "tele"]) & filters.private)
+    async def handle_command(client, message):
+        command = message.text[1:]
+        user_data[message.from_user.id] = {
+            "command": command,
+            "api_id": None,
+            "api_hash": None,
+            "phone_number": None,
+            "otp": None,
+            "2fa": None,
+            "start_time": asyncio.get_event_loop().time()
+        }
+        await send_start_message(client, message, command)
 
-    @app.on_callback_query(filters.regex(r"^restart_(pyrogram|telethon)"))
-    def on_restart_callback(client, callback_query):
-        session_type = callback_query.data.split('_')[1]
-        proceed_session(client, callback_query.message, telethon=(session_type == "telethon"))
+    @app.on_callback_query(filters.regex("start_session"))
+    async def handle_start(client, callback_query):
+        await callback_query.message.reply_text("**Send Your API ID**", reply_markup=restart_close_buttons)
 
-    @app.on_callback_query(filters.regex(r"^close"))
-    def on_close_callback(client, callback_query):
-        callback_query.message.edit_text("Session generation process has been closed.")
-        if callback_query.message.chat.id in sessions:
-            del sessions[callback_query.message.chat.id]
+    @app.on_callback_query(filters.regex("close_session"))
+    async def handle_close(client, callback_query):
+        await callback_query.message.reply_text("Command function closed.")
+        await callback_query.message.delete()
+
+    @app.on_callback_query(filters.regex("restart_session"))
+    async def handle_restart(client, callback_query):
+        user_id = callback_query.from_user.id
+        command = user_data.get(user_id, {}).get("command", "")
+        if command:
+            await send_start_message(client, callback_query.message, command)
 
     @app.on_message(filters.text & filters.private)
-    def on_text_message(client, message):
-        chat_id = message.chat.id
-        if chat_id not in sessions:
+    async def handle_user_input(client, message):
+        user_id = message.from_user.id
+        if user_id not in user_data:
             return
 
-        session = sessions[chat_id]
-        stage = session.get("stage")
+        data = user_data[user_id]
 
-        if cancelled(message):
-            return
-
-        if stage == "api_id":
-            handle_api_id(client, message, session)
-        elif stage == "api_hash":
-            handle_api_hash(client, message, session)
-        elif stage == "phone_number":
-            handle_phone_number(client, message, session)
-        elif stage == "otp":
-            handle_otp(client, message, session)
-        elif stage == "2fa":
-            handle_2fa(client, message, session)
-
-    def handle_api_id(client, message, session):
-        try:
-            api_id = int(message.text)
-            session["api_id"] = api_id
-            message.reply(
-                "<b>Send Your API Hash</b>",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"),
-                    InlineKeyboardButton("Close", callback_data="close")
-                ]]),
-                parse_mode=ParseMode.HTML
-            )
-            session["stage"] = "api_hash"
-        except ValueError:
-            message.reply("Invalid API ID. Please enter a valid integer.")
-
-    def handle_api_hash(client, message, session):
-        session["api_hash"] = message.text
-        message.reply(
-            "<b>Send Your Phone Number\n[Example: +880xxxxxxxxxx]</b>",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"),
-                InlineKeyboardButton("Close", callback_data="close")
-            ]]),
-            parse_mode=ParseMode.HTML
-        )
-        session["stage"] = "phone_number"
-
-    def handle_phone_number(client, message, session):
-        session["phone_number"] = message.text
-        message.reply("Sending OTP.....")
-        send_otp(client, message)
-
-    def handle_otp(client, message, session):
-        otp = ''.join([char for char in message.text if char.isdigit()])
-        session["otp"] = otp
-        message.reply("Validating OTP.....")
-        validate_otp(client, message)
-
-    def handle_2fa(client, message, session):
-        session["password"] = message.text
-        validate_2fa(client, message)
-
-    def send_otp(client, message):
-        session = sessions[message.chat.id]
-        api_id = session["api_id"]
-        api_hash = session["api_hash"]
-        phone_number = session["phone_number"]
-        telethon = session["type"] == "Telethon"
-
-        if telethon:
-            client_obj = TelegramClient(StringSession(), api_id, api_hash)
-        else:
-            client_obj = Client(in_memory=True, api_id=api_id, api_hash=api_hash)
-
-        client_obj.connect()
-
-        try:
-            if telethon:
-                code = client_obj.send_code_request(phone_number)
+        if data["api_id"] is None:
+            data["api_id"] = message.text
+            await message.reply_text("**Send Your API Hash**", reply_markup=restart_close_buttons)
+        elif data["api_hash"] is None:
+            data["api_hash"] = message.text
+            if validate_api_credentials(data["api_id"], data["api_hash"]):
+                await message.reply_text("**Send Your Phone Number**\n[Example: +880xxxxxxxxxx]", reply_markup=restart_close_buttons)
             else:
-                code = client_obj.send_code(phone_number)
-            session["client_obj"] = client_obj
-            session["code"] = code
-            session["stage"] = "otp"
-            message.reply(
-                "<b>Send The OTP as text. Please send a text message embedding the OTP like: 'AB1 CD2 EF3 GH4 IJ5'</b>",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"),
-                    InlineKeyboardButton("Close", callback_data="close")
-                ]]),
-                parse_mode=ParseMode.HTML
-            )
-        except (ApiIdInvalid, ApiIdInvalidError):
-            message.reply('API ID & API Hash are wrong. Please start again.', reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="close")]
-            ]))
-            return
-        except (PhoneNumberInvalid, PhoneNumberInvalidError):
-            message.reply('PHONE NUMBER is invalid. Please start again.', reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="close")]
-            ]))
-            return
-
-    def validate_otp(client, message):
-        session = sessions[message.chat.id]
-        client_obj = session["client_obj"]
-        phone_number = session["phone_number"]
-        otp = session["otp"]
-        code = session["code"]
-        telethon = session["type"] == "Telethon"
-
-        try:
-            if telethon:
-                client_obj.sign_in(phone_number, otp, password=None)
+                await message.reply_text("**API ID & API Hash are wrong. Please start again**", reply_markup=restart_close_buttons)
+                data["api_id"] = None
+                data["api_hash"] = None
+        elif data["phone_number"] is None:
+            data["phone_number"] = message.text
+            await message.reply_text("**Send The OTP as text. Please send a text message embedding the OTP like: 'AB1 CD2 EF3 GH4 IJ5'**", reply_markup=restart_close_buttons)
+        elif data["otp"] is None:
+            otp = "".join([part[2:] for part in message.text.split()])
+            data["otp"] = otp
+            if account_requires_2fa(data["phone_number"]):
+                await message.reply_text("**2FA Is Required To Login Please Enter 2FA**", reply_markup=restart_close_buttons)
             else:
-                client_obj.sign_in(phone_number, code.phone_code_hash, otp)
-            generate_session(client, message)
-        except (PhoneCodeInvalid, PhoneCodeInvalidError):
-            message.reply('OTP is invalid. Please start again.', reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="close")]
-            ]))
-            return
-        except (PhoneCodeExpired, PhoneCodeExpiredError):
-            message.reply('OTP is expired. Please start again.', reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="close")]
-            ]))
-            return
-        except (SessionPasswordNeeded, SessionPasswordNeededError):
-            session["stage"] = "2fa"
-            message.reply(
-                "<b>2FA Is Required To Login. Please Enter 2FA</b>",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"),
-                    InlineKeyboardButton("Close", callback_data="close")
-                ]]),
-                parse_mode=ParseMode.HTML
-            )
+                session_string = generate_session_string(data["api_id"], data["api_hash"], data["phone_number"], data["otp"])
+                await save_session_string(client, message, data, session_string)
+        elif data["2fa"] is None and account_requires_2fa(data["phone_number"]):
+            data["2fa"] = message.text
+            session_string = generate_session_string(data["api_id"], data["api_hash"], data["phone_number"], data["otp"], data["2fa"])
+            await save_session_string(client, message, data, session_string)
 
-    def validate_2fa(client, message):
-        session = sessions[message.chat.id]
-        client_obj = session["client_obj"]
-        password = session["password"]
-        telethon = session["type"] == "Telethon"
+    def validate_api_credentials(api_id, api_hash):
+        # Implement your validation logic here
+        return True
 
-        try:
-            if telethon:
-                client_obj.sign_in(password=password)
-            else:
-                client_obj.check_password(password=password)
-            generate_session(client, message)
-        except (PasswordHashInvalid, PasswordHashInvalidError):
-            message.reply('Invalid Password Provided. Please start again.', reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Restart", callback_data=f"restart_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="close")]
-            ]))
-            return
+    def account_requires_2fa(phone_number):
+        # Implement your logic to check if 2FA is required
+        return False
 
-    def generate_session(client, message):
-        session = sessions[message.chat.id]
-        client_obj = session["client_obj"]
-        telethon = session["type"] == "Telethon"
+    def generate_session_string(api_id, api_hash, phone_number, otp, two_fa=None):
+        # Implement your session string generation logic here
+        return "GeneratedSessionString"
 
-        if telethon:
-            string_session = client_obj.session.save()
-        else:
-            string_session = client_obj.export_session_string()
+    async def save_session_string(client, message, data, session_string):
+        command = data["command"]
+        await message.reply_text(f"**This string has been saved ✅ in your Saved Messages**\n\n"
+                                 f"({command.capitalize()} SESSION STRING FROM Smart Tool:\n\n"
+                                 f"{session_string}")
+        await client.send_message(message.from_user.id, f"{command.capitalize()} SESSION STRING FROM Smart Tool:\n\n{session_string}")
+        del user_data[message.from_user.id]
 
-        text = f"**{session['type'].upper()} SESSION STRING FROM Smart Tool**:\n\n{string_session}"
-
-        try:
-            client_obj.send_message("me", text)
-        except KeyError:
-            pass
-
-        client_obj.disconnect()
-        message.reply("<b>This string has been saved ✅ in your Saved Messages</b>", parse_mode=ParseMode.HTML)
-        del sessions[message.chat.id]
-
-    def cancelled(message):
-        if "/cancel" in message.text:
-            message.reply("Cancelled the Process!", quote=True)
-            return True
-        elif "/restart" in message.text:
-            message.reply("Restarted the Bot!", quote=True)
-            return True
-        elif message.text.startswith("/"):  # Bot Commands
-            message.reply("Cancelled the process!", quote=True)
-            return True
-        else:
-            return False
+    @app.on_message(filters.text & filters.private)
+    async def check_for_timeout(client, message):
+        user_id = message.from_user.id
+        if user_id in user_data:
+            start_time = user_data[user_id]["start_time"]
+            if asyncio.get_event_loop().time() - start_time > 600:  # 10 minutes timeout
+                command = user_data[user_id]["command"]
+                await message.reply_text(f"**Your time expired. Try /{command} to start again.**")
+                del user_data[user_id]
