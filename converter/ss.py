@@ -1,24 +1,17 @@
 import os
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+import asyncio
+from pyppeteer import launch
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
-def take_screenshot(url, output_path):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--window-size=1920x1080")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-
-    service = ChromeService(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    driver.get(url)
-    driver.save_screenshot(output_path)
-    driver.quit()
+async def take_screenshot(url, output_path):
+    browser = await launch(headless=True)
+    page = await browser.newPage()
+    await page.setViewport({'width': 1920, 'height': 1080})
+    await page.goto(url)
+    await page.screenshot({'path': output_path, 'fullPage': True})
+    await browser.close()
 
 async def capture_screenshot(client: Client, message: Message):
     # Check if the user provided a URL
@@ -36,7 +29,7 @@ async def capture_screenshot(client: Client, message: Message):
         screenshot_path = os.path.join("screenshots", "screenshot.png")
         if not os.path.exists("screenshots"):
             os.makedirs("screenshots")
-        take_screenshot(url, screenshot_path)
+        await take_screenshot(url, screenshot_path)
 
         # Delete the capturing message
         await capturing_msg.delete()
@@ -53,7 +46,7 @@ async def capture_screenshot(client: Client, message: Message):
         os.remove(screenshot_path)
 
     except Exception as e:
-        await message.reply_text(f"**An error occurred: {str(e)}**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+        await message.reply_text(f"**An error occurred: {str(e).replace('_', '\\_')}**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
         await capturing_msg.delete()
 
 def setup_ss_handler(app: Client):
