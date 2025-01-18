@@ -10,7 +10,7 @@ import json
 import yt_dlp
 
 # Path to your YouTube cookies file
-YT_COOKIES_PATH = "./cookies/cookies.txt"
+YT_COOKIES_PATH = "./cookie/nm.txt"
 
 # Function to get IP information
 def get_ip_info(ip: str) -> str:
