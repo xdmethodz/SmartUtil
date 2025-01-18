@@ -32,6 +32,9 @@ async def aud_handler(client: Client, message: Message):
         # Download the video
         video_file_path = await message.reply_to_message.download(DOWNLOAD_DIRECTORY)
 
+        # Delete the downloading message
+        await downloading_msg.delete()
+
         # Notify the user that the video is being converted to audio
         converting_msg = await message.reply_text("**Converting To .mp3 ....**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
@@ -40,6 +43,12 @@ async def aud_handler(client: Client, message: Message):
 
         # Convert the video to audio using ffmpeg
         subprocess.run(["ffmpeg", "-i", video_file_path, audio_file_path])
+
+        # Delete the converting message
+        await converting_msg.delete()
+
+        # Notify the user that the audio is being uploaded
+        uploading_msg = await message.reply_text("**Uploading Audio...**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
         # Upload the audio file to the user
         await client.send_audio(
@@ -58,9 +67,8 @@ async def aud_handler(client: Client, message: Message):
         if os.path.exists(audio_file_path):
             os.remove(audio_file_path)
 
-        # Delete the notification messages
-        await downloading_msg.delete()
-        await converting_msg.delete()
+        # Delete the uploading message
+        await uploading_msg.delete()
 
 # Function to set up handlers for the Pyrogram bot
 def setup_aud_handler(app: Client):
