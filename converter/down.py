@@ -4,6 +4,7 @@ import requests
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 import zipfile
+import shutil
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
@@ -84,6 +85,10 @@ class URLDownloader:
                     arcname = os.path.relpath(file_path, start=folder_path)
                     zipf.write(file_path, arcname)
 
+    def _remove_folder(self, folder_path):
+        """Remove a folder and its contents."""
+        shutil.rmtree(folder_path)
+
 async def download_web_source(client: Client, message: Message):
     # Check if the user provided a URL
     if len(message.command) <= 1:
@@ -125,12 +130,7 @@ async def download_web_source(client: Client, message: Message):
             os.remove(zip_path)
 
             # Delete the temporary files
-            for root, dirs, files in os.walk(page_folder):
-                for file in files:
-                    os.remove(os.path.join(root, file))
-                for dir in dirs:
-                    os.rmdir(os.path.join(root, dir))
-            os.rmdir(page_folder)
+            downloader._remove_folder(page_folder)
 
     except Exception as e:
         await message.reply_text(f"**An error occurred: {str(e)}**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
