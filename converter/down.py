@@ -42,7 +42,7 @@ class URLDownloader:
             with open(os.path.join(page_folder, 'page.html'), 'wb') as file:
                 file.write(self.soup.prettify('utf-8'))
                 
-            self._zip_folder(page_folder)
+            self._zip_folder(page_folder, url)
             return True
         except Exception as e:
             print(f"> save_page(): Create files failed: {str(e)}")
@@ -75,15 +75,19 @@ class URLDownloader:
             except Exception as exc:
                 print(exc, file=sys.stderr)
                 
-    def _zip_folder(self, folder_path):
+    def _zip_folder(self, folder_path, url):
         """Zip the folder."""
-        zip_path = f"{folder_path}.zip"
+        sanitized_url = re.sub(r'\W+', '_', url)
+        zip_name = f"Smart Tool ⚙️ ({sanitized_url}).zip"
+        zip_path = os.path.join(folder_path, zip_name)
+
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(folder_path):
                 for file in files:
                     file_path = os.path.join(root, file)
                     arcname = os.path.relpath(file_path, start=folder_path)
                     zipf.write(file_path, arcname)
+        return zip_path
 
     def _remove_folder(self, folder_path):
         """Remove a folder and its contents."""
@@ -105,7 +109,7 @@ async def download_web_source(client: Client, message: Message):
         downloader = URLDownloader()
         page_folder = os.path.join("downloads", urlparse(url).netloc)
         if downloader.save_page(url, page_folder):
-            zip_path = f"{page_folder}.zip"
+            zip_path = downloader._zip_folder(page_folder, url)
 
             # Send the zip file to the user
             user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
