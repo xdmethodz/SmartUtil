@@ -31,6 +31,10 @@ from aitools.gemi import setup_gem_handler
 from converter.converter import setup_aud_handler
 from converter.down import setup_ws_handler
 from stringsession.string import setup_string_handler
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -343,5 +347,6 @@ async def handle_callback_query(client, callback_query):
             disable_web_page_preview=True,
         )
 
-print("Bot is running...")
-app.run()
+if __name__ == "__main__":
+    logger.info("Bot is starting...")
+    app.run()
