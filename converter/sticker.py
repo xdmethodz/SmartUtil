@@ -42,24 +42,29 @@ async def handle_quote_command(client: Client, message: Message):
     }
 
     try:
-        response = requests.post('https://bot.lyo.su/quote/generate', json=json).json()
-        logging.info(f"API Response: {response}")
+        response = requests.post('https://bot.lyo.su/quote/generate', json=json)
+        logging.info(f"API Response Status Code: {response.status_code}")
+        logging.info(f"API Response: {response.text}")
 
-        if 'result' in response:
-            buffer = base64.b64decode(response['result']['image'].encode('utf-8'))
-            sticker_path = 'Quotly.png'
-            with open(sticker_path, 'wb') as f:
-                f.write(buffer)
+        if response.status_code == 200:
+            response_json = response.json()
+            if 'result' in response_json:
+                buffer = base64.b64decode(response_json['result']['image'].encode('utf-8'))
+                sticker_path = 'Quotly.png'
+                with open(sticker_path, 'wb') as f:
+                    f.write(buffer)
 
-            await client.send_photo(
-                chat_id=message.chat.id,
-                photo=sticker_path,
-                caption="Here is your quote sticker!",
-                parse_mode=ParseMode.MARKDOWN
-            )
+                await client.send_photo(
+                    chat_id=message.chat.id,
+                    photo=sticker_path,
+                    caption="Here is your quote sticker!",
+                    parse_mode=ParseMode.MARKDOWN
+                )
+            else:
+                error_message = response_json.get('error', 'Unknown error occurred')
+                await message.reply_text(f"**Failed to generate sticker. API response error: {error_message}**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
         else:
-            error_message = response.get('error', 'Unknown error occurred')
-            await message.reply_text(f"**Failed to generate sticker. API response error: {error_message}**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            await message.reply_text(f"**Failed to generate sticker. Server responded with status code {response.status_code}**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
     except requests.RequestException as e:
         logging.error(f"Request failed: {e}")
