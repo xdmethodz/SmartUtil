@@ -1,17 +1,17 @@
 import os
-import asyncio
-from pyppeteer import launch
+import imgkit
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
-async def take_screenshot(url, output_path):
-    browser = await launch(headless=True)
-    page = await browser.newPage()
-    await page.setViewport({'width': 1920, 'height': 1080})
-    await page.goto(url)
-    await page.screenshot({'path': output_path, 'fullPage': True})
-    await browser.close()
+def take_screenshot(url, output_path):
+    # Configure options for imgkit
+    options = {
+        'format': 'png',
+        'crop-w': '1920',
+        'crop-h': '1080'
+    }
+    imgkit.from_url(url, output_path, options=options)
 
 async def capture_screenshot(client: Client, message: Message):
     # Check if the user provided a URL
@@ -29,7 +29,7 @@ async def capture_screenshot(client: Client, message: Message):
         screenshot_path = os.path.join("screenshots", "screenshot.png")
         if not os.path.exists("screenshots"):
             os.makedirs("screenshots")
-        await take_screenshot(url, screenshot_path)
+        take_screenshot(url, screenshot_path)
 
         # Delete the capturing message
         await capturing_msg.delete()
