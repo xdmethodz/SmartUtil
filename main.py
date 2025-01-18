@@ -2,13 +2,13 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 from pyrogram.enums import ParseMode
-
 # Import the handlers
 from decoders.decoders import setup_decoders_handler
 from others.privacy import setup_privacy_handler
 from others.yth import setup_yth_handler
 from others.info import setup_info_handler
 from others.times import setup_time_handler
+from others.privacy import setup_privacy_handler
 from crypto.binance import setup_binance_handler
 from tempmail.tempmail import setup_temp_mail_handler
 from crypto.crypto import setup_crypto_handler
@@ -31,7 +31,6 @@ from aitools.gemi import setup_gem_handler
 from converter.converter import setup_aud_handler
 from converter.down import setup_ws_handler
 from stringsession.string import setup_string_handler
-
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -45,39 +44,35 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
+
 # Setup handlers
-def setup_handlers(app):
-    setup_decoders_handler(app)
-    setup_privacy_handler(app)
-    setup_yth_handler(app)
-    setup_info_handler(app)
-    setup_time_handler(app)
-    setup_binance_handler(app)
-    setup_temp_mail_handler(app)
-    setup_crypto_handler(app)
-    setup_fake_handler(app)
-    setup_education_handler(app)
-    setup_gpt_handlers(app)
-    setup_ip_handlers(app)
-    setup_admin_handlers(app)
-    setup_downloader_handler(app)
-    setup_pinterest_handler(app)
-    setup_dl_handlers(app)
-    setup_spotify_handler(app)
-    setup_eng_handler(app)
-    setup_credit_handlers(app)
-    setup_db_handlers(app)
-    setup_bin_handlers(app)
-    setup_filter_handlers(app)
-    setup_mail_handlers(app)
-    setup_gem_handler(app)
-    setup_aud_handler(app)
-    setup_ws_handler(app)
-    setup_string_handler(app)
-
-# Call the function to setup all handlers
-setup_handlers(app)
-
+setup_decoders_handler(app)
+setup_privacy_handler(app)
+setup_yth_handler(app)
+setup_info_handler(app)
+setup_time_handler(app)
+setup_binance_handler(app)
+setup_temp_mail_handler(app)
+setup_crypto_handler(app)
+setup_fake_handler(app)
+setup_education_handler(app)
+setup_gpt_handlers(app)
+setup_ip_handlers(app)
+setup_admin_handlers(app)
+setup_downloader_handler(app)
+setup_pinterest_handler(app)
+setup_dl_handlers(app)
+setup_spotify_handler(app)
+setup_eng_handler(app)
+setup_credit_handlers(app)
+setup_db_handlers(app)
+setup_bin_handlers(app)
+setup_filter_handlers(app)
+setup_mail_handlers(app)
+setup_gem_handler(app)
+setup_aud_handler(app)
+setup_ws_handler(app)
+setup_string_handler(app)
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
@@ -348,6 +343,5 @@ async def handle_callback_query(client, callback_query):
             disable_web_page_preview=True,
         )
 
-if __name__ == "__main__":
-    print("Bot is running...")
-    app.run()
+print("Bot is running...")
+app.run()
