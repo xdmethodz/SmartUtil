@@ -1,4 +1,4 @@
-import requests 
+import requests
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -67,7 +67,7 @@ def setup_string_handler(app: Client):
     @app.on_callback_query(filters.regex(r"^retry_(pyrogram|telethon)"))
     async def on_retry_callback(client, callback_query):
         session_type = callback_query.data.split('_')[1]
-        await start_session(client, callback_query.message, telethon=(session_type == "telethon"))
+        await proceed_session(client, callback_query.message, telethon=(session_type == "telethon"))
 
     @app.on_callback_query(filters.regex(r"^close"))
     async def on_close_callback(client, callback_query):
@@ -82,48 +82,62 @@ def setup_string_handler(app: Client):
         session = sessions[chat_id]
         stage = session.get("stage")
 
-        if stage == "api_id":
-            try:
-                api_id = int(message.text)
-                session["api_id"] = api_id
-                await message.reply(
-                    "<b>Send Your API Hash</b>",
-                    reply_markup=InlineKeyboardMarkup([[
-                        InlineKeyboardButton("Retry", callback_data=f"retry_{session['type'].lower()}"),
-                        InlineKeyboardButton("Close", callback_data="close")
-                    ]]),
-                    parse_mode=ParseMode.HTML
-                )
-                session["stage"] = "api_hash"
-            except ValueError:
-                await message.reply("Invalid API ID. Please enter a valid integer.")
+        if await cancelled(message):
+            return
 
+        if stage == "api_id":
+            await handle_api_id(client, message, session)
         elif stage == "api_hash":
-            session["api_hash"] = message.text
+            await handle_api_hash(client, message, session)
+        elif stage == "phone_number":
+            await handle_phone_number(client, message, session)
+        elif stage == "otp":
+            await handle_otp(client, message, session)
+        elif stage == "2fa":
+            await handle_2fa(client, message, session)
+
+    async def handle_api_id(client, message, session):
+        try:
+            api_id = int(message.text)
+            session["api_id"] = api_id
             await message.reply(
-                "<b>Send Your Phone Number\n[Example: +880xxxxxxxxxx]</b>",
+                "<b>Send Your API Hash</b>",
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("Retry", callback_data=f"retry_{session['type'].lower()}"),
                     InlineKeyboardButton("Close", callback_data="close")
                 ]]),
                 parse_mode=ParseMode.HTML
             )
-            session["stage"] = "phone_number"
+            session["stage"] = "api_hash"
+        except ValueError:
+            await message.reply("Invalid API ID. Please enter a valid integer.")
 
-        elif stage == "phone_number":
-            session["phone_number"] = message.text
-            await message.reply("Sending OTP.....")
-            await send_otp(client, message)
+    async def handle_api_hash(client, message, session):
+        session["api_hash"] = message.text
+        await message.reply(
+            "<b>Send Your Phone Number\n[Example: +880xxxxxxxxxx]</b>",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("Retry", callback_data=f"retry_{session['type'].lower()}"),
+                InlineKeyboardButton("Close", callback_data="close")
+            ]]),
+            parse_mode=ParseMode.HTML
+        )
+        session["stage"] = "phone_number"
 
-        elif stage == "otp":
-            otp = ''.join([char for char in message.text if char.isdigit()])
-            session["otp"] = otp
-            await message.reply("Validating OTP.....")
-            await validate_otp(client, message)
+    async def handle_phone_number(client, message, session):
+        session["phone_number"] = message.text
+        await message.reply("Sending OTP.....")
+        await send_otp(client, message)
 
-        elif stage == "2fa":
-            session["password"] = message.text
-            await validate_2fa(client, message)
+    async def handle_otp(client, message, session):
+        otp = ''.join([char for char in message.text if char.isdigit()])
+        session["otp"] = otp
+        await message.reply("Validating OTP.....")
+        await validate_otp(client, message)
+
+    async def handle_2fa(client, message, session):
+        session["password"] = message.text
+        await validate_2fa(client, message)
 
     async def send_otp(client, message):
         session = sessions[message.chat.id]
