@@ -22,8 +22,12 @@ class URLDownloader:
     def save_page(self, url, page_folder='page'):
         """Save the web page components based on the input URL and directory name."""
         try:
+            # Ensure the URL has a scheme
+            if not urlparse(url).scheme:
+                url = "https://" + url
+
             response = self.session.get(url)
-            self.soup = BeautifulSoup(response.text, features="lxml")
+            self.soup = BeautifulSoup(response.text, "html.parser")  # Use html.parser if lxml is not available
             if not os.path.exists(page_folder):
                 os.mkdir(page_folder)
                 
