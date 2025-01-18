@@ -110,22 +110,34 @@ async def stats_handler(client: Client, message: Message):
     stats_message = f"""➠ 📊 ｢Smart Tool ⚙️ Bot Live Statistics 」 📊
 ━━━━━━━━━━━━━━━━
 ☑️1 Day: {daily_users} users were active☑️
+
 ☑️1 Week: {weekly_users} users were active☑️
+
 ☑️1 Month: {monthly_users} users were active☑️
+
 ☑️1 Year: {yearly_users} users were active☑️
+
 ━━━━━━━━━━━━━━━━
 Total Users: {total_users}
 ━━━━━━━━━━━━━━━━
+
 👨‍💻Developer: @abirxdhackz ☑️
+
 👮🏻‍Support: @abir_x_official_Chat ☑️
+
 🔄Updates: @abir_x_official ☑️
+
 💰Server: @Smart_Nexus_Bot Hosted by @abirxdhackz. Powered by @abir_x_official ☑️
-📝 Framework: Python + PYROGRAM + TELETHON + AIOGRAM MIXED ☑️
+
+📝 Framework: Python + Program + Telethon + Aiogram Mixed ☑️
+
 💾 Database: MongoDB ☑️
+
 📛 Version: Latest ☑️
+
 👑 Creator: @abirxdhackz 👨‍💻"""
 
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Updates Channel", url="https://t.me/abir_x_official")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("👨‍💻 Updates Channel ☠️", url="https://t.me/abir_x_official")]])
     await message.reply_text(stats_message, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard)
 
 def setup_admin_handlers(app: Client):
