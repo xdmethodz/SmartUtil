@@ -3,13 +3,14 @@ import base64
 import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.enums import ParseMode
 
 def setup_q_handler(app: Client):
     @app.on_message(filters.command("q") & filters.private)
     async def generate_quote(client: Client, message: Message):
         # Get the text to quote from the message
         if len(message.command) < 2:
-            await message.reply_text("Please provide the text to quote.")
+            await message.reply_text("**Please provide the text to quote.**", parse_mode=ParseMode.MARKDOWN)
             return
 
         text = " ".join(message.command[1:])
@@ -21,7 +22,7 @@ def setup_q_handler(app: Client):
         if user.photo:
             avatar_file_path = await client.download_media(user.photo.big_file_id)
         else:
-            await message.reply_text("You do not have a profile photo set.")
+            await message.reply_text("**You do not have a profile photo set.**", parse_mode=ParseMode.MARKDOWN)
             return
 
         # Convert the avatar to base64
@@ -33,8 +34,8 @@ def setup_q_handler(app: Client):
             "type": "quote",
             "format": "webp",
             "backgroundColor": "#FFFFFF",
-            "width": 100,
-            "height": 100,
+            "width": 512,
+            "height": 768,
             "scale": 2,
             "messages": [
                 {
@@ -46,10 +47,10 @@ def setup_q_handler(app: Client):
                         "photo": {
                             "url": f"data:image/jpeg;base64,{avatar_base64}"
                         },
-                        "fontSize": "small"  # Make the profile name smaller
+                        "fontSize": "small"  # Ensure the profile name is small
                     },
                     "text": text,
-                    "textFontSize": "small",  # Make the text smaller
+                    "textFontSize": "small",  # Ensure the text is small
                     "replyMessage": {}
                 }
             ]
