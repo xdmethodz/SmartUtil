@@ -2,7 +2,6 @@ import os
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
-import asyncio
 
 # Define a function to generate a new sticker pack name
 def generate_sticker_pack_name(user_id):
@@ -45,52 +44,70 @@ def setup_kang_handler(app: Client):
         try:
             # Try to add the sticker to the existing pack
             if is_animated:
-                await client.add_sticker_to_set(
-                    user_id=user_id,
-                    name=sticker_pack_name,
-                    emojis=emoji,
-                    tgs_sticker=file_path
+                await client.invoke(
+                    "addStickerToSet",
+                    {
+                        "user_id": user_id,
+                        "name": sticker_pack_name,
+                        "emojis": emoji,
+                        "tgs_sticker": file_path,
+                    },
                 )
             elif is_video:
-                await client.add_sticker_to_set(
-                    user_id=user_id,
-                    name=sticker_pack_name,
-                    emojis=emoji,
-                    webm_sticker=file_path
+                await client.invoke(
+                    "addStickerToSet",
+                    {
+                        "user_id": user_id,
+                        "name": sticker_pack_name,
+                        "emojis": emoji,
+                        "webm_sticker": file_path,
+                    },
                 )
             else:
-                await client.add_sticker_to_set(
-                    user_id=user_id,
-                    name=sticker_pack_name,
-                    emojis=emoji,
-                    png_sticker=file_path
+                await client.invoke(
+                    "addStickerToSet",
+                    {
+                        "user_id": user_id,
+                        "name": sticker_pack_name,
+                        "emojis": emoji,
+                        "png_sticker": file_path,
+                    },
                 )
-        except Exception as e:
+        except Exception:
             # If the pack does not exist, create a new one
             try:
                 if is_animated:
-                    await client.create_new_sticker_set(
-                        user_id=user_id,
-                        name=sticker_pack_name,
-                        title=sticker_pack_title,
-                        emojis=emoji,
-                        tgs_sticker=file_path
+                    await client.invoke(
+                        "createNewStickerSet",
+                        {
+                            "user_id": user_id,
+                            "name": sticker_pack_name,
+                            "title": sticker_pack_title,
+                            "emojis": emoji,
+                            "tgs_sticker": file_path,
+                        },
                     )
                 elif is_video:
-                    await client.create_new_sticker_set(
-                        user_id=user_id,
-                        name=sticker_pack_name,
-                        title=sticker_pack_title,
-                        emojis=emoji,
-                        webm_sticker=file_path
+                    await client.invoke(
+                        "createNewStickerSet",
+                        {
+                            "user_id": user_id,
+                            "name": sticker_pack_name,
+                            "title": sticker_pack_title,
+                            "emojis": emoji,
+                            "webm_sticker": file_path,
+                        },
                     )
                 else:
-                    await client.create_new_sticker_set(
-                        user_id=user_id,
-                        name=sticker_pack_name,
-                        title=sticker_pack_title,
-                        emojis=emoji,
-                        png_sticker=file_path
+                    await client.invoke(
+                        "createNewStickerSet",
+                        {
+                            "user_id": user_id,
+                            "name": sticker_pack_name,
+                            "title": sticker_pack_title,
+                            "emojis": emoji,
+                            "png_sticker": file_path,
+                        },
                     )
             except Exception as e:
                 await kanging_message.delete()
@@ -107,7 +124,7 @@ def setup_kang_handler(app: Client):
             parse_mode=ParseMode.MARKDOWN,
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("View Sticker Pack", url=f"t.me/addstickers/{sticker_pack_name}")]]
-            )
+            ),
         )
 
         # Clean up the downloaded file
