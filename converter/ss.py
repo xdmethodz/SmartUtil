@@ -1,58 +1,43 @@
 import os
-import imgkit
+import aiohttp
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
-def take_screenshot(url, output_path):
-    # Configure options for imgkit
-    options = {
-        'format': 'png',
-        'crop-w': '1920',
-        'crop-h': '1080'
-    }
-    # Path to wkhtmltoimage executable
-    config = imgkit.config(wkhtmltoimage='/usr/local/bin/wkhtmltoimage')
-    imgkit.from_url(url, output_path, options=options, config=config)
-
-async def capture_screenshot(client: Client, message: Message):
-    # Check if the user provided a URL
-    if len(message.command) <= 1:
-        await message.reply_text("**Please provide a URL after the command.**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-        return
-
-    url = message.command[1]
-
-    # Notify the user that the screenshot is being captured
-    capturing_msg = await message.reply_text("**⏳ Capturing screenshot, please wait...**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-
-    try:
-        # Capture the screenshot
-        screenshot_path = os.path.join("screenshots", "screenshot.png")
-        if not os.path.exists("screenshots"):
-            os.makedirs("screenshots")
-        take_screenshot(url, screenshot_path)
-
-        # Delete the capturing message
-        await capturing_msg.delete()
-
-        # Send the screenshot to the user
-        await client.send_photo(
-            chat_id=message.chat.id,
-            photo=screenshot_path,
-            caption=f"Screenshot of {url}",
-            parse_mode=ParseMode.MARKDOWN
-        )
-
-        # Delete the screenshot file after sending
-        os.remove(screenshot_path)
-
-    except Exception as e:
-        error_message = "**An error occurred: {}**".format(str(e).replace('_', '\\_'))
-        await message.reply_text(error_message, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-        await capturing_msg.delete()
+API_BASE_URL = "https://webss.yasirapi.eu.org/api"
 
 def setup_ss_handler(app: Client):
     @app.on_message(filters.command("ss") & filters.private)
-    async def ss_command(client: Client, message: Message):
-        await capture_screenshot(client, message)
+    async def capture_screenshot(client: Client, message: Message):
+        # Check if a URL is provided
+        if len(message.command) < 2:
+            await message.reply_text("**Please Give At Least One URL**", parse_mode=ParseMode.HTML)
+            return
+        
+        url = message.command[1]
+        
+        # Inform the user that the screenshot capturing process has started
+        capturing_message = await message.reply_text("**Capturing Screenshot Please Wait..**", parse_mode=ParseMode.HTML)
+        
+        # Construct the API URL
+        api_url = f"{API_BASE_URL}?url={url}&width=1280&height=720"
+        
+        # Capture the screenshot using the API
+        async with aiohttp.ClientSession() as session:
+            async with session.get(api_url) as resp:
+                if resp.status == 200:
+                    # Save the screenshot to a file
+                    file_name = f"screenshot_{message.from_user.id}.png"
+                    with open(file_name, 'wb') as f:
+                        f.write(await resp.read())
+                    
+                    # Send the screenshot to the user
+                    await client.send_photo(message.chat.id, file_name)
+                    
+                    # Delete the screenshot file
+                    os.remove(file_name)
+                else:
+                    await message.reply_text(f"Failed to capture screenshot. Status code: {resp.status}")
+        
+        # Delete the "Capturing Screenshot" message
+        await capturing_message.delete()
