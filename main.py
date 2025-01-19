@@ -36,7 +36,7 @@ from stringsession.string import setup_string_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
-BOT_TOKEN = "8102817624:AAHxa654IoI_ziQn7L020TIjbGkaU9awa_E"  # Replace with your Bot Token
+BOT_TOKEN = "7941865929:AAFh8u_6r7FCEAG564vZ3bvvdphZ-QRFBPg"  # Replace with your Bot Token
 
 # Initialize the bot client
 app = Client(
