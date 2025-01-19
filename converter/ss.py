@@ -17,7 +17,7 @@ def setup_ss_handler(app: Client):
         url = message.command[1]
         
         # Inform the user that the screenshot capturing process has started
-        capturing_message = await message.reply_text("**Capturing Screenshot Please Wait..**", parse_mode=ParseMode.MARKDOWN)
+        capturing_message = await message.reply_text("**⏳ Capturing Screenshot Please Wait..**", parse_mode=ParseMode.MARKDOWN)
         
         # Construct the API URL
         api_url = f"{API_BASE_URL}?url={url}&width=1280&height=720"
