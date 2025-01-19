@@ -11,7 +11,7 @@ def setup_q_handler(app: Client):
         if len(message.command) < 2:
             await message.reply_text("Please provide the text to quote.")
             return
-        
+
         text = " ".join(message.command[1:])
         user = message.from_user
         full_name = f"{user.first_name} {user.last_name}" if user.last_name else user.first_name
@@ -45,9 +45,11 @@ def setup_q_handler(app: Client):
                         "name": full_name,
                         "photo": {
                             "url": f"data:image/jpeg;base64,{avatar_base64}"
-                        }
+                        },
+                        "fontSize": "small"  # Make the profile name smaller
                     },
                     "text": text,
+                    "textFontSize": "small",  # Make the text smaller
                     "replyMessage": {}
                 }
             ]
@@ -58,7 +60,7 @@ def setup_q_handler(app: Client):
         file_path = 'Quotly.webp'
         with open(file_path, 'wb') as f:
             f.write(buffer)
-        
+
         await client.send_sticker(message.chat.id, file_path)
         os.remove(file_path)  # Clean up the file
         os.remove(avatar_file_path)  # Clean up the downloaded avatar file
