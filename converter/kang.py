@@ -6,7 +6,7 @@ import asyncio
 
 # Define a function to generate a new sticker pack name
 def generate_sticker_pack_name(user_id):
-    return f"{user_id}_kang_pack"
+    return f"{user_id}_kang_pack_by_bot"
 
 def setup_kang_handler(app: Client):
     @app.on_message(filters.command("Kang") & filters.private)
@@ -40,48 +40,75 @@ def setup_kang_handler(app: Client):
         # Generate the new sticker pack name
         user_id = message.from_user.id
         sticker_pack_name = generate_sticker_pack_name(user_id)
+        sticker_pack_title = f"{message.from_user.first_name}'s Kanged Pack"
 
-        # Kang the sticker/image
         try:
+            # Try to add the sticker to the existing pack
             if is_animated:
-                await client.create_new_sticker_set(
+                await client.add_sticker_to_set(
                     user_id=user_id,
                     name=sticker_pack_name,
-                    title=f"{message.from_user.first_name}'s Kanged Pack",
                     emojis=emoji,
                     tgs_sticker=file_path
                 )
             elif is_video:
-                await client.create_new_sticker_set(
+                await client.add_sticker_to_set(
                     user_id=user_id,
                     name=sticker_pack_name,
-                    title=f"{message.from_user.first_name}'s Kanged Pack",
                     emojis=emoji,
                     webm_sticker=file_path
                 )
             else:
-                await client.create_new_sticker_set(
+                await client.add_sticker_to_set(
                     user_id=user_id,
                     name=sticker_pack_name,
-                    title=f"{message.from_user.first_name}'s Kanged Pack",
                     emojis=emoji,
                     png_sticker=file_path
                 )
-
-            # Delete the kanging message
-            await kanging_message.delete()
-
-            # Inform the user that kanging is complete
-            await message.reply_text(
-                f"Sticker Kanged!\nSticker Emoji: {emoji}",
-                parse_mode=ParseMode.MARKDOWN,
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("View Sticker Pack", url=f"t.me/addstickers/{sticker_pack_name}")]]
-                )
-            )
         except Exception as e:
-            await kanging_message.delete()
-            await message.reply_text(f"**Failed to kang the sticker:** {e}", parse_mode=ParseMode.MARKDOWN)
+            # If the pack does not exist, create a new one
+            try:
+                if is_animated:
+                    await client.create_new_sticker_set(
+                        user_id=user_id,
+                        name=sticker_pack_name,
+                        title=sticker_pack_title,
+                        emojis=emoji,
+                        tgs_sticker=file_path
+                    )
+                elif is_video:
+                    await client.create_new_sticker_set(
+                        user_id=user_id,
+                        name=sticker_pack_name,
+                        title=sticker_pack_title,
+                        emojis=emoji,
+                        webm_sticker=file_path
+                    )
+                else:
+                    await client.create_new_sticker_set(
+                        user_id=user_id,
+                        name=sticker_pack_name,
+                        title=sticker_pack_title,
+                        emojis=emoji,
+                        png_sticker=file_path
+                    )
+            except Exception as e:
+                await kanging_message.delete()
+                await message.reply_text(f"**Failed to kang the sticker:** {e}", parse_mode=ParseMode.MARKDOWN)
+                os.remove(file_path)
+                return
+
+        # Delete the kanging message
+        await kanging_message.delete()
+
+        # Inform the user that kanging is complete
+        await message.reply_text(
+            f"Sticker Kanged!\nSticker Emoji: {emoji}",
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("View Sticker Pack", url=f"t.me/addstickers/{sticker_pack_name}")]]
+            )
+        )
 
         # Clean up the downloaded file
         os.remove(file_path)
