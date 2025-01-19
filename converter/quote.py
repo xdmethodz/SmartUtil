@@ -33,8 +33,8 @@ def setup_q_handler(app: Client):
             "type": "quote",
             "format": "webp",
             "backgroundColor": "#FFFFFF",
-            "width": 512,
-            "height": 768,
+            "width": 100,
+            "height": 100,
             "scale": 2,
             "messages": [
                 {
@@ -55,10 +55,10 @@ def setup_q_handler(app: Client):
 
         response = requests.post('https://bot.lyo.su/quote/generate', json=json_data).json()
         buffer = base64.b64decode(response['result']['image'].encode('utf-8'))
-        file_path = 'Quotly.png'
+        file_path = 'Quotly.webp'
         with open(file_path, 'wb') as f:
             f.write(buffer)
         
-        await client.send_photo(message.chat.id, file_path, caption="Here is your quote!")
+        await client.send_sticker(message.chat.id, file_path)
         os.remove(file_path)  # Clean up the file
         os.remove(avatar_file_path)  # Clean up the downloaded avatar file
