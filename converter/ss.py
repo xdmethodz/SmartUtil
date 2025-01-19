@@ -16,46 +16,35 @@ def setup_ss_handler(app: Client):
         
         url = message.command[1]
         
+        # Add "https://www." to the URL if it's not present
+        if not url.startswith("https://www."):
+            url = "https://www." + url
+        
         # Inform the user that the screenshot capturing process has started
         capturing_message = await message.reply_text("**⏳ Capturing Screenshot Please Wait..**", parse_mode=ParseMode.MARKDOWN)
         
         # Construct the API URL
         api_url = f"{API_BASE_URL}?url={url}&width=1280&height=720"
         
-        # Capture the screenshot using the API
-        async with aiohttp.ClientSession() as session:
-            async with session.get(api_url) as resp:
-                if resp.status == 200:
-                    # Save the screenshot to a file
-                    file_name = f"screenshot_{message.from_user.id}.png"
-                    with open(file_name, 'wb') as f:
-                        f.write(await resp.read())
-                    
-                    # Send the screenshot to the user
-                    await client.send_photo(message.chat.id, file_name)
-                    
-                    # Delete the screenshot file
-                    os.remove(file_name)
-                else:
-                    await message.reply_text(f"Failed to capture screenshot. Status code: {resp.status}")
+        try:
+            # Capture the screenshot using the API
+            async with aiohttp.ClientSession() as session:
+                async with session.get(api_url) as resp:
+                    if resp.status == 200:
+                        # Save the screenshot to a file
+                        file_name = f"screenshot_{message.from_user.id}.png"
+                        with open(file_name, 'wb') as f:
+                            f.write(await resp.read())
+                        
+                        # Send the screenshot to the user
+                        await client.send_photo(message.chat.id, file_name)
+                        
+                        # Delete the screenshot file
+                        os.remove(file_name)
+                    else:
+                        await message.reply_text("**Sorry, Failed To Save Screenshot**", parse_mode=ParseMode.MARKDOWN)
+        except Exception as e:
+            await message.reply_text("**Sorry, Failed To Save Screenshot**", parse_mode=ParseMode.MARKDOWN)
         
         # Delete the "Capturing Screenshot" message
         await capturing_message.delete()
-
-# Example usage in main.py
-if __name__ == '__main__':
-    from ss import setup_ss_handler
-
-    # Replace these with your actual API details
-    API_ID = "YOUR_API_ID"  # Replace with your API ID
-    API_HASH = "YOUR_API_HASH"  # Replace with your API Hash
-    BOT_TOKEN = "YOUR_BOT_TOKEN"  # Replace with your Bot Token
-
-    # Initialize the bot client
-    app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-    
-    # Setup handlers
-    setup_ss_handler(app)
-    
-    # Run the bot
-    app.run()
