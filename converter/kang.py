@@ -7,8 +7,8 @@ from pyrogram.raw.types import (
     InputStickerSetShortName,
     InputStickerSetItem,
     InputDocument,
-    InputFile
 )
+from pyrogram.raw.functions.upload import GetFile
 
 # Define a function to generate a new sticker pack name
 def generate_sticker_pack_name(user_id):
@@ -49,18 +49,13 @@ def setup_kang_handler(app: Client):
         sticker_pack_title = f"{message.from_user.first_name}'s Kanged Pack"
 
         try:
-            # Upload the file and prepare InputDocument
-            async with client:
-                upload_response = await client.send(
-                    functions.Upload.SaveFilePart(
-                        file=await client.save_file(file_path)
-                    )
-                )
-                input_document = InputDocument(
-                    id=upload_response.file.id,
-                    access_hash=upload_response.file.access_hash,
-                    file_reference=upload_response.file.file_reference,
-                )
+            # Upload the file to Telegram using client.save_file
+            uploaded_file = await client.save_file(file_path)
+            input_document = InputDocument(
+                id=uploaded_file.id,
+                access_hash=uploaded_file.access_hash,
+                file_reference=uploaded_file.file_reference,
+            )
 
             # Try to add the sticker to the existing pack
             try:
