@@ -11,13 +11,13 @@ def setup_ss_handler(app: Client):
     async def capture_screenshot(client: Client, message: Message):
         # Check if a URL is provided
         if len(message.command) < 2:
-            await message.reply_text("**Please Give At Least One URL**", parse_mode=ParseMode.HTML)
+            await message.reply_text("**Please Give At Least One URL**", parse_mode=ParseMode.MARKDOWN)
             return
         
         url = message.command[1]
         
         # Inform the user that the screenshot capturing process has started
-        capturing_message = await message.reply_text("**Capturing Screenshot Please Wait..**", parse_mode=ParseMode.HTML)
+        capturing_message = await message.reply_text("**Capturing Screenshot Please Wait..**", parse_mode=ParseMode.MARKDOWN)
         
         # Construct the API URL
         api_url = f"{API_BASE_URL}?url={url}&width=1280&height=720"
@@ -41,3 +41,21 @@ def setup_ss_handler(app: Client):
         
         # Delete the "Capturing Screenshot" message
         await capturing_message.delete()
+
+# Example usage in main.py
+if __name__ == '__main__':
+    from ss import setup_ss_handler
+
+    # Replace these with your actual API details
+    API_ID = "YOUR_API_ID"  # Replace with your API ID
+    API_HASH = "YOUR_API_HASH"  # Replace with your API Hash
+    BOT_TOKEN = "YOUR_BOT_TOKEN"  # Replace with your Bot Token
+
+    # Initialize the bot client
+    app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+    
+    # Setup handlers
+    setup_ss_handler(app)
+    
+    # Run the bot
+    app.run()
