@@ -253,7 +253,8 @@ async def handle_download_request(client, message, url):
     try:
         result, error = await download_video(url)
         if error:
-            await search_message.edit(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
+            await search_message.delete()
+            await message.reply_text(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
             return
 
         await search_message.delete()
@@ -299,7 +300,8 @@ async def handle_download_request(client, message, url):
             os.remove(thumbnail_path)
 
     except Exception as e:
-        await search_message.edit(f"❌ An error occurred: {str(e)}", parse_mode=enums.ParseMode.MARKDOWN)
+        await search_message.delete()
+        await message.reply_text(f"❌ An error occurred: {str(e)}", parse_mode=enums.ParseMode.MARKDOWN)
 
 async def handle_audio_request(client, message):
     query = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else None
@@ -311,18 +313,22 @@ async def handle_audio_request(client, message):
     status_message = await message.reply_text("`Searching the audio...`", parse_mode=enums.ParseMode.MARKDOWN)
 
     if not await validate_url(query):
-        await status_message.edit("`Searching for the song...`", parse_mode=enums.ParseMode.MARKDOWN)
+        await status_message.delete()
+        searching_message = await message.reply_text("`Searching for the song...`", parse_mode=enums.ParseMode.MARKDOWN)
         video_url = await search_youtube(query)
         if not video_url:
-            await status_message.edit("❌ No matching videos found. Please try a different search term.")
+            await searching_message.delete()
+            await message.reply_text("❌ No matching videos found. Please try a different search term.")
             return
-        await status_message.edit("`Found the video! Starting download...`", parse_mode=enums.ParseMode.MARKDOWN)
+        await searching_message.delete()
+        status_message = await message.reply_text("`Found the video! Starting download...`", parse_mode=enums.ParseMode.MARKDOWN)
     else:
         video_url = query
 
     result, error = await download_audio(video_url)
     if error:
-        await status_message.edit(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
+        await status_message.delete()
+        await message.reply_text(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
         return
 
     audio_path = result['file_path']
@@ -359,7 +365,8 @@ async def handle_audio_request(client, message):
         os.remove(audio_path)
         await status_message.delete()
     except Exception as e:
-        await status_message.edit(f"❌ An error occurred during upload: {str(e)}")
+        await status_message.delete()
+        await message.reply_text(f"❌ An error occurred during upload: {str(e)}")
         if os.path.exists(audio_path):
             os.remove(audio_path)
 
