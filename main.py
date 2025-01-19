@@ -31,7 +31,7 @@ from aitools.gemi import setup_gem_handler
 from converter.converter import setup_aud_handler
 from converter.down import setup_ws_handler
 from converter.ss import setup_ss_handler
-from converter.qoute import setup_q_handler
+from converter.quote import setup_q_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
