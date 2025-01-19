@@ -3,7 +3,12 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
 from pyrogram.raw.functions.stickers import CreateStickerSet, AddStickerToSet
-from pyrogram.raw.types import InputStickerSetShortName, InputStickerSetItem, InputDocument
+from pyrogram.raw.types import (
+    InputStickerSetShortName,
+    InputStickerSetItem,
+    InputDocument,
+    InputFile
+)
 
 # Define a function to generate a new sticker pack name
 def generate_sticker_pack_name(user_id):
@@ -44,25 +49,30 @@ def setup_kang_handler(app: Client):
         sticker_pack_title = f"{message.from_user.first_name}'s Kanged Pack"
 
         try:
-            # Upload the file to Telegram and get its file reference
-            uploaded_file = await client.save_file(file_path)
-            input_document = InputDocument(
-                id=uploaded_file.id,
-                access_hash=uploaded_file.access_hash,
-                file_reference=uploaded_file.file_reference,
-            )
+            # Upload the file and prepare InputDocument
+            async with client:
+                upload_response = await client.send(
+                    functions.Upload.SaveFilePart(
+                        file=await client.save_file(file_path)
+                    )
+                )
+                input_document = InputDocument(
+                    id=upload_response.file.id,
+                    access_hash=upload_response.file.access_hash,
+                    file_reference=upload_response.file.file_reference,
+                )
 
             # Try to add the sticker to the existing pack
             try:
                 await client.invoke(
                     AddStickerToSet(
+                        stickerset=InputStickerSetShortName(short_name=sticker_pack_name),
                         stickers=[
                             InputStickerSetItem(
                                 document=input_document,
                                 emoji=emoji,
                             )
                         ],
-                        stickerset=InputStickerSetShortName(sticker_pack_name),
                     )
                 )
             except Exception:
