@@ -12,4 +12,6 @@ pillow
 yt-dlp
 ffmpeg
 spotipy
-instaloader
+pyspellchecker
+google-generativeai
+pillow
