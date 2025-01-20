@@ -55,8 +55,8 @@ def setup_info_handler(app: Client):
                             )
                         else:
                             response = "<b>Invalid chat type</b>"
-                        
-                        # Fetch the chat avatar
+
+                        # Fetch the chat avatar (photo) using get_chat_photo method on the chat object
                         try:
                             photo = await client.get_chat_photo(chat.id)
                             # Send the photo with the info in the caption
