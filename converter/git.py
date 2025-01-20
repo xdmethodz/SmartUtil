@@ -41,13 +41,13 @@ def setup_git_handler(app: Client):
                     caption=(
                         "<b>Repository Details</b>\n"
                         "━━━━━━━━━━━━━━━━━━\n"
-                        f"<b>User:</b> `{repo_info['owner']['login']}`\n"
-                        f"<b>Repo Name:</b> `{repo_info['name']}`\n"
-                        f"<b>Forks Count:</b> `{repo_info['forks_count']}`\n"
-                        f"<b>Repo URL:</b> `{repo_info['html_url']}`\n"
-                        f"<b>Description:</b> `{repo_info['description']}`\n"
-                        f"<b>Downloaded Branch:</b> `{branch}`\n"
-                        f"<b>Available Branches:</b> `{', '.join(get_repo_branches(url))}`"
+                        f"<b>User:</b> <code>{repo_info['owner']['login']}</code>\n"
+                        f"<b>Repo Name:</b> <code>{repo_info['name']}</code>\n"
+                        f"<b>Forks Count:</b> <code>{repo_info['forks_count']}</code>\n"
+                        f"<b>Repo URL:</b> <code>{repo_info['html_url']}</code>\n"
+                        f"<b>Description:</b> <code>{repo_info['description']}</code>\n"
+                        f"<b>Downloaded Branch:</b> <code>{branch}</code>\n"
+                        f"<b>Available Branches:</b> <code>{', '.join(get_repo_branches(url))}</code>"
                     ),
                     parse_mode=ParseMode.HTML
                 )
