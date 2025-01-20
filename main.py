@@ -17,10 +17,10 @@ from educationutils.education import setup_education_handler
 from aitools.gpt import setup_gpt_handlers 
 from others.ip import setup_ip_handlers
 from others.admin import setup_admin_handlers
-from others.downloaders import setup_downloader_handler
-from others.pin import setup_pinterest_handler
-from others.dl import setup_dl_handlers
-from others.spotify import setup_spotify_handler
+from downloaders.downloaders import setup_downloader_handler
+from downloaders.pin import setup_pinterest_handler
+from downloaders.dl import setup_dl_handlers
+from downloaders.spotify import setup_spotify_handler
 from educationutils.grammar import setup_eng_handler
 from creditcards.gen import setup_credit_handlers
 from creditcards.db import setup_db_handlers
@@ -119,7 +119,7 @@ async def send_start_message(client, message):
 
     # Main welcome message
     start_message = (
-        f"<b>Hi — {full_name}! Welcome to this bot</b>\n"
+        f"<b>Hi  {full_name}! Welcome to this bot</b>\n"
         "<b>________________________________</b>\n"
         "<b><a href='https://t.me/abir_x_official_developer'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
         "<b>________________________________</b>\n"
@@ -292,14 +292,17 @@ async def handle_callback_query(client, callback_query):
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
         "about_me": (
-            "<b>Name:</b> Smart Util ⚙️\n"
+            "<b>Name:</b> Smart Tool ⚙️\n"
             "<b>Version:</b> 3.0 (Beta Testing) 🛠\n\n"
             "<b>Development Team:</b>\n"
             "- <b>Creator:</b> <a href='https://t.me/abirxdhackz'>⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻</a>\n"
             "- <b>Contributor:</b> <a href='https://t.me/hmm_Smokie'>HMM٭SMOKIE 🤝</a>\n\n"
+            "- <b>Contributor:</b> <a href='https://t.me/TheSmartBisnu'>Bisnu Ray 🤝</a>\n"
+            "- <b>Contributor:</b> <a href='https://t.me/NafisMuhtadi'>Nafis [×] 🤝</a>\n\n"
+            "- <b>Contributor:</b> <a href='https://t.me/Adnan8368'>Farhan 🤝</a>\n\n"
             "<b>Technical Stack:</b>\n"
             "- <b>Language:</b> Python 🐍\n"
-            "- <b>Libraries:</b> Aiogram, Pyrogram 📚\n"
+            "- <b>Libraries:</b> Aiogram, Pyrogram And Telethon 📚\n"
             "- <b>Database:</b> MongoDB 🗄\n"
             "- <b>Hosting:</b> Hostinger 🌐\n\n"
             "<b>About:</b> The all-in-one Telegram toolkit for seamless education, AI, downloads, and more!",
@@ -329,7 +332,7 @@ async def handle_callback_query(client, callback_query):
 
         # Main welcome message
         start_message = (
-            f"<b>Hi — {full_name}! Welcome to this bot</b>\n"
+            f"<b>Hi  {full_name}! Welcome to this bot</b>\n"
             "<b>________________________________</b>\n"
             "<b><a href='https://t.me/Smart_Nexus_Bot'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
             "<b>________________________________</b>\n"
@@ -349,5 +352,3 @@ async def handle_callback_query(client, callback_query):
 
 print("Bot is running...")
 app.run()
-
-
