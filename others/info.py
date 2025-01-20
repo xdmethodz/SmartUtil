@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from pyrogram.enums import ParseMode
+from pyrogram.enums import ParseMode, ChatType
 from pyrogram.errors import PeerIdInvalid, UsernameNotOccupied, ChannelInvalid
 
 def setup_info_handler(app: Client):
@@ -36,7 +36,7 @@ def setup_info_handler(app: Client):
                         print(f"Chat info: {chat}")  # Debugging output to inspect chat data
                         print(f"Chat type: {chat.type}")  # Print the type to help debug
 
-                        if chat.type == "channel":
+                        if chat.type == ChatType.CHANNEL:  # Correct check using ChatType constant
                             response = (
                                 f"📛 <b>{chat.title}</b>\n"
                                 f"━━━━━━━━━━━━━━━━━━\n"
@@ -44,12 +44,12 @@ def setup_info_handler(app: Client):
                                 f"📌 <b>Type:</b> <code>Channel</code>\n"
                                 f"👥 <b>Member count:</b> <code>{chat.members_count}</code>"
                             )
-                        elif chat.type in ["supergroup", "group"]:
+                        elif chat.type in [ChatType.SUPERGROUP, ChatType.GROUP]:
                             response = (
                                 f"📛 <b>{chat.title}</b>\n"
                                 f"━━━━━━━━━━━━━━━━━━\n"
                                 f"🆔 <b>ID:</b> <code>{chat.id}</code>\n"
-                                f"📌 <b>Type:</b> <code>{'Supergroup' if chat.type == 'supergroup' else 'Group'}</code>\n"
+                                f"📌 <b>Type:</b> <code>{'Supergroup' if chat.type == ChatType.SUPERGROUP else 'Group'}</code>\n"
                                 f"👥 <b>Member count:</b> <code>{chat.members_count}</code>"
                             )
                         else:
