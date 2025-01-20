@@ -36,6 +36,7 @@ def setup_info_handler(app: Client):
                         print(f"Chat info: {chat}")  # Debugging output to inspect chat data
                         print(f"Chat type: {chat.type}")  # Print the type to help debug
 
+                        # Prepare response information
                         if chat.type == ChatType.CHANNEL:  # Correct check using ChatType constant
                             response = (
                                 f"📛 <b>{chat.title}</b>\n"
@@ -54,7 +55,21 @@ def setup_info_handler(app: Client):
                             )
                         else:
                             response = "<b>Invalid chat type</b>"
-                        await message.reply_text(response, parse_mode=ParseMode.HTML)
+                        
+                        # Fetch the chat avatar
+                        try:
+                            photo = await client.get_chat_photo(chat.id)
+                            # Send the photo with the info in the caption
+                            await message.reply_photo(
+                                photo=photo.file_id,
+                                caption=response,  # Send info in the caption
+                                parse_mode=ParseMode.HTML
+                            )
+                        except Exception as e:
+                            await message.reply_text(
+                                f"<b>Error fetching photo:</b> {str(e)}",
+                                parse_mode=ParseMode.HTML
+                            )
                     except (ChannelInvalid, PeerIdInvalid):
                         await message.reply_text(
                             "<b>Invalid username or chat not found</b>",
