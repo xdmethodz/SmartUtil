@@ -17,10 +17,10 @@ from educationutils.education import setup_education_handler
 from aitools.gpt import setup_gpt_handlers 
 from others.ip import setup_ip_handlers
 from others.admin import setup_admin_handlers
-from downloaders.downloaders import setup_downloader_handler
-from downloaders.pin import setup_pinterest_handler
-from downloaders.dl import setup_dl_handlers
-from downloaders.spotify import setup_spotify_handler
+from others.downloaders import setup_downloader_handler
+from others.pin import setup_pinterest_handler
+from others.dl import setup_dl_handlers
+from others.spotify import setup_spotify_handler
 from educationutils.grammar import setup_eng_handler
 from creditcards.gen import setup_credit_handlers
 from creditcards.db import setup_db_handlers
