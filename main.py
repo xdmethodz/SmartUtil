@@ -32,7 +32,7 @@ from converter.converter import setup_aud_handler
 from converter.down import setup_ws_handler
 from converter.ss import setup_ss_handler
 from converter.quote import setup_q_handler
-
+from converter.git import setup_git_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -76,7 +76,7 @@ setup_aud_handler(app)
 setup_ws_handler(app)
 setup_ss_handler(app)
 setup_q_handler(app)
-
+setup_git_handler(app)
 # Inline keyboard for the main menu
 main_menu_keyboard = InlineKeyboardMarkup([
     [
