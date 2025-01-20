@@ -33,6 +33,9 @@ def setup_info_handler(app: Client):
                     # If not a user, try fetching chat info (group/channel)
                     try:
                         chat = await client.get_chat(username)
+                        print(f"Chat info: {chat}")  # Debugging output to inspect chat data
+                        print(f"Chat type: {chat.type}")  # Print the type to help debug
+
                         if chat.type == "channel":
                             response = (
                                 f"📛 <b>{chat.title}</b>\n"
