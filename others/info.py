@@ -16,9 +16,14 @@ def setup_info_handler(app: Client):
             )
             
             # Fetch and send user profile photo
-            photos = await client.get_chat_photos(user.id)
-            if photos:
-                await message.reply_photo(photo=photos[0].file_id, caption=response, parse_mode=ParseMode.HTML)
+            photos = client.get_chat_photos(user.id)
+            photo = None
+            async for p in photos:
+                photo = p.file_id
+                break  # Only get the first photo
+            
+            if photo:
+                await message.reply_photo(photo=photo, caption=response, parse_mode=ParseMode.HTML)
             else:
                 await message.reply_text(response, parse_mode=ParseMode.HTML)
         else:
@@ -36,9 +41,14 @@ def setup_info_handler(app: Client):
                     )
                     
                     # Fetch and send user profile photo
-                    photos = await client.get_chat_photos(user.id)
-                    if photos:
-                        await message.reply_photo(photo=photos[0].file_id, caption=response, parse_mode=ParseMode.HTML)
+                    photos = client.get_chat_photos(user.id)
+                    photo = None
+                    async for p in photos:
+                        photo = p.file_id
+                        break
+                    
+                    if photo:
+                        await message.reply_photo(photo=photo, caption=response, parse_mode=ParseMode.HTML)
                     else:
                         await message.reply_text(response, parse_mode=ParseMode.HTML)
                 else:
@@ -66,9 +76,14 @@ def setup_info_handler(app: Client):
                             response = "<b>Invalid chat type</b>"
                         
                         # Fetch and send chat photo
-                        photos = await client.get_chat_photos(chat.id)
-                        if photos:
-                            await message.reply_photo(photo=photos[0].file_id, caption=response, parse_mode=ParseMode.HTML)
+                        photos = client.get_chat_photos(chat.id)
+                        photo = None
+                        async for p in photos:
+                            photo = p.file_id
+                            break
+                        
+                        if photo:
+                            await message.reply_photo(photo=photo, caption=response, parse_mode=ParseMode.HTML)
                         else:
                             await message.reply_text(response, parse_mode=ParseMode.HTML)
                     except (ChannelInvalid, PeerIdInvalid):
