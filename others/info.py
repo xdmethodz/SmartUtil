@@ -14,18 +14,7 @@ def setup_info_handler(app: Client):
                 f"🔖 <b>Username:</b> <code>@{user.username}</code>\n"
                 f"💬 <b>Chat Id:</b> <code>{user.id}</code>"
             )
-            
-            # Fetch and send user profile photo
-            photos = client.get_chat_photos(user.id)
-            photo = None
-            async for p in photos:
-                photo = p.file_id
-                break  # Only get the first photo
-            
-            if photo:
-                await message.reply_photo(photo=photo, caption=response, parse_mode=ParseMode.HTML)
-            else:
-                await message.reply_text(response, parse_mode=ParseMode.HTML)
+            await message.reply_text(response, parse_mode=ParseMode.HTML)
         else:
             username = message.command[1].strip('@')
             try:
@@ -39,22 +28,13 @@ def setup_info_handler(app: Client):
                         f"🔖 <b>Username:</b> <code>@{user.username}</code>\n"
                         f"💬 <b>Chat Id:</b> <code>{user.id}</code>"
                     )
-                    
-                    # Fetch and send user profile photo
-                    photos = client.get_chat_photos(user.id)
-                    photo = None
-                    async for p in photos:
-                        photo = p.file_id
-                        break
-                    
-                    if photo:
-                        await message.reply_photo(photo=photo, caption=response, parse_mode=ParseMode.HTML)
-                    else:
-                        await message.reply_text(response, parse_mode=ParseMode.HTML)
+                    await message.reply_text(response, parse_mode=ParseMode.HTML)
                 else:
                     # If not a user, try fetching chat info (group/channel)
                     try:
                         chat = await client.get_chat(username)
+                        print(f"Chat info: {chat}")  # Debugging output to inspect chat data
+                        print(f"Chat type: {chat.type}")  # Print the type to help debug
 
                         if chat.type == ChatType.CHANNEL:  # Correct check using ChatType constant
                             response = (
@@ -74,18 +54,7 @@ def setup_info_handler(app: Client):
                             )
                         else:
                             response = "<b>Invalid chat type</b>"
-                        
-                        # Fetch and send chat photo
-                        photos = client.get_chat_photos(chat.id)
-                        photo = None
-                        async for p in photos:
-                            photo = p.file_id
-                            break
-                        
-                        if photo:
-                            await message.reply_photo(photo=photo, caption=response, parse_mode=ParseMode.HTML)
-                        else:
-                            await message.reply_text(response, parse_mode=ParseMode.HTML)
+                        await message.reply_text(response, parse_mode=ParseMode.HTML)
                     except (ChannelInvalid, PeerIdInvalid):
                         await message.reply_text(
                             "<b>Invalid username or chat not found</b>",
