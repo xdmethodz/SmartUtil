@@ -16,7 +16,7 @@ def setup_info_handler(app: Client):
             )
             
             # Fetch and send user profile photo
-            photos = await client.get_profile_photos(user.id)
+            photos = await client.get_chat_photos(user.id)
             if photos:
                 await message.reply_photo(photo=photos[0].file_id, caption=response, parse_mode=ParseMode.HTML)
             else:
@@ -36,7 +36,7 @@ def setup_info_handler(app: Client):
                     )
                     
                     # Fetch and send user profile photo
-                    photos = await client.get_profile_photos(user.id)
+                    photos = await client.get_chat_photos(user.id)
                     if photos:
                         await message.reply_photo(photo=photos[0].file_id, caption=response, parse_mode=ParseMode.HTML)
                     else:
