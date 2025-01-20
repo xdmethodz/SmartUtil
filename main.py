@@ -286,6 +286,7 @@ async def handle_callback_query(client, callback_query):
             "➢ /p2p - Get Latest P2P Trades Currency BDT\n"
             "➢ /aud - Reply to a Video to Convert to Audio\n"
             "➢ /q - Generate a Sticker\n"
+            "➢ /git - Download Github Repository or Specific Branch\n"
             "➢ /kang - Kang Any Image, Sticker, or Animated Sticker\n"
             "━━━━━━━━━━━━━━━━\n"
             "For Smart Tool ⚙️ Bot Update News : <a href='https://t.me/abir_x_official'>Join Now</a>",
