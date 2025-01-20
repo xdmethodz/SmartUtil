@@ -1,6 +1,7 @@
 import requests
 import os
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 
 def setup_git_handler(app: Client):
     @app.on_message(filters.command("git") & filters.private)
@@ -10,7 +11,7 @@ def setup_git_handler(app: Client):
         if len(command_parts) < 2:
             message.reply_text(
                 "<b>Provide a GitHub repository URL after the command.</b>",
-                parse_mode="html"
+                parse_mode=ParseMode.HTML
             )
             return
 
@@ -19,7 +20,7 @@ def setup_git_handler(app: Client):
 
         downloading_message = message.reply_text(
             "<b>Downloading GitHub Repository From URL...</b>",
-            parse_mode="html"
+            parse_mode=ParseMode.HTML
         )
 
         try:
@@ -48,20 +49,20 @@ def setup_git_handler(app: Client):
                         f"<b>Downloaded Branch:</b> `{branch}`\n"
                         f"<b>Available Branches:</b> `{', '.join(get_repo_branches(url))}`"
                     ),
-                    parse_mode="html"
+                    parse_mode=ParseMode.HTML
                 )
 
                 os.remove(zip_file_path)
             else:
                 downloading_message.edit_text(
                     "<b>Failed to download the repository. Please check the URL and branch name.</b>",
-                    parse_mode="html"
+                    parse_mode=ParseMode.HTML
                 )
 
         except Exception as e:
             downloading_message.edit_text(
                 f"<b>Error:</b> {str(e)}",
-                parse_mode="html"
+                parse_mode=ParseMode.HTML
             )
 
 def get_repo_info(url):
