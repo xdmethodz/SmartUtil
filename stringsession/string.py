@@ -26,17 +26,19 @@ async def handle_callback_query(client, callback_query):
     data = callback_query.data
     chat_id = callback_query.message.chat.id
 
+    if chat_id not in session_data:
+        await callback_query.answer("Session data not found. Please start again.", show_alert=True)
+        return
+
     if data == "session_close":
         await callback_query.message.edit_text("Session setup closed.", parse_mode=ParseMode.MARKDOWN)
-        if chat_id in session_data:
-            del session_data[chat_id]
+        del session_data[chat_id]
         return
 
     if data.startswith("session_go_"):
-        platform = data.split("_")[2]
-        session_data[chat_id] = {"platform": platform}
+        platform = session_data[chat_id]["platform"]
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         new_text = "**Send Your API ID**"
         
@@ -46,6 +48,10 @@ async def handle_callback_query(client, callback_query):
         else:
             await callback_query.answer("The message is already up-to-date.", show_alert=True)
         session_data[chat_id]["step"] = "api_id"
+
+    if data.startswith("session_resume_"):
+        platform = data.split("_")[2]
+        await handle_start(client, callback_query.message, platform)
 
 async def handle_text(client, message: Message):
     chat_id = message.chat.id
@@ -58,7 +64,7 @@ async def handle_text(client, message: Message):
     if step == "api_id":
         data["api_id"] = message.text
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"session_go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send Your API Hash**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "api_hash"
@@ -78,7 +84,7 @@ async def handle_text(client, message: Message):
             return
 
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"session_go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send Your Phone Number\n[Example: +880xxxxxxxxxx]**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "phone_number"
@@ -86,7 +92,7 @@ async def handle_text(client, message: Message):
     elif step == "phone_number":
         data["phone_number"] = message.text
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"session_go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send The OTP as text. Please send a text message embedding the OTP like: 'AB1 CD2 EF3 GH4 IJ5'**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "otp"
@@ -172,6 +178,10 @@ def setup_string_handler(app: Client):
 
     @app.on_callback_query(filters.regex(r"^session_go_"))
     async def callback_query_go_handler(client, callback_query):
+        await handle_callback_query(client, callback_query)
+
+    @app.on_callback_query(filters.regex(r"^session_resume_"))
+    async def callback_query_resume_handler(client, callback_query):
         await handle_callback_query(client, callback_query)
 
     @app.on_callback_query(filters.regex(r"^session_close$"))
