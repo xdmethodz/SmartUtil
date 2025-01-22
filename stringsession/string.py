@@ -26,17 +26,16 @@ async def handle_callback_query(client, callback_query):
     data = callback_query.data
     chat_id = callback_query.message.chat.id
 
-    if chat_id not in session_data:
-        await callback_query.answer("Session data not found. Please start again.", show_alert=True)
-        return
-
     if data == "session_close":
         await callback_query.message.edit_text("Session setup closed.", parse_mode=ParseMode.MARKDOWN)
-        del session_data[chat_id]
+        if chat_id in session_data:
+            del session_data[chat_id]
         return
 
     if data.startswith("session_go_"):
-        platform = session_data[chat_id]["platform"]
+        platform = data.split("_")[2]
+        if chat_id not in session_data:
+            session_data[chat_id] = {"platform": platform}
         buttons = [
             [InlineKeyboardButton("Resume", callback_data=f"session_resume_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
