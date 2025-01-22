@@ -164,11 +164,9 @@ def setup_string_handler(app: Client):
         platform = "PyroGram" if message.command[0] == "pyro" else "Telethon"
         await handle_start(client, message, platform)
 
-    @app.on_callback_query()
+    @app.on_callback_query(filters.regex(r"^(go_|close)"))
     async def callback_query_handler(client, callback_query):
-        data = callback_query.data
-        if data.startswith("go_") or data == "close":
-            await handle_callback_query(client, callback_query)
+        await handle_callback_query(client, callback_query)
 
     @app.on_message(filters.text)
     async def text_handler(client, message: Message):
