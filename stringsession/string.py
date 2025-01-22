@@ -38,7 +38,13 @@ async def handle_callback_query(client, callback_query):
         buttons = [
             [InlineKeyboardButton("Resume", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
-        await callback_query.message.edit_text("**Send Your API ID**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
+        new_text = "**Send Your API ID**"
+        
+        # Check if the new text is different from the current text
+        if callback_query.message.text != new_text:
+            await callback_query.message.edit_text(new_text, reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
+        else:
+            await callback_query.answer("The message is already up-to-date.", show_alert=True)
         session_data[chat_id]["step"] = "api_id"
 
 async def handle_text(client, message: Message):
