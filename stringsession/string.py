@@ -18,7 +18,7 @@ async def ask_user(client, message, question, buttons):
 async def handle_start(client, message, platform):
     session_data[message.chat.id] = {"platform": platform}
     buttons = [
-        [InlineKeyboardButton("Go", callback_data=f"go_{platform}"), InlineKeyboardButton("Close", callback_data="close")]
+        [InlineKeyboardButton("Go", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
     ]
     await ask_user(client, message, f"**Welcome to the {platform} session setup!**\n━━━━━━━━━━━━━━━━━\nThis is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.\n\n**Note: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.**", buttons)
 
@@ -26,17 +26,17 @@ async def handle_callback_query(client, callback_query):
     data = callback_query.data
     chat_id = callback_query.message.chat.id
 
-    if data == "close":
+    if data == "session_close":
         await callback_query.message.edit_text("Session setup closed.", parse_mode=ParseMode.MARKDOWN)
         if chat_id in session_data:
             del session_data[chat_id]
         return
 
-    if data.startswith("go_"):
-        platform = data.split("_")[1]
+    if data.startswith("session_go_"):
+        platform = data.split("_")[2]
         session_data[chat_id] = {"platform": platform}
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"go_{platform}"), InlineKeyboardButton("Close", callback_data="close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await callback_query.message.edit_text("**Send Your API ID**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         session_data[chat_id]["step"] = "api_id"
@@ -52,7 +52,7 @@ async def handle_text(client, message: Message):
     if step == "api_id":
         data["api_id"] = message.text
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send Your API Hash**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "api_hash"
@@ -72,7 +72,7 @@ async def handle_text(client, message: Message):
             return
 
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send Your Phone Number\n[Example: +880xxxxxxxxxx]**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "phone_number"
@@ -80,7 +80,7 @@ async def handle_text(client, message: Message):
     elif step == "phone_number":
         data["phone_number"] = message.text
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send The OTP as text. Please send a text message embedding the OTP like: 'AB1 CD2 EF3 GH4 IJ5'**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "otp"
@@ -164,8 +164,12 @@ def setup_string_handler(app: Client):
         platform = "PyroGram" if message.command[0] == "pyro" else "Telethon"
         await handle_start(client, message, platform)
 
-    @app.on_callback_query(filters.regex(r"^(go_|close)"))
-    async def callback_query_handler(client, callback_query):
+    @app.on_callback_query(filters.regex(r"^session_go_"))
+    async def callback_query_go_handler(client, callback_query):
+        await handle_callback_query(client, callback_query)
+
+    @app.on_callback_query(filters.regex(r"^session_close$"))
+    async def callback_query_close_handler(client, callback_query):
         await handle_callback_query(client, callback_query)
 
     @app.on_message(filters.text)
