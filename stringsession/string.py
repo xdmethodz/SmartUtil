@@ -168,6 +168,6 @@ def setup_string_handler(app: Client):
     async def callback_query_handler(client, callback_query):
         await handle_callback_query(client, callback_query)
 
-    @app.on_message(filters.text & ~filters.command)
+    @app.on_message(filters.text & ~filters.create(lambda _, __, query: query.command))
     async def text_handler(client, message: Message):
         await handle_text(client, message)
