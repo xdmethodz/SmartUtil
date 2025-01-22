@@ -12,7 +12,7 @@ session_data = {}
 
 async def ask_user(client, message, question, buttons):
     reply_markup = InlineKeyboardMarkup(buttons)
-    sent_message = await message.reply_text(question, reply_markup=reply_markup)
+    sent_message = await message.reply_text(question, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
     return sent_message
 
 async def handle_start(client, message, platform):
@@ -20,14 +20,14 @@ async def handle_start(client, message, platform):
     buttons = [
         [InlineKeyboardButton("Go", callback_data=f"go_{platform}"), InlineKeyboardButton("Close", callback_data="close")]
     ]
-    await ask_user(client, message, f"Welcome to the {platform} session setup!\n━━━━━━━━━━━━━━━━━\nThis is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.\n\nNote: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.", buttons)
+    await ask_user(client, message, f"**Welcome to the {platform} session setup!**\n━━━━━━━━━━━━━━━━━\nThis is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.\n\n**Note: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.**", buttons)
 
 async def handle_callback_query(client, callback_query):
     data = callback_query.data
     chat_id = callback_query.message.chat.id
 
     if data == "close":
-        await callback_query.message.edit_text("Session setup closed.")
+        await callback_query.message.edit_text("Session setup closed.", parse_mode=ParseMode.MARKDOWN)
         if chat_id in session_data:
             del session_data[chat_id]
         return
@@ -38,7 +38,7 @@ async def handle_callback_query(client, callback_query):
         buttons = [
             [InlineKeyboardButton("Resume", callback_data=f"go_{platform}"), InlineKeyboardButton("Close", callback_data="close")]
         ]
-        await callback_query.message.edit_text("<b>Send Your API ID</b>", reply_markup=InlineKeyboardMarkup(buttons))
+        await callback_query.message.edit_text("**Send Your API ID**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         session_data[chat_id]["step"] = "api_id"
 
 async def handle_text(client, message: Message):
@@ -54,7 +54,7 @@ async def handle_text(client, message: Message):
         buttons = [
             [InlineKeyboardButton("Resume", callback_data=f"go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="close")]
         ]
-        await message.reply_text("<b>Send Your API Hash</b>", reply_markup=InlineKeyboardMarkup(buttons))
+        await message.reply_text("**Send Your API Hash**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "api_hash"
 
     elif step == "api_hash":
@@ -67,14 +67,14 @@ async def handle_text(client, message: Message):
                 with TelethonClient("session_test", api_id=int(data["api_id"]), api_hash=data["api_hash"]):
                     pass
         except Exception:
-            await message.reply_text("<b>API ID & API Hash are wrong. Please start again</b>")
+            await message.reply_text("**API ID & API Hash are wrong. Please start again**", parse_mode=ParseMode.MARKDOWN)
             del session_data[chat_id]
             return
 
         buttons = [
             [InlineKeyboardButton("Resume", callback_data=f"go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="close")]
         ]
-        await message.reply_text("<b>Send Your Phone Number\n[Example: +880xxxxxxxxxx]</b>", reply_markup=InlineKeyboardMarkup(buttons))
+        await message.reply_text("**Send Your Phone Number\n[Example: +880xxxxxxxxxx]**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "phone_number"
 
     elif step == "phone_number":
@@ -82,7 +82,7 @@ async def handle_text(client, message: Message):
         buttons = [
             [InlineKeyboardButton("Resume", callback_data=f"go_{data['platform']}"), InlineKeyboardButton("Close", callback_data="close")]
         ]
-        await message.reply_text("<b>Send The OTP as text. Please send a text message embedding the OTP like: 'AB1 CD2 EF3 GH4 IJ5'</b>", reply_markup=InlineKeyboardMarkup(buttons))
+        await message.reply_text("**Send The OTP as text. Please send a text message embedding the OTP like: 'AB1 CD2 EF3 GH4 IJ5'**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "otp"
 
     elif step == "otp":
@@ -101,11 +101,11 @@ async def handle_text(client, message: Message):
                 client.session.delete()
             except BadRequest as e:
                 if e.value == "2FA is required":
-                    await message.reply_text("<b>2FA Is Required To Login Please Enter 2FA</b>")
+                    await message.reply_text("**2FA Is Required To Login Please Enter 2FA**", parse_mode=ParseMode.MARKDOWN)
                     data["step"] = "2fa"
                     return
                 else:
-                    await message.reply_text(f"Error: {e}")
+                    await message.reply_text(f"Error: {e}", parse_mode=ParseMode.MARKDOWN)
                     del session_data[chat_id]
                     return
 
@@ -121,15 +121,15 @@ async def handle_text(client, message: Message):
                 client.session.delete()
             except Exception as e:
                 if "2FA" in str(e):
-                    await message.reply_text("<b>2FA Is Required To Login Please Enter 2FA</b>")
+                    await message.reply_text("**2FA Is Required To Login Please Enter 2FA**", parse_mode=ParseMode.MARKDOWN)
                     data["step"] = "2fa"
                     return
                 else:
-                    await message.reply_text(f"Error: {e}")
+                    await message.reply_text(f"Error: {e}", parse_mode=ParseMode.MARKDOWN)
                     del session_data[chat_id]
                     return
 
-        await message.reply_text("<b>This string has been saved ✅ in your Saved Messages</b>")
+        await message.reply_text("**This string has been saved ✅ in your Saved Messages**", parse_mode=ParseMode.MARKDOWN)
         await client.send_message("me", f"{data['platform']} SESSION STRING FROM Smart Tool:\n\n{session_string}")
         del session_data[chat_id]
 
@@ -154,7 +154,7 @@ async def handle_text(client, message: Message):
             # Remove the session file
             client.session.delete()
 
-        await message.reply_text("<b>This string has been saved ✅ in your Saved Messages</b>")
+        await message.reply_text("**This string has been saved ✅ in your Saved Messages**", parse_mode=ParseMode.MARKDOWN)
         await client.send_message("me", f"{data['platform']} SESSION STRING FROM Smart Tool:\n\n{session_string}")
         del session_data[chat_id]
 
@@ -163,3 +163,11 @@ def setup_string_handler(app: Client):
     async def session_setup(client, message: Message):
         platform = "PyroGram" if message.command[0] == "pyro" else "Telethon"
         await handle_start(client, message, platform)
+
+    @app.on_callback_query()
+    async def callback_query_handler(client, callback_query):
+        await handle_callback_query(client, callback_query)
+
+    @app.on_message(filters.text & ~filters.command)
+    async def text_handler(client, message: Message):
+        await handle_text(client, message)
