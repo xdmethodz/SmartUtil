@@ -1,12 +1,11 @@
 import re
 import os
-import random
 import asyncio
 import requests
 from collections import Counter
 from pyrogram import Client, filters, handlers
 from pyrogram.enums import ParseMode
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message
 
 # Function to fetch BIN information
 async def fetch_bin_info(bin_number):
@@ -88,5 +87,5 @@ async def handle_topbin_command(client, message: Message):
 
 # Setup handlers
 def setup_filter_handlers(app: Client):
-    app.add_handler(handlers.MessageHandler(handle_fcc_command, filters.command("fcc")))
-    app.add_handler(handlers.MessageHandler(handle_topbin_command, filters.command("topbin")))
+    app.add_handler(handlers.MessageHandler(handle_fcc_command, filters.command("fcc") & (filters.private | filters.group)))
+    app.add_handler(handlers.MessageHandler(handle_topbin_command, filters.command("topbin") & (filters.private | filters.group)))
