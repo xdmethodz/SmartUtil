@@ -76,34 +76,35 @@ def get_domain_info(domain: str) -> str:
 
     return details
 
-# Function to check proxy status
-def check_proxy(proxy: str, auth: tuple = None) -> str:
-    url = "http://ipinfo.io/json"
+# Function to check proxy status by attempting to access Google
+async def check_proxy(proxy: str, auth: tuple = None) -> str:
+    url = "https://www.google.com"
     proxies = {
         "http": f"http://{proxy}",
         "https": f"https://{proxy}",
     }
     try:
-        response = requests.get(url, proxies=proxies, auth=auth, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            region = data.get("region", "Unknown")
-            return (
-                f"**Proxy:** `{proxy}`\n"
-                f"**Type:** `HTTP/HTTPS`\n"
-                f"**Status:** ☑️ `Alive`\n"
-                f"**Region:** `{region}`\n"
-                f"━━━━━━━━━━━━━━━━━━\n"
-            )
-        else:
-            return (
-                f"**Proxy:** `{proxy}`\n"
-                f"**Type:** `HTTP/HTTPS`\n"
-                f"**Status:** 🔴 `Dead`\n"
-                f"**Region:** `Unknown`\n"
-                f"━━━━━━━━━━━━━━━━━━\n"
-            )
-    except requests.RequestException as e:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, proxy=proxies, auth=aiohttp.BasicAuth(*auth) if auth else None, timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    region = data.get("region", "Unknown")
+                    return (
+                        f"**Proxy:** `{proxy}`\n"
+                        f"**Type:** `HTTP/HTTPS`\n"
+                        f"**Status:** ☑️ `Alive`\n"
+                        f"**Region:** `{region}`\n"
+                        f"━━━━━━━━━━━━━━━━━━\n"
+                    )
+                else:
+                    return (
+                        f"**Proxy:** `{proxy}`\n"
+                        f"**Type:** `HTTP/HTTPS`\n"
+                        f"**Status:** 🔴 `Dead`\n"
+                        f"**Region:** `Unknown`\n"
+                        f"━━━━━━━━━━━━━━━━━━\n"
+                    )
+    except aiohttp.ClientError as e:
         return (
             f"**Proxy:** `{proxy}`\n"
             f"**Type:** `HTTP/HTTPS`\n"
@@ -268,7 +269,7 @@ async def proxy_info_handler(client: Client, message: Message):
 
     details_list = []
     for proxy in proxies:
-        details = check_proxy(proxy, auth)
+        details = await check_proxy(proxy, auth)
         details_list.append(details)
     
     details_combined = "\n".join(details_list)
@@ -309,30 +310,32 @@ async def stripe_key_info_handler(client: Client, message: Message):
 
 # Function to set up handlers for the Pyrogram bot
 def setup_ip_handlers(app: Client):
-    @app.on_message(filters.command("ip") & filters.private)
+    @app.on_message(filters.command("ip") & (filters.private | filters.group))
     async def ip_info(client: Client, message: Message):
         await ip_info_handler(client, message)
 
-    @app.on_message(filters.command("dmn") & filters.private)
+    @app.on_message(filters.command("dmn") & (filters.private | filters.group))
     async def domain_info(client: Client, message: Message):
         await domain_info_handler(client, message)
 
-    @app.on_message(filters.command("px") & filters.private)
+    @app.on_message(filters.command("px") & (filters.private | filters.group))
     async def proxy_info(client: Client, message: Message):
         await proxy_info_handler(client, message)
 
-    @app.on_message(filters.command("ocr") & filters.private)
+    @app.on_message(filters.command("ocr") & (filters.private | filters.group))
     async def ocr_extract(client: Client, message: Message):
         await ocr_handler(client, message)
 
-    @app.on_message(filters.command("ytag") & filters.private)
+    @app.on_message(filters.command("ytag") & (filters.private | filters.group))
     async def ytag_info(client: Client, message: Message):
         await ytag_handler(client, message)
 
-    @app.on_message(filters.command("sk") & filters.private)
+    @app.on_message(filters.command("sk") & (filters.private | filters.group))
     async def stripe_key(client: Client, message: Message):
         await stripe_key_handler(client, message)
 
-    @app.on_message(filters.command("skinfo") & filters.private)
+    @app.on_message(filters.command("skinfo") & (filters.private | filters.group))
     async def stripe_key_info(client: Client, message: Message):
         await stripe_key_info_handler(client, message)
+
+# To use the handler, call setup_ip_handlers(app) in your main script
