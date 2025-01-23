@@ -1,12 +1,15 @@
+import os
 import requests
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery
 
 BASE_URL = "https://api.binance.com/api/v3/ticker/24hr"
 
-def fetch_crypto_data():
-    response = requests.get(BASE_URL)
+async def fetch_crypto_data():
+    loop = asyncio.get_event_loop()
+    response = await loop.run_in_executor(None, requests.get, BASE_URL)
     response.raise_for_status()
     return response.json()
 
@@ -33,13 +36,13 @@ def format_crypto_info(data, start_index=0):
     return result
 
 def setup_crypto_handler(app: Client):
-    @app.on_message(filters.command(["gainers", "losers"]) & filters.private)
-    async def handle_command(client, message):
+    @app.on_message(filters.command(["gainers", "losers"]) & (filters.private | filters.group))
+    async def handle_command(client: Client, message: Message):
         command = message.command[0]
         fetching_message = await message.reply(f"<b>Fetching {command}...</b>", parse_mode=ParseMode.HTML)
         
         try:
-            data = fetch_crypto_data()
+            data = await fetch_crypto_data()
             top_n = 5
             if command == "gainers":
                 top_cryptos = get_top_gainers(data, top_n)
@@ -62,14 +65,14 @@ def setup_crypto_handler(app: Client):
             await message.reply(f"<b>Error fetching data: {str(e)}</b>", parse_mode=ParseMode.HTML)
 
     @app.on_callback_query(filters.regex(r"^(gainers|losers)_\d+"))
-    async def handle_pagination(client, callback_query):
+    async def handle_pagination(client: Client, callback_query: CallbackQuery):
         command, page = callback_query.data.split('_')
         page = int(page)
         next_page = page + 1
         prev_page = page - 1
 
         try:
-            data = fetch_crypto_data()
+            data = await fetch_crypto_data()
             top_n = 5
             if command == "gainers":
                 top_cryptos = get_top_gainers(data, top_n * next_page)[(page-1)*top_n:page*top_n]
@@ -92,5 +95,3 @@ def setup_crypto_handler(app: Client):
 
         except Exception as e:
             await callback_query.message.edit_text(f"<b>Error fetching data: {str(e)}</b>", parse_mode=ParseMode.HTML)
-
-# To use the handler, call setup_crypto_handler(app) in your main script
