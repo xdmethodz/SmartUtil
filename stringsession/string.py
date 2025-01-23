@@ -81,6 +81,24 @@ async def handle_text(client, message: Message):
         buttons = [
             [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
+
+        # Attempt to send the OTP
+        try:
+            if data["platform"] == "PyroGram":
+                client = PyroClient("otp_test", api_id=int(data["api_id"]), api_hash=data["api_hash"])
+                await client.connect()
+                await client.send_code(data["phone_number"])
+                await client.disconnect()
+            elif data["platform"] == "Telethon":
+                client = TelethonClient(TelethonStringSession(), api_id=int(data["api_id"]), api_hash=data["api_hash"])
+                await client.connect()
+                await client.send_code_request(data["phone_number"])
+                await client.disconnect()
+        except Exception as e:
+            await message.reply_text(f"**Failed to send OTP: {str(e)}**", parse_mode=ParseMode.MARKDOWN)
+            del session_data[chat_id]
+            return
+
         await message.reply_text("**Send The OTP as text. Please send a text message embedding the OTP like: 'AB1 CD2 EF3 GH4 IJ5'**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "otp"
 
@@ -92,7 +110,6 @@ async def handle_text(client, message: Message):
             client = PyroClient(name="pyro_session", api_id=int(data["api_id"]), api_hash=data["api_hash"], phone_number=data["phone_number"])
             try:
                 await client.connect()
-                await client.send_code(data["phone_number"])
                 await client.sign_in(data["phone_number"], code=data["otp"])
                 session_string = await client.export_session_string()
                 await client.stop()
@@ -112,7 +129,6 @@ async def handle_text(client, message: Message):
             client = TelethonClient(TelethonStringSession(), api_id=int(data["api_id"]), api_hash=data["api_hash"])
             try:
                 await client.connect()
-                await client.send_code_request(data["phone_number"])
                 await client.sign_in(data["phone_number"], code=data["otp"])
                 session_string = client.session.save()
                 await client.disconnect()
