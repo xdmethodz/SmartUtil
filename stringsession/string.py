@@ -9,7 +9,7 @@ from pyrogram.errors import BadRequest
 
 # Define this dictionary outside to store session data
 session_data = {}
-TIMEOUT = 20  # Timeout in seconds
+TIMEOUT = 600  # Timeout in seconds (10 minutes)
 
 async def ask_user(client, message, question, buttons):
     reply_markup = InlineKeyboardMarkup(buttons)
@@ -20,9 +20,9 @@ async def handle_start(client, message, platform):
     chat_id = message.chat.id
     session_data[chat_id] = {"platform": platform}
     buttons = [
-        [InlineKeyboardButton("Go", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
+        [InlineKeyboardButton("Start", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
     ]
-    await ask_user(client, message, f"**Welcome to the {platform} session setup!**\n━━━━━━━━━━━━━━━━━\nThis is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.\n\n**Note: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.**", buttons)
+    await ask_user(client, message, f"**Welcome to the {platform} session setup!**\n**━━━━━━━━━━━━━━━━━**\n**This is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.**\n\n**Note: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.**", buttons)
     # Start a timeout coroutine
     asyncio.create_task(timeout_session(client, chat_id, platform))
 
@@ -48,7 +48,7 @@ async def handle_callback_query(client, callback_query):
         if chat_id not in session_data:
             session_data[chat_id] = {"platform": platform}
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Restart", callback_data=f"session_resume_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         new_text = "**Send Your API ID**"
         # Check if the new text is different from the current text
@@ -73,7 +73,7 @@ async def handle_text(client, message: Message):
     if step == "api_id":
         data["api_id"] = message.text
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Restart", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send Your API Hash**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "api_hash"
@@ -81,7 +81,7 @@ async def handle_text(client, message: Message):
     elif step == "api_hash":
         data["api_hash"] = message.text
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Restart", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send Your Phone Number\n[Example: +880xxxxxxxxxx]**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "phone_number"
@@ -89,7 +89,7 @@ async def handle_text(client, message: Message):
     elif step == "phone_number":
         data["phone_number"] = message.text
         buttons = [
-            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Restart", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
 
         # Attempt to send the OTP
