@@ -23,14 +23,15 @@ def generate_credit_card(bin, month, year, amount):
 
 def parse_input(user_input):
     bin = None
-    month = f"{random.randint(1, 12):02}"
-    year = random.randint(2024, 2029)
+    month = None
+    year = None
     amount = 10
 
-    match = re.match(r"(\d{6,})(\d{0,10}[xX]{0,4})\|?(\d{2})?\|?(\d{2,4})?\s*(\d+)?", user_input)
+    match = re.match(r"(\d{6,})(\d{0,10}[xX]{0,4})?\|?(\d{2})?\|?(\d{2,4})?\s*(\d+)?", user_input)
     if match:
         bin, suffix, month, year, amount = match.groups()
-        bin = bin + ''.join([str(random.randint(0, 9)) if x in 'xX' else x for x in suffix])
+        bin = bin + ''.join([str(random.randint(0, 9)) if x in 'xX' else x for x in suffix]) if suffix else bin
+        month = month if month else f"{random.randint(1, 12):02}"
         year = f"20{year}" if year and len(year) == 2 else (year if year else random.randint(2024, 2029))
         amount = int(amount) if amount else 10
         
@@ -54,7 +55,7 @@ def setup_credit_handlers(app: Client):
         # Fetch BIN info
         bin_info = get_bin_info(bin[:6])
         if not bin_info or bin_info.get("Status") != "SUCCESS":
-            await message.reply_text("**Invalid BIN provided❌**")
+            await message.reply_text("**Invalid BIN provided ❌**")
             return
 
         bank = bin_info.get("Issuer")
@@ -145,7 +146,7 @@ def setup_credit_handlers(app: Client):
         await progress_message.delete()
 
         if not bin_info or bin_info.get("Status") != "SUCCESS":
-            await message.reply_text("**Invalid BIN provided❌**")
+            await message.reply_text("**Invalid BIN provided ❌**")
             return
 
         bank = bin_info.get("Issuer", "Unknown")
@@ -183,8 +184,12 @@ def setup_credit_handlers(app: Client):
 
         total_cards = []
         for bin in bins:
-            cards = generate_credit_card(bin[:6], f"{random.randint(1, 12):02}", random.randint(2024, 2029), amount)
-            total_cards.extend(cards)
+            for _ in range(amount):
+                month = f"{random.randint(1, 12):02}"
+                year = random.randint(2024, 2029)
+                card = bin + ''.join([str(random.randint(0, 9)) for _ in range(16-len(bin))])
+                cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
+                total_cards.append(f"{card}|{month}|{year}|{cvv}")
 
         file_name = "Smart Tool ⚙️ Multigen.txt"
         try:
