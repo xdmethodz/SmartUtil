@@ -1,14 +1,37 @@
 import os
+import logging
+from pathlib import Path
+from typing import Optional
 import yt_dlp
-from pyrogram import Client, filters, enums
+import asyncio
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from pyrogram.enums import ParseMode
 import re
 import math
 import time
 import requests
 from PIL import Image
-from typing import Optional
 
-YT_COOKIES_PATH = "./cookies/cookies.txt"
+# Configure logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# Configuration
+class Config:
+    TEMP_DIR = Path("temp")
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive',
+        'Referer': 'https://www.pinterest.com/',
+    }
+
+Config.TEMP_DIR.mkdir(exist_ok=True)
 
 async def sanitize_filename(title: str) -> str:
     """
@@ -248,17 +271,17 @@ async def prepare_thumbnail(thumbnail_url: str, output_path: str) -> str:
     return None
 
 async def handle_download_request(client, message, url):
-    search_message = await message.reply_text("`Searching the video...`", parse_mode=enums.ParseMode.MARKDOWN)
+    search_message = await message.reply_text("`Searching the video...`", parse_mode=ParseMode.MARKDOWN)
 
     try:
         result, error = await download_video(url)
         if error:
             await search_message.delete()
-            await message.reply_text(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
+            await message.reply_text(f"❌ {error}", parse_mode=ParseMode.MARKDOWN)
             return
 
         await search_message.delete()
-        downloading_message = await message.reply_text("`Found ☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
+        downloading_message = await message.reply_text("`Found ☑️ Downloading...`", parse_mode=ParseMode.MARKDOWN)
 
         video_path = result['file_path']
         title = result['title']
@@ -284,7 +307,7 @@ async def handle_download_request(client, message, url):
             chat_id=message.chat.id,
             video=video_path,
             caption=video_caption,
-            parse_mode=enums.ParseMode.MARKDOWN,
+            parse_mode=ParseMode.MARKDOWN,
             supports_streaming=True,
             thumb=thumbnail_path,
             progress=progress_bar,
@@ -301,34 +324,34 @@ async def handle_download_request(client, message, url):
 
     except Exception as e:
         await search_message.delete()
-        await message.reply_text(f"❌ An error occurred: {str(e)}", parse_mode=enums.ParseMode.MARKDOWN)
+        await message.reply_text(f"❌ An error occurred: {str(e)}", parse_mode=ParseMode.MARKDOWN)
 
 async def handle_audio_request(client, message):
     query = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else None
 
     if not query:
-        await message.reply_text("**Please provide a Music Link ❌**", parse_mode=enums.ParseMode.MARKDOWN)
+        await message.reply_text("**Please provide a Music Link ❌**", parse_mode=ParseMode.MARKDOWN)
         return
 
-    status_message = await message.reply_text("`Searching the audio...`", parse_mode=enums.ParseMode.MARKDOWN)
+    status_message = await message.reply_text("`Searching the audio...`", parse_mode=ParseMode.MARKDOWN)
 
     if not await validate_url(query):
         await status_message.delete()
-        searching_message = await message.reply_text("`Searching for the song...`", parse_mode=enums.ParseMode.MARKDOWN)
+        searching_message = await message.reply_text("`Searching for the song...`", parse_mode=ParseMode.MARKDOWN)
         video_url = await search_youtube(query)
         if not video_url:
             await searching_message.delete()
             await message.reply_text("❌ No matching videos found. Please try a different search term.")
             return
         await searching_message.delete()
-        status_message = await message.reply_text("`Found the video! Starting download...`", parse_mode=enums.ParseMode.MARKDOWN)
+        status_message = await message.reply_text("`Found the video! Starting download...`", parse_mode=ParseMode.MARKDOWN)
     else:
         video_url = query
 
     result, error = await download_audio(video_url)
     if error:
         await status_message.delete()
-        await message.reply_text(f"❌ {error}", parse_mode=enums.ParseMode.MARKDOWN)
+        await message.reply_text(f"❌ {error}", parse_mode=ParseMode.MARKDOWN)
         return
 
     audio_path = result['file_path']
@@ -357,7 +380,7 @@ async def handle_audio_request(client, message):
             caption=audio_caption,
             title=title,
             performer="YouTube Downloader",
-            parse_mode=enums.ParseMode.MARKDOWN,
+            parse_mode=ParseMode.MARKDOWN,
             progress=progress_bar,
             progress_args=(status_message, start_time, last_update_time)
         )
@@ -371,19 +394,19 @@ async def handle_audio_request(client, message):
             os.remove(audio_path)
 
 def setup_downloader_handler(app: Client):
-    @app.on_message(filters.command(["video", "yt"]))
+    @app.on_message(filters.command(["video", "yt"]) & (filters.private | filters.group))
     async def video_command(client, message):
         command_parts = message.text.split(maxsplit=1)
         if len(command_parts) == 1:
-            await message.reply_text("**Please provide your video link ❌**", parse_mode=enums.ParseMode.MARKDOWN)
+            await message.reply_text("**Please provide your video link ❌**", parse_mode=ParseMode.MARKDOWN)
         else:
             url = command_parts[1]
             if not await validate_url(url):
-                await message.reply_text("**Invalid YouTube URL ❌**", parse_mode=enums.ParseMode.MARKDOWN)
+                await message.reply_text("**Invalid YouTube URL ❌**", parse_mode=ParseMode.MARKDOWN)
             else:
                 await handle_download_request(client, message, url)
 
-    @app.on_message(filters.command("song"))
+    @app.on_message(filters.command("song") & (filters.private | filters.group))
     async def song_command(client, message):
         await handle_audio_request(client, message)
 
