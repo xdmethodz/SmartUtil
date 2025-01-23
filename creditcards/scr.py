@@ -23,7 +23,7 @@ async def scrape_messages(client, channel_username, limit, start_number=None):
     messages = []
     count = 0
     pattern = r'\d{16}\D*\d{2}\D*\d{2,4}\D*\d{3,4}'
-    async for message in client.search_messages(channel_username):
+    async for message in client.get_chat_history(channel_username, limit=limit):
         if count >= limit:
             break
         text = message.text if message.text else message.caption
@@ -81,7 +81,7 @@ def setup_scr_handler(app: Client):
                     f"<b>Amount:</b> <code>{len(unique_messages)}</code>\n"
                     f"<b>Duplicates Removed:</b> <code>{duplicates_removed}</code>\n"
                     f"<b>━━━━━━━━━━━━━━━━</b>\n"
-                    f"<b>Card-Scrapper By: <a href='https://t.me/itsSmartDev'>Smart Dev</a></b>\n"
+                    f"<b>Card-Scrapper By: <a href='https://t.me/ItsSmartToolBot'>Smart Tool</a></b>\n"
                 )
                 await temporary_msg.delete()
                 await client.send_document(message.chat.id, f, caption=caption)
