@@ -1,8 +1,4 @@
-import re
 import pymongo
-import os
-import random
-import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
