@@ -1,5 +1,3 @@
-# setup_gem_handler.py
-
 import os
 import io
 import logging
@@ -18,7 +16,7 @@ model = genai.GenerativeModel(MODEL_NAME)
 
 def setup_gem_handler(app: Client):
 
-    @app.on_message(filters.command("gem"))
+    @app.on_message(filters.command("gem") & (filters.private | filters.group))
     async def gemi_handler(client: Client, message: Message):
         loading_message = None
         try:
@@ -29,7 +27,7 @@ def setup_gem_handler(app: Client):
                 return
 
             prompt = message.text.split(maxsplit=1)[1]
-            response = model.generate_content(prompt)
+            response = await model.generate_content(prompt)
 
             response_text = response.text
             if len(response_text) > 4000:
@@ -45,7 +43,7 @@ def setup_gem_handler(app: Client):
             if loading_message:
                 await loading_message.delete()
 
-    @app.on_message(filters.command("imgai"))
+    @app.on_message(filters.command("imgai") & (filters.private | filters.group))
     async def generate_from_image(client: Client, message: Message):
         if not message.reply_to_message or not message.reply_to_message.photo:
             await message.reply_text("**Please reply to a photo for a response.**")
@@ -59,7 +57,7 @@ def setup_gem_handler(app: Client):
             img_data = await client.download_media(message.reply_to_message, in_memory=True)
             img = PIL.Image.open(io.BytesIO(img_data.getbuffer()))
 
-            response = model.generate_content([prompt, img])
+            response = await model.generate_content([prompt, img])
             response_text = response.text
 
             await message.reply_text(response_text, parse_mode=None)
@@ -68,3 +66,5 @@ def setup_gem_handler(app: Client):
             await message.reply_text("**An error occurred. Please try again.**")
         finally:
             await processing_message.delete()
+
+# To use the handler, call setup_gem_handler(app) in your main script
