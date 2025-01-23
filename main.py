@@ -98,9 +98,9 @@ async def send_start_message(client, message):
     start_message = (
         f"<b>Hi {full_name}! Welcome to this bot</b>\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-        "<b><a href='https://t.me/abir_x_official_developer'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
+        "<b><a href='https://t.me/abirxdhackz'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-        "<b>Don't forget to <a href='https://t.me/abir_x_official'>join</a> for updates!</b>"
+        "<b>Don't forget to <a href='https://t.me/ModVipRM'>join</a> for updates!</b>"
     )
 
     await message.reply_text(
@@ -108,7 +108,7 @@ async def send_start_message(client, message):
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")],
-            [InlineKeyboardButton("🔄 Updates", url="https://t.me/abir_x_official"),
+            [InlineKeyboardButton("🔄 Updates", url="https://t.me/ModVipRM"),
              InlineKeyboardButton("ℹ️ About Me", callback_data="about_me")]
         ]),
         disable_web_page_preview=True,
