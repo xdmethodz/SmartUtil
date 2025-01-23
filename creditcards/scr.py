@@ -19,11 +19,12 @@ def remove_duplicates(messages):
     duplicates_removed = len(messages) - len(unique_messages)
     return unique_messages, duplicates_removed
 
-async def scrape_messages(client, channel_username, limit, start_number=None):
+async def scrape_messages(client, channel_id, limit, start_number=None):
     messages = []
     count = 0
     pattern = r'\d{16}\D*\d{2}\D*\d{2,4}\D*\d{3,4}'
-    async for message in client.get_chat_history(channel_username, limit=limit):
+    
+    async for message in client.get_chat_history(channel_id, limit=limit):
         if count >= limit:
             break
         text = message.text if message.text else message.caption
@@ -39,6 +40,7 @@ async def scrape_messages(client, channel_username, limit, start_number=None):
                         formatted_messages.append(f"{card_number}|{mo}|{year}|{cvv}")
                 messages.extend(formatted_messages)
                 count += len(formatted_messages)
+                
     if start_number:
         messages = [msg for msg in messages if msg.startswith(start_number)]
     messages = messages[:limit]
@@ -81,7 +83,7 @@ def setup_scr_handler(app: Client):
                     f"<b>Amount:</b> <code>{len(unique_messages)}</code>\n"
                     f"<b>Duplicates Removed:</b> <code>{duplicates_removed}</code>\n"
                     f"<b>━━━━━━━━━━━━━━━━</b>\n"
-                    f"<b>Card-Scrapper By: <a href='https://t.me/ItsSmartToolBot'>Smart Tool</a></b>\n"
+                    f"<b>Card-Scrapper By: <a href='https://t.me/itsSmartDev'>Smart Dev</a></b>\n"
                 )
                 await temporary_msg.delete()
                 await client.send_document(message.chat.id, f, caption=caption)
