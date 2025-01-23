@@ -20,7 +20,7 @@ async def handle_start(client, message, platform):
     chat_id = message.chat.id
     session_data[chat_id] = {"platform": platform}
     buttons = [
-        [InlineKeyboardButton("Start", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
+        [InlineKeyboardButton("Go", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
     ]
     await ask_user(client, message, f"**Welcome to the {platform} session setup!**\n**━━━━━━━━━━━━━━━━━**\n**This is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.**\n\n**Note: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.**", buttons)
     # Start a timeout coroutine
@@ -48,7 +48,7 @@ async def handle_callback_query(client, callback_query):
         if chat_id not in session_data:
             session_data[chat_id] = {"platform": platform}
         buttons = [
-            [InlineKeyboardButton("Restart", callback_data=f"session_resume_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         new_text = "**Send Your API ID**"
         # Check if the new text is different from the current text
@@ -71,9 +71,13 @@ async def handle_text(client, message: Message):
     step = data.get("step")
 
     if step == "api_id":
+        if not message.text.isdigit():
+            await message.reply_text("**API ID should be an integer. Please Enter A Valid API ID**", parse_mode=ParseMode.MARKDOWN)
+            return
+        
         data["api_id"] = message.text
         buttons = [
-            [InlineKeyboardButton("Restart", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send Your API Hash**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "api_hash"
@@ -81,7 +85,7 @@ async def handle_text(client, message: Message):
     elif step == "api_hash":
         data["api_hash"] = message.text
         buttons = [
-            [InlineKeyboardButton("Restart", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         await message.reply_text("**Send Your Phone Number\n[Example: +880xxxxxxxxxx]**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "phone_number"
@@ -89,7 +93,7 @@ async def handle_text(client, message: Message):
     elif step == "phone_number":
         data["phone_number"] = message.text
         buttons = [
-            [InlineKeyboardButton("Restart", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
+            [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
 
         # Attempt to send the OTP
@@ -120,7 +124,7 @@ async def handle_text(client, message: Message):
             client = PyroClient(name="pyro_session", api_id=int(data["api_id"]), api_hash=data["api_hash"], phone_number=data["phone_number"])
             try:
                 await client.connect()
-                await client.sign_in(data["phone_number"], code=data["otp"])
+                await client.sign_in(data["phone_number"], data["otp"])
                 session_string = await client.export_session_string()
                 await client.stop()
                 # Remove the session file
@@ -139,7 +143,7 @@ async def handle_text(client, message: Message):
             client = TelethonClient(TelethonStringSession(), api_id=int(data["api_id"]), api_hash=data["api_hash"])
             try:
                 await client.connect()
-                await client.sign_in(data["phone_number"], code=data["otp"])
+                await client.sign_in(data["phone_number"], data["otp"])
                 session_string = client.session.save()
                 await client.disconnect()
                 # Remove the session file
@@ -164,7 +168,7 @@ async def handle_text(client, message: Message):
         if data["platform"] == "PyroGram":
             client = PyroClient(name="pyro_session", api_id=int(data["api_id"]), api_hash=data["api_hash"], phone_number=data["phone_number"])
             await client.connect()
-            await client.sign_in(data["phone_number"], code=data["otp"], password=data["2fa"])
+            await client.sign_in(data["phone_number"], data["otp"], password=data["2fa"])
             session_string = await client.export_session_string()
             await client.stop()
             # Remove the session file
@@ -173,7 +177,7 @@ async def handle_text(client, message: Message):
         elif data["platform"] == "Telethon":
             client = TelethonClient(TelethonStringSession(), api_id=int(data["api_id"]), api_hash=data["api_hash"])
             await client.connect()
-            await client.sign_in(data["phone_number"], code=data["otp"], password=data["2fa"])
+            await client.sign_in(data["phone_number"], data["otp"], password=data["2fa"])
             session_string = client.session.save()
             await client.disconnect()
             # Remove the session file
