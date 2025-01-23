@@ -124,7 +124,7 @@ async def handle_text(client, message: Message):
             client = PyroClient(name="pyro_session", api_id=int(data["api_id"]), api_hash=data["api_hash"], phone_number=data["phone_number"])
             try:
                 await client.connect()
-                await client.sign_in(data["phone_number"], data["otp"])
+                await client.sign_in(phone_number=data["phone_number"], phone_code=data["otp"])
                 session_string = await client.export_session_string()
                 await client.stop()
                 # Remove the session file
@@ -143,7 +143,7 @@ async def handle_text(client, message: Message):
             client = TelethonClient(TelethonStringSession(), api_id=int(data["api_id"]), api_hash=data["api_hash"])
             try:
                 await client.connect()
-                await client.sign_in(data["phone_number"], data["otp"])
+                await client.sign_in(phone=data["phone_number"], code=data["otp"])
                 session_string = client.session.save()
                 await client.disconnect()
                 # Remove the session file
@@ -168,7 +168,7 @@ async def handle_text(client, message: Message):
         if data["platform"] == "PyroGram":
             client = PyroClient(name="pyro_session", api_id=int(data["api_id"]), api_hash=data["api_hash"], phone_number=data["phone_number"])
             await client.connect()
-            await client.sign_in(data["phone_number"], data["otp"], data["2fa"])
+            await client.sign_in(phone_number=data["phone_number"], phone_code=data["otp"], password=data["2fa"])
             session_string = await client.export_session_string()
             await client.stop()
             # Remove the session file
@@ -177,7 +177,7 @@ async def handle_text(client, message: Message):
         elif data["platform"] == "Telethon":
             client = TelethonClient(TelethonStringSession(), api_id=int(data["api_id"]), api_hash=data["api_hash"])
             await client.connect()
-            await client.sign_in(data["phone_number"], data["otp"], password=data["2fa"])
+            await client.sign_in(phone=data["phone_number"], code=data["otp"], password=data["2fa"])
             session_string = client.session.save()
             await client.disconnect()
             # Remove the session file
