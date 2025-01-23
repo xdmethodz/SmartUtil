@@ -70,4 +70,4 @@ async def handle_bin_commands(client, message: Message):
     os.remove(file_path)
 
 def setup_bin_handlers(app: Client):
-    app.add_handler(handlers.MessageHandler(handle_bin_commands, filters.command(["adbin", "rmbin"])))
+    app.add_handler(handlers.MessageHandler(handle_bin_commands, filters.command(["adbin", "rmbin"]) & (filters.private | filters.group)))
