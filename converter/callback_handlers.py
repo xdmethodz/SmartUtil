@@ -546,7 +546,7 @@ async def handle_callback_query(client, callback_query):
             parse_mode=ParseMode.HTML,
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("⚙️ Main Menu", callback_data="main_menu")],
-                [InlineKeyboardButton("🔄 Updates", url="https://t.me/abir_x_official"),
+                [InlineKeyboardButton("🔄 Updates", url="https://t.me/ModVipRM"),
                  InlineKeyboardButton("ℹ️ About Me", callback_data="about_me")]
             ]),
             disable_web_page_preview=True,
