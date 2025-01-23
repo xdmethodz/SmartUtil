@@ -5,7 +5,7 @@ from pyrogram.enums import ParseMode
 from telethon.sync import TelegramClient as TelethonClient
 from telethon.sessions import StringSession as TelethonStringSession
 from pyrogram import Client as PyroClient
-from pyrogram.errors import BadRequest
+from pyrogram.errors import BadRequest, PhoneCodeExpired
 
 # Define this dictionary outside to store session data
 session_data = {}
@@ -131,6 +131,10 @@ async def handle_text(client, message: Message):
                 await client.stop()
                 # Remove the session file
                 client.session.delete()
+            except PhoneCodeExpired:
+                await message.reply_text("**The confirmation code has expired. Please request a new code by sending your phone number again.**", parse_mode=ParseMode.MARKDOWN)
+                data["step"] = "phone_number"
+                return
             except BadRequest as e:
                 if e.value == "2FA is required":
                     await message.reply_text("**2FA Is Required To Login Please Enter 2FA**", parse_mode=ParseMode.MARKDOWN)
@@ -150,6 +154,10 @@ async def handle_text(client, message: Message):
                 await client.disconnect()
                 # Remove the session file
                 client.session.delete()
+            except PhoneCodeExpired:
+                await message.reply_text("**The confirmation code has expired. Please request a new code by sending your phone number again.**", parse_mode=ParseMode.MARKDOWN)
+                data["step"] = "phone_number"
+                return
             except Exception as e:
                 if "2FA" in str(e):
                     await message.reply_text("**2FA Is Required To Login Please Enter 2FA**", parse_mode=ParseMode.MARKDOWN)
