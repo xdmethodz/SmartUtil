@@ -71,7 +71,7 @@ def get_country_info(alpha_2):
     return None
 
 def setup_fake_handler(app: Client):
-    @app.on_message(filters.command(["fake", "rnd", ".fake", ".rnd"]))
+    @app.on_message(filters.command(["fake", "rnd", ".fake", ".rnd"]) & (filters.private | filters.group))
     async def fake_handler(client: Client, message: Message):
         if len(message.command) <= 1:
             await message.reply_text("**❌ Provide a valid country name or country code.**")
@@ -128,3 +128,5 @@ def generate_phone_number(fake, phone_format):
     for _ in range(phone_number.count('X')):
         phone_number = phone_number.replace('X', str(fake.random_digit()), 1)
     return phone_number
+
+# To use the handler, call setup_fake_handler(app) in your main script
