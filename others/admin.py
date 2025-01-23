@@ -99,18 +99,7 @@ async def send_handler(client: Client, message: Message):
     if broadcast_message.reply_markup and isinstance(broadcast_message.reply_markup, InlineKeyboardMarkup):
         buttons = broadcast_message.reply_markup.inline_keyboard
     
-    # Add custom buttons from message text
-    custom_buttons = []
-    if ":" in message.text:
-        parts = message.text.split(":")[1].strip().split("\n")
-        for part in parts:
-            if " " in part:
-                text, url = part.split(" ", 1)
-                custom_buttons.append(InlineKeyboardButton(text.strip(), url=url.strip()))
-
-    # Format buttons in 2x2 grid
-    all_buttons = buttons + custom_buttons
-    keyboard = InlineKeyboardMarkup([all_buttons[i:i + 2] for i in range(0, len(all_buttons), 2)]) if all_buttons else None
+    keyboard = InlineKeyboardMarkup(buttons) if buttons else None
 
     # Send processing message
     processing_msg = await message.reply_text("**Sending Broadcast Everywhere....**", parse_mode=ParseMode.MARKDOWN)
