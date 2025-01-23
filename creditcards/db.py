@@ -129,5 +129,3 @@ def setup_db_handlers(app: Client):
         reply_markup = InlineKeyboardMarkup([[button]])
 
         await message.reply_text(f"**{bin_data}**", parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
-
-    return app
