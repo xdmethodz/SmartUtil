@@ -1,4 +1,5 @@
 import os
+import logging
 import time
 import yt_dlp
 import spotipy
@@ -6,7 +7,16 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 from typing import Optional
+import asyncio
 
+# Configure logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# Configuration
 SPOTIFY_CLIENT_ID = '5941bb8af55d4a52a91c5297f616e325'
 SPOTIFY_CLIENT_SECRET = '408f04b237aa4dd2ba1b8bfc5da9eff8'  # Replace this with your actual Spotify client secret
 
@@ -57,7 +67,7 @@ async def download_audio(url: str, output_filename: str) -> Optional[str]:
             return output_path
         return None
     except Exception as e:
-        print(f"Error downloading audio: {e}")
+        logger.error(f"Error downloading audio: {e}")
         return None
 
 async def handle_spotify_request(client, message, url):
@@ -163,12 +173,14 @@ async def progress_bar(current, total, status_message, start_time, last_update_t
     try:
         await status_message.edit(text)
     except Exception as e:
-        print(f"Error updating progress: {e}")
+        logger.error(f"Error updating progress: {e}")
 
 def setup_spotify_handler(app: Client):
-    @app.on_message(filters.command("sp"))
+    @app.on_message(filters.command("sp") & (filters.private | filters.group))
     async def spotify_command(client, message):
         # Check if the message contains a Spotify URL
         command_parts = message.text.split(maxsplit=1)
         url = command_parts[1] if len(command_parts) > 1 else None
         await handle_spotify_request(client, message, url)
+
+# To use the handler, call setup_spotify_handler(app) in your main script
