@@ -115,10 +115,11 @@ async def handle_text(client, message: Message):
             del session_data[chat_id]
             return
 
-        await message.reply_text("**Send The OTP as text. Please send a text message embedding the OTP like: 'AB1 CD2 EF3 GH4 IJ5'**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
+        await message.reply_text("**Send The OTP as text. Please send a text message embedding the OTP like: 'AB5 CD0 EF3 GH7 IJ6'**", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
         data["step"] = "otp"
 
     elif step == "otp":
+        # Extract only the digits from the text message
         otp = ''.join(filter(str.isdigit, message.text))
         data["otp"] = otp
 
