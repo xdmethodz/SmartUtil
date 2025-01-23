@@ -76,7 +76,7 @@ def setup_credit_handlers(app: Client):
         if amount <= 10:
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
-            callback_data = f"regenerate|{bin}|{month}|{year}|{amount}"
+            callback_data = f"regenerate|{bin}|{month or ''}|{year or ''}|{amount}"
 
             reply_markup = InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Regenerate", callback_data=callback_data)]]
@@ -141,11 +141,11 @@ def setup_credit_handlers(app: Client):
             await message.reply_text("**Provide a valid BIN (6 digits) ❌**")
             return
 
-        bin = user_input[1][:6]  # Take the first 6 digits as BIN
+        bin = user_input[1]  # Take the full BIN
 
         # Fetch BIN info
         progress_message = await message.reply_text("**Fetching Bin Details...**")
-        bin_info = get_bin_info(bin)
+        bin_info = get_bin_info(bin[:6])
         await progress_message.delete()
 
         if not bin_info or bin_info.get("Status") != "SUCCESS":
