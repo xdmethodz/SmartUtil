@@ -41,7 +41,7 @@ from creditcards.scr import setup_scr_handler
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
 BOT_TOKEN = "7941865929:AAFh8u_6r7FCEAG564vZ3bvvdphZ-QRFBPg"  # Replace with your Bot Token
-SESSION_STRING = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"  # Replace this SESSION STRING with your actual SESSION_STRING
+SESSION_STRING = "BQF3ZcoAsX0yc18HrzrBGcI8rNpM02CXtzn5YPHRhTs725h-OjM3KPGwv_yckjVNlFy7M6jT9u2NbAu1z2eOZzRMTg2FVPoBZ7LmPrCksegO3yK1irJjWh0f8yk3LlU1uGqRLC0ZlrJSGIzuqiF9vj7S_K8AU25Pw5IXaTuubXwPET65a6HfGtxmi6gbAQ-ayjiVcavTamd_Wc_QWS17Am4fQoLF_8fwP59sWcTY5PrXVdLfmke5xLODmxVHqBpoVkpccnxWDOskJwZXYFwoysclMcZ2V9xRiKlUpfVmgxUmSRX1GbCzHSBXCUUgBpZILJw576l7KOByjXyly1y-gVRvvrciggAAAAHWFal6AA"  # Replace this SESSION STRING with your actual SESSION_STRING
 
 # Initialize the bot client
 app = Client(
