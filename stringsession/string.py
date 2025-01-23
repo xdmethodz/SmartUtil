@@ -70,18 +70,6 @@ async def handle_text(client, message: Message):
 
     elif step == "api_hash":
         data["api_hash"] = message.text
-        try:
-            if data["platform"] == "PyroGram":
-                async with PyroClient("session_test", api_id=int(data["api_id"]), api_hash=data["api_hash"]):
-                    pass
-            elif data["platform"] == "Telethon":
-                with TelethonClient("session_test", api_id=int(data["api_id"]), api_hash=data["api_hash"]):
-                    pass
-        except Exception:
-            await message.reply_text("**API ID & API Hash are wrong. Please start again**", parse_mode=ParseMode.MARKDOWN)
-            del session_data[chat_id]
-            return
-
         buttons = [
             [InlineKeyboardButton("Resume", callback_data=f"session_resume_{data['platform']}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
