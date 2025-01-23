@@ -23,7 +23,7 @@ async def scrape_messages(client, channel_id, limit, start_number=None):
     messages = []
     count = 0
     pattern = r'\d{16}\D*\d{2}\D*\d{2,4}\D*\d{3,4}'
-    
+
     async for message in client.get_chat_history(channel_id, limit=limit):
         if count >= limit:
             break
@@ -40,7 +40,7 @@ async def scrape_messages(client, channel_id, limit, start_number=None):
                         formatted_messages.append(f"{card_number}|{mo}|{year}|{cvv}")
                 messages.extend(formatted_messages)
                 count += len(formatted_messages)
-                
+
     if start_number:
         messages = [msg for msg in messages if msg.startswith(start_number)]
     messages = messages[:limit]
