@@ -42,7 +42,17 @@ async def aud_handler(client: Client, message: Message):
         audio_file_path = os.path.join(DOWNLOAD_DIRECTORY, f"{audio_file_name}.mp3")
 
         # Convert the video to audio using ffmpeg
-        subprocess.run(["ffmpeg", "-i", video_file_path, audio_file_path])
+        process = await asyncio.create_subprocess_exec(
+            "ffmpeg", "-i", video_file_path, 
+            audio_file_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await process.communicate()
+
+        if process.returncode != 0:
+            raise Exception(f"ffmpeg error: {stderr.decode()}")
 
         # Delete the converting message
         await converting_msg.delete()
@@ -68,10 +78,11 @@ async def aud_handler(client: Client, message: Message):
             os.remove(audio_file_path)
 
         # Delete the uploading message
-        await uploading_msg.delete()
+        if 'uploading_msg' in locals():
+            await uploading_msg.delete()
 
 # Function to set up handlers for the Pyrogram bot
 def setup_aud_handler(app: Client):
-    @app.on_message(filters.command("aud") & filters.private)
+    @app.on_message(filters.command("aud") & (filters.private | filters.group))
     async def aud_command(client: Client, message: Message):
         await aud_handler(client, message)
