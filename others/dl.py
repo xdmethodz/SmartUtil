@@ -33,11 +33,11 @@ class FacebookDownloader:
         self.temp_dir = temp_dir
         yt_dlp.utils.std_headers['User-Agent'] = Config.HEADERS['User-Agent']
 
-    def download_video(self, url: str) -> Optional[str]:
+    async def download_video(self, url: str) -> Optional[str]:
         self.temp_dir.mkdir(exist_ok=True)
         ydl_opts = {
             'format': 'best',
-            'outtmpl': os.path.join(str(self.temp_dir), '%(title)s.%(ext)s'),
+            'outtmpl': str(self.temp_dir / '%(title)s.%(ext)s'),
             'quiet': True,
             'no_warnings': True,
             'no_color': True,
@@ -46,21 +46,26 @@ class FacebookDownloader:
         }
         
         try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info_dict = ydl.extract_info(url, download=True)
-                filename = ydl.prepare_filename(info_dict)
-                if os.path.exists(filename):
-                    return filename
-                else:
-                    return None
+            loop = asyncio.get_event_loop()
+            filename = await loop.run_in_executor(None, self._download_video, ydl_opts, url)
+            return filename
         except Exception as e:
             logger.error(f"Facebook download error: {e}")
             return None
 
+    def _download_video(self, ydl_opts, url):
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info_dict)
+            if os.path.exists(filename):
+                return filename
+            else:
+                return None
+
 def setup_dl_handlers(app: Client):
     fb_downloader = FacebookDownloader(Config.TEMP_DIR)
 
-    @app.on_message(filters.command("fb") & filters.private)
+    @app.on_message(filters.command("fb") & (filters.private | filters.group))
     async def fb_handler(client: Client, message: Message):
         if len(message.command) <= 1:
             await message.reply_text("**Please provide a Facebook video URL after the command.**", parse_mode=ParseMode.MARKDOWN)
@@ -70,7 +75,7 @@ def setup_dl_handlers(app: Client):
         downloading_message = await message.reply_text("`Searching The Video`", parse_mode=ParseMode.MARKDOWN)
         
         try:
-            filename = await asyncio.to_thread(fb_downloader.download_video, url)
+            filename = await fb_downloader.download_video(url)
             if filename:
                 await downloading_message.edit_text("`Downloading Your Video ...`", parse_mode=ParseMode.MARKDOWN)
                 max_telegram_size = 50 * 1024 * 1024
