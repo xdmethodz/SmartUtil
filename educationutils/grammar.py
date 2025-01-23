@@ -1,5 +1,6 @@
 import os
 import requests
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 from pyrogram.handlers import MessageHandler
@@ -14,7 +15,8 @@ async def check_grammar(text):
         'text': text,
         'language': 'en-US'
     }
-    response = requests.post(url, data=data)
+    loop = asyncio.get_event_loop()
+    response = await loop.run_in_executor(None, requests.post, url, data)
     result = response.json()
     corrected_text = text
     for match in result['matches']:
@@ -24,7 +26,7 @@ async def check_grammar(text):
         corrected_text = corrected_text[:offset] + replacement + corrected_text[offset + length:]
     return corrected_text
 
-async def grammar_check(client: Client, message):
+async def grammar_check(client: Client, message: Message):
     user_input = message.text.split(maxsplit=1)  # Split the message text
     if len(user_input) < 2:
         await message.reply_text("**Provide some text to fix Grammar..**", parse_mode=ParseMode.MARKDOWN)
@@ -43,7 +45,7 @@ async def check_spelling(word):
         corrected_word = word
     return corrected_word
 
-async def spell_check(client: Client, message):
+async def spell_check(client: Client, message: Message):
     user_input = message.text.split(maxsplit=1)  # Split the message text
     if len(user_input) < 2:
         await message.reply_text("**Provide some text to check spelling..**", parse_mode=ParseMode.MARKDOWN)
@@ -56,7 +58,8 @@ async def spell_check(client: Client, message):
 async def fetch_pronunciation_info(word):
     # Use FreeDictionaryAPI to fetch word information
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-    response = requests.get(url)
+    loop = asyncio.get_event_loop()
+    response = await loop.run_in_executor(None, requests.get, url)
     
     # Check if the response is successful
     if response.status_code != 200:
@@ -92,7 +95,7 @@ async def fetch_pronunciation_info(word):
 
     return pronunciation_info
 
-async def pronunciation_check(client: Client, message):
+async def pronunciation_check(client: Client, message: Message):
     user_input = message.text.split(maxsplit=1)  # Split the message text
     if len(user_input) < 2:
         await message.reply_text("**Provide a word to check its pronunciation.**", parse_mode=ParseMode.MARKDOWN)
@@ -113,7 +116,8 @@ async def pronunciation_check(client: Client, message):
         if pronunciation_info['audio_link']:
             audio_filename = f"Smart Tool ⚙️ {word}.mp3"
             # Download the audio file
-            response = requests.get(pronunciation_info['audio_link'])
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(None, requests.get, pronunciation_info['audio_link'])
             with open(audio_filename, 'wb') as f:
                 f.write(response.content)
 
@@ -138,6 +142,6 @@ async def pronunciation_check(client: Client, message):
         await checking_message.delete()
 
 def setup_eng_handler(app: Client):
-    app.add_handler(MessageHandler(grammar_check, filters.command("gra")))
-    app.add_handler(MessageHandler(spell_check, filters.command("spell")))
-    app.add_handler(MessageHandler(pronunciation_check, filters.command("prn")))
+    app.add_handler(MessageHandler(grammar_check, filters.command("gra") & (filters.private | filters.group)))
+    app.add_handler(MessageHandler(spell_check, filters.command("spell") & (filters.private | filters.group)))
+    app.add_handler(MessageHandler(pronunciation_check, filters.command("prn") & (filters.private | filters.group)))
