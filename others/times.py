@@ -4,7 +4,7 @@ from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 
-def get_time_for_country(country_code):
+async def get_time_for_country(country_code):
     # Get the country name and flag emoji
     country = pycountry.countries.get(alpha_2=country_code)
     if not country:
@@ -29,7 +29,7 @@ def get_time_for_country(country_code):
     return f"{flag_emoji} <b>{country_name}:</b> Current Time & Date\n━━━━━━━━━━━━━━━━━\n🕰️ <b>Time:</b> <code>{time_str}</code>\n📆 <b>Date:</b> <code>{date_str}</code>\n📅 <b>Day:</b> <code>{day_str}</code>"
 
 def setup_time_handler(app: Client):
-    @app.on_message(filters.command("time") & filters.private)
+    @app.on_message(filters.command("time") & (filters.private | filters.group))
     async def handle_time_command(client, message):
         if len(message.command) == 1:
             await message.reply_text(
@@ -39,10 +39,12 @@ def setup_time_handler(app: Client):
         else:
             country_code = message.command[1].upper()
             try:
-                result = get_time_for_country(country_code)
+                result = await get_time_for_country(country_code)
                 await message.reply_text(result, parse_mode=ParseMode.HTML)
             except Exception as e:
                 await message.reply_text(
                     f"<b>Error:</b> {str(e)}",
                     parse_mode=ParseMode.HTML
                 )
+
+# To use the handler, you would call setup_time_handler(app) in your main script
