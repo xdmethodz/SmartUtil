@@ -75,5 +75,5 @@ async def handle_fpass_command(client, message: Message):
 
 # Setup handlers
 def setup_mail_handlers(app: Client):
-    app.add_handler(handlers.MessageHandler(handle_fmail_command, filters.command("fmail")))
-    app.add_handler(handlers.MessageHandler(handle_fpass_command, filters.command("fpass")))
+    app.add_handler(handlers.MessageHandler(handle_fmail_command, filters.command("fmail") & (filters.private | filters.group)))
+    app.add_handler(handlers.MessageHandler(handle_fpass_command, filters.command("fpass") & (filters.private | filters.group)))
