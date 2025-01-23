@@ -1,12 +1,14 @@
 import requests
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
 # Function to fetch synonyms and antonyms using Datamuse API
-def fetch_synonyms_antonyms(word):
-    synonyms_response = requests.get(f"https://api.datamuse.com/words?rel_syn={word}")
-    antonyms_response = requests.get(f"https://api.datamuse.com/words?rel_ant={word}")
+async def fetch_synonyms_antonyms(word):
+    loop = asyncio.get_event_loop()
+    synonyms_response = await loop.run_in_executor(None, requests.get, f"https://api.datamuse.com/words?rel_syn={word}")
+    antonyms_response = await loop.run_in_executor(None, requests.get, f"https://api.datamuse.com/words?rel_ant={word}")
 
     synonyms = [syn['word'] for syn in synonyms_response.json()]
     antonyms = [ant['word'] for ant in antonyms_response.json()]
@@ -14,14 +16,15 @@ def fetch_synonyms_antonyms(word):
     return synonyms, antonyms
 
 # Function to translate text using Global Translator API
-def translate_text(text, target_lang):
-    response = requests.get(f"https://global-translator-api.bjcoderx.workers.dev/?text={text}&targetLang={target_lang}")
+async def translate_text(text, target_lang):
+    loop = asyncio.get_event_loop()
+    response = await loop.run_in_executor(None, requests.get, f"https://global-translator-api.bjcoderx.workers.dev/?text={text}&targetLang={target_lang}")
     response_data = response.json()
     translated_text = response_data.get("translatedText", "Translation failed")
     return translated_text
 
 def setup_education_handler(app: Client):
-    @app.on_message(filters.command("syn"))
+    @app.on_message(filters.command("syn") & (filters.private | filters.group))
     async def synonyms_handler(client: Client, message: Message):
         if len(message.command) <= 1:
             await message.reply_text("**Please Enter The Word To Get Synonyms And Antonyms**", parse_mode=ParseMode.MARKDOWN)
@@ -31,7 +34,7 @@ def setup_education_handler(app: Client):
         loading_message = await message.reply_text("**Fetching Synonyms and Antonyms...**", parse_mode=ParseMode.MARKDOWN)
 
         try:
-            synonyms, antonyms = fetch_synonyms_antonyms(word)
+            synonyms, antonyms = await fetch_synonyms_antonyms(word)
             synonyms_text = ", ".join(synonyms) if synonyms else "No synonyms found"
             antonyms_text = ", ".join(antonyms) if antonyms else "No antonyms found"
 
@@ -46,7 +49,7 @@ def setup_education_handler(app: Client):
             await loading_message.delete()
             await message.reply_text(f"**An error occurred: {str(e)}**", parse_mode=ParseMode.MARKDOWN)
 
-    @app.on_message(filters.command("tr"))
+    @app.on_message(filters.command("tr") & (filters.private | filters.group))
     async def translate_handler(client: Client, message: Message):
         if len(message.command) <= 2:
             await message.reply_text("**Please Enter A Language Code and Text To Translate e.g. /tr bn Hello**", parse_mode=ParseMode.MARKDOWN)
@@ -57,7 +60,7 @@ def setup_education_handler(app: Client):
         loading_message = await message.reply_text(f"**Translating Text Into {target_lang} language...**", parse_mode=ParseMode.MARKDOWN)
 
         try:
-            translated_text = translate_text(text_to_translate, target_lang)
+            translated_text = await translate_text(text_to_translate, target_lang)
             await loading_message.delete()
             await message.reply_text(f"`{translated_text}`", parse_mode=ParseMode.MARKDOWN)
         except Exception as e:
