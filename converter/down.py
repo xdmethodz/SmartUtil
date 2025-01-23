@@ -13,12 +13,12 @@ from pyrogram.enums import ParseMode
 class URLDownloader:
     """Download the webpage components based on the input URL."""
     
-    def __init__(self, img_flg=True, link_flg=True, script_flg=True):
+    def __init__(self, img_flg=False, link_flg=True, script_flg=True):
         self.soup = None
         self.img_flg = img_flg
         self.link_flg = link_flg
         self.script_flg = script_flg
-        self.link_type = ('css', 'png', 'ico', 'jpg', 'jpeg', 'mov', 'ogg', 'gif', 'xml', 'js')
+        self.link_type = ('css', 'js')
         
     async def fetch(self, session, url):
         async with session.get(url) as response:
@@ -38,8 +38,6 @@ class URLDownloader:
                     os.mkdir(page_folder)
                 
                 tasks = []
-                if self.img_flg:
-                    tasks.append(self._soup_find_and_save(session, url, page_folder, 'img', 'src'))
                 if self.link_flg:
                     tasks.append(self._soup_find_and_save(session, url, page_folder, 'link', 'href'))
                 if self.script_flg:
@@ -56,7 +54,7 @@ class URLDownloader:
             print(f"> save_page(): Create files failed: {str(e)}")
             return None
 
-    async def _soup_find_and_save(self, session, url, page_folder, tag_to_find='img', inner='src'):
+    async def _soup_find_and_save(self, session, url, page_folder, tag_to_find='link', inner='href'):
         """Save specified tag_to_find objects in the page_folder."""
         page_folder = os.path.join(page_folder, tag_to_find)
         if not os.path.exists(page_folder):
@@ -74,7 +72,7 @@ class URLDownloader:
         try:
             filename = re.sub(r'\W+', '.', os.path.basename(res[inner]))
             if inner == 'href' and (not any(ext in filename for ext in self.link_type)):
-                filename += '.html'
+                return
 
             file_url = urljoin(url, res.get(inner))
             file_path = os.path.join(page_folder, filename)
@@ -91,7 +89,7 @@ class URLDownloader:
     def _zip_folder(self, folder_path, url):
         """Zip the folder."""
         sanitized_url = re.sub(r'\W+', '_', url)
-        zip_name = f"Smart Tool ⚙️ ({sanitized_url}).zip"
+        zip_name = f"Smart_Tool_{sanitized_url}.zip"
         zip_path = os.path.join("downloads", zip_name)
 
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -157,6 +155,6 @@ async def download_web_source(client: Client, message: Message):
         await downloading_msg.delete()
 
 def setup_ws_handler(app: Client):
-    @app.on_message(filters.command("ws") & filters.private)
+    @app.on_message(filters.command("ws") & (filters.private | filters.group))
     async def ws_command(client: Client, message: Message):
         await download_web_source(client, message)
