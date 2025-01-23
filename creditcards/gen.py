@@ -1,7 +1,7 @@
-import os
 import re
-import requests
+import os
 import random
+import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
@@ -13,28 +13,27 @@ def get_bin_info(bin):
         return response.json()
     return None
 
-def generate_credit_card(bin, month, year, amount):
+def generate_credit_card(bin, amount):
     cards = []
     for _ in range(amount):
         card = bin + ''.join([str(random.randint(0, 9)) for _ in range(16-len(bin))])
+        month = f"{random.randint(1, 12):02}"
+        year = random.randint(2024, 2029)
         cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
         cards.append(f"{card}|{month}|{year}|{cvv}")
     return cards
 
 def parse_input(user_input):
     bin = None
-    month = f"{random.randint(1, 12):02}"
-    year = random.randint(2024, 2029)
     amount = 10
 
-    match = re.match(r"(\d{6,})(\d{0,10}[xX]{0,4})\|?(\d{2})?\|?(\d{2,4})?\s*(\d+)?", user_input)
+    match = re.match(r"(\d{6,})(\d{0,10}[xX]{0,4})\s*(\d+)?", user_input)
     if match:
-        bin, suffix, month, year, amount = match.groups()
+        bin, suffix, amount = match.groups()
         bin = bin + ''.join([str(random.randint(0, 9)) if x in 'xX' else x for x in suffix])
-        year = f"20{year}" if year and len(year) == 2 else (year if year else random.randint(2024, 2029))
         amount = int(amount) if amount else 10
         
-    return bin, month, year, amount
+    return bin, amount
 
 def setup_credit_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]) & (filters.private | filters.group))
@@ -45,7 +44,7 @@ def setup_credit_handlers(app: Client):
             return
         
         user_input = user_input[1]
-        bin, month, year, amount = parse_input(user_input)
+        bin, amount = parse_input(user_input)
 
         if not bin or len(bin) < 6:
             await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
@@ -68,13 +67,13 @@ def setup_credit_handlers(app: Client):
         progress_message = await message.reply_text("**Generating Credit Cards...☑️**")
 
         # Generate credit cards
-        cards = generate_credit_card(bin, month, year, amount)
+        cards = generate_credit_card(bin, amount)
         card_text = "\n".join([f"`{card}`" for card in cards])
 
         if amount <= 10:
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
-            callback_data = f"regenerate|{bin}|{month}|{year}|{amount}"
+            callback_data = f"regenerate|{bin}|{amount}"
 
             reply_markup = InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Regenerate", callback_data=callback_data)]]
@@ -99,9 +98,9 @@ def setup_credit_handlers(app: Client):
                 if os.path.exists(file_name):
                     os.remove(file_name)
 
-    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6,16})\|(\d{2})\|(\d{4})\|(\d+)"))
+    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6,16})\|(\d+)"))
     async def regenerate_callback(client: Client, callback_query):
-        _, bin, month, year, amount = callback_query.data.split('|')
+        _, bin, amount = callback_query.data.split('|')
         amount = int(amount)
 
         # Fetch BIN info again
@@ -117,14 +116,14 @@ def setup_credit_handlers(app: Client):
         bank_text = bank.upper() if bank else "Unknown"
 
         # Generate new credit cards
-        cards = generate_credit_card(bin, month, year, amount)
+        cards = generate_credit_card(bin, amount)
         card_text = "\n".join([f"`{card}`" for card in cards])
 
         bin_info_text = f"**Bank:** `{bank_text}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
         response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
 
         reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}")]]
+            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{amount}")]]
         )
 
         await callback_query.message.edit_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
@@ -183,7 +182,7 @@ def setup_credit_handlers(app: Client):
 
         total_cards = []
         for bin in bins:
-            cards = generate_credit_card(bin[:6], f"{random.randint(1, 12):02}", random.randint(2024, 2029), amount)
+            cards = generate_credit_card(bin[:6], amount)
             total_cards.extend(cards)
 
         file_name = "Smart Tool ⚙️ Multigen.txt"
