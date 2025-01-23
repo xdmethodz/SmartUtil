@@ -35,7 +35,7 @@ def setup_decoders_handler(app: Client):
 
     # Register handlers for each command
     for command, func in commands.items():
-        @app.on_message(filters.command(command) & filters.private)
+        @app.on_message(filters.command(command) & (filters.private | filters.group))
         async def handle_command(client, message, func=func, command=command):
             if len(message.command) == 1 and not message.reply_to_message:
                 # No input provided
@@ -62,3 +62,5 @@ def setup_decoders_handler(app: Client):
                         f"<b>Error:</b> {str(e)}",
                         parse_mode=ParseMode.HTML
                     )
+
+# To use the handler, call setup_decoders_handler(app) in your main script
