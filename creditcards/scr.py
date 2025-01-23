@@ -1,9 +1,9 @@
 import re
 import os
-import asyncio
-from urllib.parse import urlparse
-from pyrogram.enums import ParseMode
-from pyrogram import Client, filters
+from telethon import TelegramClient
+from telethon.sessions import StringSession
+from pyrogram import filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Admin IDs
 ADMIN_IDS = [7303810912, 6808763554]
@@ -12,22 +12,17 @@ ADMIN_IDS = [7303810912, 6808763554]
 DEFAULT_LIMIT = 10000  # Card Scrapping Limit For Everyone
 ADMIN_LIMIT = 50000  # Card Scrapping Limit For Admin
 
-scrape_queue = asyncio.Queue()
 
-def remove_duplicates(messages):
-    unique_messages = list(set(messages))
-    duplicates_removed = len(messages) - len(unique_messages)
-    return unique_messages, duplicates_removed
 
-async def scrape_messages(client, channel_id, limit, start_number=None):
+async def scrape_messages(channel_id, limit, start_number=None):
     messages = []
     count = 0
     pattern = r'\d{16}\D*\d{2}\D*\d{2,4}\D*\d{3,4}'
 
-    async for message in client.get_chat_history(channel_id, limit=limit):
+    async for message in telethon_client.iter_messages(channel_id, limit=limit):
         if count >= limit:
             break
-        text = message.text if message.text else message.caption
+        text = message.message
         if text:
             matched_messages = re.findall(pattern, text)
             if matched_messages:
@@ -46,7 +41,12 @@ async def scrape_messages(client, channel_id, limit, start_number=None):
     messages = messages[:limit]
     return messages
 
-def setup_scr_handler(app: Client):
+def remove_duplicates(messages):
+    unique_messages = list(set(messages))
+    duplicates_removed = len(messages) - len(unique_messages)
+    return unique_messages, duplicates_removed
+
+def setup_scr_handler(app):
     @app.on_message(filters.command(["scr"]))
     async def scr_cmd(client, message):
         args = message.text.split()[1:]
@@ -60,16 +60,15 @@ def setup_scr_handler(app: Client):
             await message.reply_text(f"<b>Sorry Bro! Amount over Max limit is {max_lim} ❌</b>")
             return
         start_number = args[2] if len(args) == 3 else None
-        parsed_url = urlparse(channel_identifier)
-        channel_username = parsed_url.path.lstrip('/') if not parsed_url.scheme else channel_identifier
         try:
-            chat = await client.get_chat(channel_username)
+            await telethon_client.start()
+            chat = await telethon_client.get_entity(channel_identifier)
             channel_name = chat.title
         except Exception:
             await message.reply_text("<b>Hey Bro! 🥲 Incorrect username ❌</b>")
             return
         temporary_msg = await message.reply_text("<b>Scraping in progress wait.....</b>")
-        scrapped_results = await scrape_messages(client, chat.id, limit, start_number)
+        scrapped_results = await scrape_messages(chat.id, limit, start_number)
         unique_messages, duplicates_removed = remove_duplicates(scrapped_results)
         if unique_messages:
             file_name = f"x{len(unique_messages)}_{channel_name.replace(' ', '_')}.txt"
