@@ -168,7 +168,7 @@ async def handle_text(client, message: Message):
         if data["platform"] == "PyroGram":
             client = PyroClient(name="pyro_session", api_id=int(data["api_id"]), api_hash=data["api_hash"], phone_number=data["phone_number"])
             await client.connect()
-            await client.sign_in(data["phone_number"], data["otp"], password=data["2fa"])
+            await client.sign_in(data["phone_number"], data["otp"], data["2fa"])
             session_string = await client.export_session_string()
             await client.stop()
             # Remove the session file
