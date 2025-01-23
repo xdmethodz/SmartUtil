@@ -396,7 +396,7 @@ async def handle_pinterest_request(client, message, url):
             await message.reply_text('An error occurred while processing your request.')
 
 def setup_pinterest_handler(app: Client):
-    @app.on_message(filters.command(["pin", "pnt"]))
+    @app.on_message(filters.command(["pin", "pnt"]) & (filters.private | filters.group))
     async def pin_command(client, message):
         command_parts = message.text.split(maxsplit=1)
         if len(command_parts) == 1:
@@ -408,3 +408,5 @@ def setup_pinterest_handler(app: Client):
     # Link the downloader and semaphore to the app for access in handlers
     app.downloader = PinterestDownloader()
     app.download_semaphore = asyncio.Semaphore(Config.MAX_CONCURRENT_DOWNLOADS)
+
+# To use the handler, call setup_pinterest_handler(app) in your main script
