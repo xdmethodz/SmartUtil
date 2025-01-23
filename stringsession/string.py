@@ -128,20 +128,20 @@ async def handle_text(client, message: Message):
 
     elif stage == "phone_number":
         session["phone_number"] = message.text
-        await message.reply("Sending OTP.....")
-        await send_otp(client, message)
+        otp_message = await message.reply("Sending OTP.....")
+        await send_otp(client, message, otp_message)
 
     elif stage == "otp":
         otp = ''.join([char for char in message.text if char.isdigit()])
         session["otp"] = otp
-        await message.reply("Validating OTP.....")
-        await validate_otp(client, message)
+        otp_message = await message.reply("Validating OTP.....")
+        await validate_otp(client, message, otp_message)
 
     elif stage == "2fa":
         session["password"] = message.text
         await validate_2fa(client, message)
 
-async def send_otp(client, message):
+async def send_otp(client, message, otp_message):
     session = session_data[message.chat.id]
     api_id = session["api_id"]
     api_hash = session["api_hash"]
@@ -171,18 +171,21 @@ async def send_otp(client, message):
             ]]),
             parse_mode=ParseMode.HTML
         )
+        await otp_message.delete()
     except (ApiIdInvalid, ApiIdInvalidError):
         await message.reply('`API_ID` and `API_HASH` combination is invalid. Please start generating session again.', reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Resume", callback_data=f"session_resume_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]))
+        await otp_message.delete()
         return
     except (PhoneNumberInvalid, PhoneNumberInvalidError):
         await message.reply('`PHONE_NUMBER` is invalid. Please start generating session again.', reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Resume", callback_data=f"session_resume_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]))
+        await otp_message.delete()
         return
 
-async def validate_otp(client, message):
+async def validate_otp(client, message, otp_message):
     session = session_data[message.chat.id]
     client_obj = session["client_obj"]
     phone_number = session["phone_number"]
@@ -196,15 +199,18 @@ async def validate_otp(client, message):
         else:
             await client_obj.sign_in(phone_number, code.phone_code_hash, otp)
         await generate_session(client, message)
+        await otp_message.delete()
     except (PhoneCodeInvalid, PhoneCodeInvalidError):
         await message.reply('OTP is invalid. Please start generating session again.', reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Resume", callback_data=f"session_resume_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]))
+        await otp_message.delete()
         return
     except (PhoneCodeExpired, PhoneCodeExpiredError):
         await message.reply('OTP is expired. Please start generating session again.', reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Resume", callback_data=f"session_resume_{session['type'].lower()}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]))
+        await otp_message.delete()
         return
     except (SessionPasswordNeeded, SessionPasswordNeededError):
         session["stage"] = "2fa"
@@ -216,6 +222,7 @@ async def validate_otp(client, message):
             ]]),
             parse_mode=ParseMode.HTML
         )
+        await otp_message.delete()
 
 async def validate_2fa(client, message):
     session = session_data[message.chat.id]
@@ -253,6 +260,5 @@ async def generate_session(client, message):
         pass
 
     await client_obj.disconnect()
-    await message.reply(f"Successfully generated {session['type']} string session. \n\nPlease check your saved messages! \n\nBy @ItsSmartToolBot")
     await message.reply("<b>This string has been saved ✅ in your Saved Messages</b>", parse_mode=ParseMode.HTML)
     del session_data[message.chat.id]
