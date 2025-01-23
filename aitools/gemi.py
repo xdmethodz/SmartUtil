@@ -18,7 +18,7 @@ model = genai.GenerativeModel(MODEL_NAME)
 
 def setup_gem_handler(app: Client):
 
-    @app.on_message(filters.command("gem"))
+    @app.on_message(filters.command("gem") & (filters.private | filters.group))
     async def gemi_handler(client: Client, message: Message):
         loading_message = None
         try:
@@ -45,7 +45,7 @@ def setup_gem_handler(app: Client):
             if loading_message:
                 await loading_message.delete()
 
-    @app.on_message(filters.command("imgai"))
+    @app.on_message(filters.command("imgai") & (filters.private | filters.group))
     async def generate_from_image(client: Client, message: Message):
         if not message.reply_to_message or not message.reply_to_message.photo:
             await message.reply_text("**Please reply to a photo for a response.**")
