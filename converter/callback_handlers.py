@@ -44,7 +44,7 @@ responses = {
         "   - Example 2: Reply to an image with <code>/imgai What is this?</code> (Provides a specific response based on the prompt and image).\n\n"
         ">NOTE:\n"
         "1️⃣ These tools leverage advanced AI models for accurate and detailed outputs.\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     ),
@@ -63,7 +63,7 @@ responses = {
         "   - Example: <code>/losers</code> (Returns a list of cryptos with significant price declines, indicating potential buying opportunities)\n\n"
         ">✨ NOTE:\n"
         "1️⃣ Data for prices, P2P trades, gainers, and losers is fetched in real-time using the Binance API.\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     ),
@@ -105,7 +105,7 @@ responses = {
         "   - Example: <code>/wc Hello World!</code> (Returns 'Word Count: 2')\n\n"
         ">NOTE:\n"
         "1️⃣ Ensure text input is in a valid format for encoding and decoding commands.\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     ),
@@ -120,7 +120,7 @@ responses = {
         "Example: <code>/dmn google.com youtube.com demo.net</code>\n\n"
         ">NOTE:\n"
         "1️⃣ The maximum limit for a single check is 20 domains.\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     ),
@@ -140,7 +140,7 @@ responses = {
         ">NOTE:\n"
         "1. Only public repositories are supported.\n"
         "2. Ensure the URL is formatted correctly.\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     ),
@@ -179,7 +179,7 @@ responses = {
         "   - Example: <code>/rmbin 460827</code> (Removes CC details with BIN 460827 from a file or message)\n\n"
         ">✨ NOTE:\n"
         "1️⃣ Always ensure compliance with legal and privacy regulations when using these tools.\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     ),
@@ -192,7 +192,7 @@ responses = {
         ">NOTE:\n"
         "1️⃣ Ensure you reply directly to a video message with the <code>/aud</code> command.\n"
         "2️⃣ The extracted audio will be provided in a standard format (e.g., MP3).\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     ),
@@ -217,7 +217,7 @@ responses = {
         "   - Example: <code>/song https://youtu.be/In8bfGnXavw</code> (Converts and downloads the video as MP3)\n\n"
         ">NOTE:\n"
         "1️⃣ Provide a valid public URL for each platform to download successfully.\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     ),
@@ -240,7 +240,7 @@ responses = {
             "1️⃣ These tools support common English words and sentences.\n"
             "2️⃣ Ensure the word or sentence provided is clear for accurate results.\n"
             "3️⃣ Reply to a message with the command to apply it directly to the text in the message.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -253,7 +253,7 @@ responses = {
             ">NOTE:\n"
             "1️⃣ For groups/channels, use their username or numeric ID.\n"
             "2️⃣ Ensure proper input format to get accurate results.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -272,7 +272,7 @@ responses = {
             "1️⃣ For <code>/scrmail</code>, provide the chat username or link (e.g., <code>@ChatName</code> or <code>https://t.me/ChatName</code>) and the number of messages to scrape.\n"
             "2️⃣ Ensure that the chat username or link provided is valid and accessible.\n"
             "3️⃣ These tools are intended for data filtering and scraping; ensure compliance with privacy and legal regulations.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -288,7 +288,7 @@ responses = {
             ">NOTE:\n"
             "1️⃣ Supported formats include either the country code (e.g., <code>US</code>, <code>BD</code>) or full country name (e.g., <code>UnitedStates</code>, <code>Bangladesh</code>).\n"
             "2️⃣ Some countries may not have address data available.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -303,7 +303,7 @@ responses = {
             "   - Example: <code>/skinfo sk_live_4eC39HqLyjWDarjtT1zdp7dc</code> (Fetches details like account type, region, etc.)\n\n"
             ">NOTE:\n"
             "1️⃣ Ensure you provide a valid Stripe key for both commands.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -316,7 +316,7 @@ responses = {
             "   - Example: <code>/time US</code> or <code>/time BD</code>\n\n"
             ">NOTE:\n"
             "1️⃣ Use valid country codes (e.g., <code>US</code> for the United States, <code>BD</code> for Bangladesh).\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -334,7 +334,7 @@ responses = {
             ">✨ NOTE:\n"
             "1️⃣ When generating an email, a unique mail token is provided. This token is required to check received emails.\n"
             "2️⃣ Each email has a different token, so keep your tokens private to prevent unauthorized access.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -352,7 +352,7 @@ responses = {
             ">NOTE:\n"
             "1️⃣ For <code>/ip</code>, ensure the input is a valid IP address.\n"
             "2️⃣ For <code>/px</code>, proxies can be provided in either <code>[IP:Port]</code> or <code>[IP:Port User Pass]</code> formats.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -369,7 +369,7 @@ responses = {
             "1️⃣ Pyrogram and Telethon are Python libraries for interacting with Telegram APIs.\n"
             "2️⃣ Use <code>/pyro</code> for Pyrogram-based projects and <code>/tele</code> for Telethon-based projects.\n"
             "3️⃣ Follow the prompts to enter your Telegram login credentials securely. Keep the generated session string private.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -385,7 +385,7 @@ responses = {
             ">NOTE:\n"
             "1️⃣ For <code>/q</code>, ensure you reply directly to a text message to generate the sticker.\n"
             "2️⃣ For <code>/kang</code>, reply directly to the media or sticker you want to add to your pack.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -408,7 +408,7 @@ responses = {
     "2️⃣ Supported commands include <code>/tr en</code> (English), <code>/tr bn</code> (Bengali), <code>/tr hi</code> (Hindi), and others.\n"
     "3️⃣ To translate, either type the text with the command or reply to a message with the command.\n"
     "━━━━━━━━━━━━━━━━━━━━━━\n"
-    "🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+    "🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
     ,
     {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -421,7 +421,7 @@ responses = {
             ">NOTE:\n"
             "1️⃣ This command only works with clear images containing English text.\n"
             "2️⃣ Ensure the image is not blurry or distorted for accurate text extraction.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -436,7 +436,7 @@ responses = {
             "   - Example: <code>/ws https://example.com</code> (Downloads the source code of the given website)\n\n"
             ">NOTE:\n"
             "1️⃣ Ensure you provide a valid and accessible website URL for both commands.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -451,7 +451,7 @@ responses = {
             "   - Example: <code>/yth https://youtu.be/In8bfGnXavw</code> (Downloads the thumbnail of the specified video)\n\n"
             ">NOTE:\n"
             "1️⃣ Ensure you provide a valid YouTube video URL with the commands.\n\n"
-            ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+            ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
             ,
             {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
         ),
@@ -466,7 +466,7 @@ responses = {
         "- <b>Database:</b> MongoDB Database 🗄\n"
         "- <b>Hosting:</b> Hostinger VPS 🌐\n\n"
         "<b>About:</b> Smart Tool ⚙️ The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!\n\n"
-        ">🔔 For Bot Update News: <a href='https://t.me/abir_x_official'>Join Now</a>"
+        ">🔔 For Bot Update News: <a href='https://t.me/ModVipRM'>Join Now</a>"
         ,
         {'parse_mode': ParseMode.HTML, 'disable_web_page_preview': True}
     )
@@ -537,9 +537,9 @@ async def handle_callback_query(client, callback_query):
         start_message = (
             f"<b>Hi {full_name}! Welcome to this bot</b>\n"
             "<b>━━━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-            "<b><a href='https://t.me/Smart_Nexus_Bot'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
+            "<b><a href='https://t.me/abirxdhackz'>Smart Tool ⚙️</a></b>: The ultimate toolkit on Telegram, offering education, AI, downloaders, temp mail, credit card tool, and more. Simplify your tasks with ease!\n"
             "<b>━━━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-            "<b>Don't forget to <a href='https://t.me/abir_x_official'>join</a> for updates!</b>"
+            "<b>Don't forget to <a href='https://t.me/ModVipRM'>join</a> for updates!</b>"
         )
         await call.message.edit_text(
             start_message,
