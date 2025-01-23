@@ -36,18 +36,26 @@ from converter.ss import setup_ss_handler
 from converter.quote import setup_q_handler
 from converter.git import setup_git_handler
 from stringsession.string import setup_string_handler
+from creditcards.scr import setup_scr_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
 BOT_TOKEN = "7941865929:AAFh8u_6r7FCEAG564vZ3bvvdphZ-QRFBPg"  # Replace with your Bot Token
-
+SESSION_STRING = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"  # Replace this SESSION STRING with your actual SESSION_STRING
 
 # Initialize the bot client
 app = Client(
     "app_session",
     api_id=API_ID,
     api_hash=API_HASH,
-    bot_token=BOT_TOKEN
+    bot_token=BOT_TOKEN,
+    workers=1000
+)
+
+user = Client(
+    "user_session",
+    session_string=SESSION_STRING,
+    workers=1000
 )
 
 # Setup handlers
@@ -81,6 +89,7 @@ setup_ss_handler(app)
 setup_q_handler(app)
 setup_git_handler(app)
 setup_string_handler(app)
+setup_scr_handler(app)
 @app.on_message(filters.command("start") & filters.private)
 async def send_start_message(client, message):
     chat_id = message.chat.id
@@ -118,4 +127,5 @@ async def handle_callback(client, callback_query):
     await handle_callback_query(client, callback_query)
 
 print("Bot is running...")
+user.start()
 app.run()
