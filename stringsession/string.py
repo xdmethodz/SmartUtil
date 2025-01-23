@@ -1,7 +1,7 @@
 import requests
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from pyrogram.errors import (
