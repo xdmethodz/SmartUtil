@@ -171,11 +171,11 @@ def setup_credit_handlers(app: Client):
 
         await message.reply_text(bin_info_text, parse_mode=ParseMode.MARKDOWN)
 
-    @app.on_message(filters.command("mgen") & (filters.private | filters.group))
+    @app.on_message(filters.command("mgn") & (filters.private | filters.group))
     async def multigen_handler(client: Client, message: Message):
         user_input = message.text.split()
         if len(user_input) < 3:
-            await message.reply_text("**Wrong args ❌**\nUse `/mgen [bin1] [bin2] ... [amount]`", parse_mode=ParseMode.MARKDOWN)
+            await message.reply_text("**Wrong args ❌**\nUse `/mgn [bin1] [bin2] ... [amount]`", parse_mode=ParseMode.MARKDOWN)
             return
 
         bins = user_input[1:-1]
