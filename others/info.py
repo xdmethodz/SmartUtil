@@ -3,7 +3,7 @@ from pyrogram.enums import ParseMode, ChatType
 from pyrogram.errors import PeerIdInvalid, UsernameNotOccupied, ChannelInvalid
 
 def setup_info_handler(app: Client):
-    @app.on_message(filters.command("info") & filters.private)
+    @app.on_message(filters.command("info") & (filters.private | filters.group))
     async def handle_info_command(client, message):
         if len(message.command) == 1:
             # No username or chat provided, show current user info
@@ -70,3 +70,5 @@ def setup_info_handler(app: Client):
                 )
             except Exception as e:
                 await message.reply_text(f"<b>Error:</b> {str(e)}", parse_mode=ParseMode.HTML)
+
+# To use the handler, call setup_info_handler(app) in your main script
