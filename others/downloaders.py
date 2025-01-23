@@ -12,7 +12,7 @@ import math
 import time
 import requests
 from PIL import Image
-
+YT_COOKIES_PATH = "./cookies/cookies.txt"
 # Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
