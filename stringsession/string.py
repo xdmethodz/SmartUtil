@@ -9,6 +9,7 @@ from pyrogram.errors import BadRequest
 
 # Define this dictionary outside to store session data
 session_data = {}
+TIMEOUT = 20  # Timeout in seconds
 
 async def ask_user(client, message, question, buttons):
     reply_markup = InlineKeyboardMarkup(buttons)
@@ -16,18 +17,28 @@ async def ask_user(client, message, question, buttons):
     return sent_message
 
 async def handle_start(client, message, platform):
-    session_data[message.chat.id] = {"platform": platform}
+    chat_id = message.chat.id
+    session_data[chat_id] = {"platform": platform}
     buttons = [
         [InlineKeyboardButton("Go", callback_data=f"session_go_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
     ]
     await ask_user(client, message, f"**Welcome to the {platform} session setup!**\n━━━━━━━━━━━━━━━━━\nThis is a totally safe session string generator. We don't save any info that you will provide, so this is completely safe.\n\n**Note: Don't send OTP directly. Otherwise, your account could be banned, or you may not be able to log in.**", buttons)
+    # Start a timeout coroutine
+    asyncio.create_task(timeout_session(client, chat_id, platform))
+
+async def timeout_session(client, chat_id, platform):
+    await asyncio.sleep(TIMEOUT)
+    if chat_id in session_data:
+        await client.send_message(chat_id, f"**Your time expired. Try /{platform.lower()} to start again.**", parse_mode=ParseMode.MARKDOWN)
+        del session_data[chat_id]
 
 async def handle_callback_query(client, callback_query):
     data = callback_query.data
     chat_id = callback_query.message.chat.id
 
     if data == "session_close":
-        await callback_query.message.edit_text("Session setup closed.", parse_mode=ParseMode.MARKDOWN)
+        platform = session_data[chat_id]["platform"]
+        await callback_query.message.edit_text(f"**Operation Cancelled. You can start by sending /{platform.lower()}.**", parse_mode=ParseMode.MARKDOWN)
         if chat_id in session_data:
             del session_data[chat_id]
         return
@@ -40,7 +51,6 @@ async def handle_callback_query(client, callback_query):
             [InlineKeyboardButton("Resume", callback_data=f"session_resume_{platform}"), InlineKeyboardButton("Close", callback_data="session_close")]
         ]
         new_text = "**Send Your API ID**"
-        
         # Check if the new text is different from the current text
         if callback_query.message.text != new_text:
             await callback_query.message.edit_text(new_text, reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN)
