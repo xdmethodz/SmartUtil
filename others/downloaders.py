@@ -12,7 +12,10 @@ import math
 import time
 import requests
 from PIL import Image
+from concurrent.futures import ThreadPoolExecutor
+
 YT_COOKIES_PATH = "./cookies/cookies.txt"
+
 # Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -258,11 +261,8 @@ async def prepare_thumbnail(thumbnail_url: str, output_path: str) -> str:
             thumbnail_resized_path = f"{output_path}_thumb.jpg"
             with Image.open(thumbnail_temp_path) as img:
                 img = img.convert('RGB')
-                img.thumbnail((320, 320), Image.Resampling.LANCZOS)
-                background = Image.new('RGB', (320, 320), (255, 255, 255))
-                offset = ((320 - img.width) // 2, (320 - img.height) // 2)
-                background.paste(img, offset)
-                background.save(thumbnail_resized_path, "JPEG", quality=85)
+                img = img.resize((1280, 720), Image.Resampling.LANCZOS)
+                img.save(thumbnail_resized_path, "JPEG", quality=85)
 
             os.remove(thumbnail_temp_path)
             return thumbnail_resized_path
@@ -277,7 +277,7 @@ async def handle_download_request(client, message, url):
         result, error = await download_video(url)
         if error:
             await search_message.delete()
-            await message.reply_text(f"❌ {error}", parse_mode=ParseMode.MARKDOWN)
+            await message.reply_text(f"**An Error Occurred During Download**\n\n❌ {error}", parse_mode=ParseMode.MARKDOWN)
             return
 
         await search_message.delete()
@@ -324,7 +324,7 @@ async def handle_download_request(client, message, url):
 
     except Exception as e:
         await search_message.delete()
-        await message.reply_text(f"❌ An error occurred: {str(e)}", parse_mode=ParseMode.MARKDOWN)
+        await message.reply_text(f"**An Error Occurred During Download**\n\n❌ {str(e)}", parse_mode=ParseMode.MARKDOWN)
 
 async def handle_audio_request(client, message):
     query = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else None
@@ -351,7 +351,7 @@ async def handle_audio_request(client, message):
     result, error = await download_audio(video_url)
     if error:
         await status_message.delete()
-        await message.reply_text(f"❌ {error}", parse_mode=ParseMode.MARKDOWN)
+        await message.reply_text(f"**An Error Occurred During Download**\n\n❌ {error}", parse_mode=ParseMode.MARKDOWN)
         return
 
     audio_path = result['file_path']
@@ -389,7 +389,7 @@ async def handle_audio_request(client, message):
         await status_message.delete()
     except Exception as e:
         await status_message.delete()
-        await message.reply_text(f"❌ An error occurred during upload: {str(e)}")
+        await message.reply_text(f"**An Error Occurred During Download**\n\n❌ {str(e)}")
         if os.path.exists(audio_path):
             os.remove(audio_path)
 
