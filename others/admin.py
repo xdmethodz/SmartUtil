@@ -123,7 +123,7 @@ Name: Smart Tool ⚙️
 Version: 3.0 (Beta Testing) 🛠
 
 Development Team:
-- Creator: ⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻 [@abirxdhackz](https://t.me/abirxdhackz)
+- Creator:  [⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻](https://t.me/abirxdhackz)
 Technical Stack:
 - Language: Python 🐍
 - Libraries: Aiogram, Pyrogram And Telethon 📚
@@ -132,7 +132,7 @@ Technical Stack:
 
 About: Smart Tool ⚙️ The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!
 
->🔔 For Bot Update News: Join Now [ModVipRM](https://t.me/ModVipRM)
+>🔔 For Bot Update News: [ Join Now](https://t.me/ModVipRM)
 
 ━━━━━━━━━━━━━━━━
 1 Day: {daily_users} users were active
@@ -163,10 +163,13 @@ async def reload_handler(client: Client, message: Message):
         os.makedirs(downloads_folder)
 
         # Send success message after clearing temp files
-        await message.reply_text("**🔄 Restarting And Clearing Cache.... ✅**", parse_mode=ParseMode.MARKDOWN)
+        restart_msg = await message.reply_text("**🔄 Restarting And Clearing Cache.... ✅**", parse_mode=ParseMode.MARKDOWN)
 
         # Restart the bot
-        await message.reply_text("**Smart Tool ⚙️ Bot Restarted Successfully And All Logs Cleaned... 👮🏻‍♂️**", parse_mode=ParseMode.MARKDOWN)
+        await restart_msg.delete()  # Delete restart message after clearing cache
+
+        # Send bot restarted message
+        await message.reply_text("**Smart Tool ⚙️ Bot Restarted Successfully**", parse_mode=ParseMode.MARKDOWN)
         os.execv(sys.executable, ['python'] + sys.argv)  # Restarting the bot (make sure to add proper imports)
 
     else:
