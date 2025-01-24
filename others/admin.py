@@ -1,10 +1,6 @@
 from pyrogram import Client, filters
-from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
-import os
-import shutil
-import sys
 from datetime import datetime, timedelta
 from collections import defaultdict
 import pymongo
@@ -18,38 +14,31 @@ user_activity_collection = db["user_activity"]
 # List of owner ids (add your owner ids here)
 OWNERS = [7303810912, 7886711162]  # Replace with actual owner IDs
 
-# Dictionary to track user activity
-USER_ACTIVITY = defaultdict(lambda: {"last_activity": None, "daily": 0, "weekly": 0, "monthly": 0, "yearly": 0})
-
-# Function to update user activity
+# Function to update user activity in the MongoDB database
 def update_user_activity(user_id):
     now = datetime.utcnow()
-    if USER_ACTIVITY[user_id]["last_activity"] is None:
-        USER_ACTIVITY[user_id]["last_activity"] = now
-    USER_ACTIVITY[user_id]["last_activity"] = now
-    USER_ACTIVITY[user_id]["daily"] += 1
-    USER_ACTIVITY[user_id]["weekly"] += 1
-    USER_ACTIVITY[user_id]["monthly"] += 1
-    USER_ACTIVITY[user_id]["yearly"] += 1
+    user = user_activity_collection.find_one({"user_id": user_id})
+    if not user:
+        user_activity_collection.insert_one({
+            "user_id": user_id,
+            "last_activity": now,
+            "daily": 0,
+            "weekly": 0,
+            "monthly": 0,
+            "yearly": 0
+        })
+    else:
+        user_activity_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"last_activity": now}},
+            upsert=True
+        )
+        user_activity_collection.update_one(
+            {"user_id": user_id},
+            {"$inc": {"daily": 1, "weekly": 1, "monthly": 1, "yearly": 1}},
+        )
 
-# Function to reset daily, weekly, monthly, and yearly counts
-def reset_user_activity():
-    now = datetime.utcnow()
-    for user_id, activity in USER_ACTIVITY.items():
-        if activity["last_activity"] < now - timedelta(days=1):
-            activity["daily"] = 0
-        if activity["last_activity"] < now - timedelta(weeks=1):
-            activity["weekly"] = 0
-        if activity["last_activity"] < now - timedelta(days=30):
-            activity["monthly"] = 0
-        if activity["last_activity"] < now - timedelta(days=365):
-            activity["yearly"] = 0
-
-# Function to handle all commands to update user activity
-async def command_handler(client: Client, message: Message):
-    update_user_activity(message.from_user.id)
-
-# Function to handle the /send command
+# Function to handle the /send command (works in private)
 async def send_handler(client: Client, message: Message):
     if message.from_user.id not in OWNERS:
         return
@@ -88,10 +77,10 @@ async def send_handler(client: Client, message: Message):
     processing_msg = await message.reply_text("**Sending Broadcast Everywhere....**", parse_mode=ParseMode.MARKDOWN)
 
     sent_count = 0
-    for user_id in USER_ACTIVITY.keys():
+    for user in user_activity_collection.find():
         try:
             await client.send_message(
-                chat_id=user_id,
+                chat_id=user["user_id"],
                 text=message_text,
                 reply_markup=keyboard,
                 parse_mode=ParseMode.MARKDOWN,  # Use Markdown for formatting
@@ -99,91 +88,56 @@ async def send_handler(client: Client, message: Message):
             )
             sent_count += 1
         except Exception as e:
-            print(f"Failed to send message to {user_id}: {e}")
+            print(f"Failed to send message to {user['user_id']}: {e}")
 
     # Delete processing message and notify completion
     await processing_msg.delete()
     await message.reply_text(f"**Broadcast Successfully Sent to {sent_count} users**", parse_mode=ParseMode.MARKDOWN)
 
-# Function to handle the /stats command
+# Function to handle the /stats command (works in both private and group)
 async def stats_handler(client: Client, message: Message):
-    if message.from_user.id not in OWNERS:
-        return
-
     now = datetime.utcnow()
-    daily_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(days=1))
-    weekly_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(weeks=1))
-    monthly_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(days=30))
-    yearly_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(days=365))
-    total_users = len(USER_ACTIVITY)
+    daily_users = user_activity_collection.count_documents({"last_activity": {"$gt": now - timedelta(days=1)}})
+    weekly_users = user_activity_collection.count_documents({"last_activity": {"$gt": now - timedelta(weeks=1)}})
+    monthly_users = user_activity_collection.count_documents({"last_activity": {"$gt": now - timedelta(days=30)}})
+    yearly_users = user_activity_collection.count_documents({"last_activity": {"$gt": now - timedelta(days=365)}})
+    total_users = user_activity_collection.count_documents({})
 
-    stats_message = f"""Smart Bot Status ⇾ Report ✅
-━━━━━━━━━━━━━━━━
-Name: Smart Tool ⚙️
-Version: 3.0 (Beta Testing) 🛠
+    stats_text = (
+        "Smart Bot Status ⇾ Report ✅\n"
+        "━━━━━━━━━━━━━━━━\n"
+        "Name: <b>Smart Tool ⚙️</b>\n"
+        "Version: <b>3.0 (Beta Testing) 🛠</b>\n\n"
+        "Development Team:\n"
+        "- Creator: ⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻 <a href='https://t.me/abirxdhackz'>@abirxdhackz</a>\n"
+        "Technical Stack:\n"
+        "- Language: Python 🐍\n"
+        "- Libraries: Aiogram, Pyrogram, and Telethon 📚\n"
+        "- Database: MongoDB Database 🗄\n"
+        "- Hosting: Hostinger VPS 🌐\n\n"
+        "About: <b>Smart Tool ⚙️</b> The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!\n\n"
+        ">🔔 <a href='https://t.me/ModVipRM'>For Bot Update News: Join Now</a>\n"
+        "━━━━━━━━━━━━━━━━\n"
+        f"1 Day: <b>{daily_users}</b> users were active\n"
+        f"1 Week: <b>{weekly_users}</b> users were active\n"
+        f"1 Month: <b>{monthly_users}</b> users were active\n"
+        f"1 Year: <b>{yearly_users}</b> users were active\n"
+        "━━━━━━━━━━━━━━━━\n"
+        f"Total Smart Tools Users: <b>{total_users}</b>"
+    )
 
-Development Team:
-- Creator:  [⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻](https://t.me/abirxdhackz)
-Technical Stack:
-- Language: Python 🐍
-- Libraries: Aiogram, Pyrogram And Telethon 📚
-- Database: MongoDB Database 🗄
-- Hosting: Hostinger VPS 🌐
-
-About: Smart Tool ⚙️ The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!
-
->🔔 For Bot Update News: [ Join Now](https://t.me/ModVipRM)
-
-━━━━━━━━━━━━━━━━
-1 Day: {daily_users} users were active
-1 Week: {weekly_users} users were active
-1 Month: {monthly_users} users were active
-1 Year: {yearly_users} users were active
-━━━━━━━━━━━━━━━━
-Total Smart Tools Users: {total_users}
-"""
-
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("👨‍💻 Updates Channel ☠️", url="https://t.me/abirxdhackz")]])
-    await message.reply_text(stats_message, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard, disable_web_page_preview=True)
-
-# Function to handle /reload or /restart command
-async def reload_handler(client: Client, message: Message):
-    if message.from_user.id not in OWNERS:
-        return
-
-    # Define temp folder path
-    downloads_folder = "./downloads"  # Path to the folder you want to clear
-
-    if os.path.exists(downloads_folder):
-        # Delete the temp folder and its contents
-        shutil.rmtree(downloads_folder)
-        print(f"Cleared folder: {downloads_folder}")
-
-        # Create a fresh downloads folder after removal
-        os.makedirs(downloads_folder)
-
-        # Send success message after clearing temp files
-        restart_msg = await message.reply_text("**🔄 Restarting And Clearing Cache.... ✅**", parse_mode=ParseMode.MARKDOWN)
-
-        # Restart the bot
-        await restart_msg.delete()  # Delete restart message after clearing cache
-
-        # Send bot restarted message
-        await message.reply_text("**Smart Tool ⚙️ Bot Restarted Successfully**", parse_mode=ParseMode.MARKDOWN)
-        os.execv(sys.executable, ['python'] + sys.argv)  # Restarting the bot (make sure to add proper imports)
-
-    else:
-        await message.reply_text("**Bot Already Restarted**", parse_mode=ParseMode.MARKDOWN)
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔔 Bot Updates", url="https://t.me/ModVipRM")]])
+    await message.reply_text(stats_text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
 
 # Function to set up the admin handlers for the bot
 def setup_admin_handlers(app: Client):
     """
     Set up command handlers for the Pyrogram bot.
-    This includes specific commands like /send, /stats, /reload, and /restart.
+    This includes specific commands like /send and /stats, as well as general activity tracking.
     """
     # Add the /send command handler for broadcasting messages
     app.add_handler(
-        MessageHandler(send_handler, filters.command("send")),
+        MessageHandler(send_handler, filters.command("send") & filters.private),
         group=1,  # High priority to ensure it executes first
     )
     
@@ -193,8 +147,8 @@ def setup_admin_handlers(app: Client):
         group=1,  # High priority to ensure it executes first
     )
     
-    # Add the /reload or /restart command handler (works in both private and group)
+    # Add a general handler to track all user activity
     app.add_handler(
-        MessageHandler(reload_handler, filters.command("reload")),
-        group=1,  # High priority to ensure it executes first
+        MessageHandler(lambda client, message: update_user_activity(message.from_user.id), filters.all),
+        group=2,  # Lower priority so it runs after command handlers
     )
