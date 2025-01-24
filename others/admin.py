@@ -1,12 +1,14 @@
+from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.enums import ParseMode
 import os
 import shutil
 import sys
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.enums import ParseMode
 from datetime import datetime, timedelta
+from collections import defaultdict
 import pymongo
-from pyrogram.handlers import MessageHandler 
+
 # MongoDB connection setup
 MONGO_URL = "mongodb+srv://abirxdhackzinfome:BqU8yZt8JENDYkIx@cluster0.mbj0a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 client = pymongo.MongoClient(MONGO_URL)
@@ -16,31 +18,38 @@ user_activity_collection = db["user_activity"]
 # List of owner ids (add your owner ids here)
 OWNERS = [7303810912, 7886711162]  # Replace with actual owner IDs
 
-# Function to update user activity in the MongoDB database
+# Dictionary to track user activity
+USER_ACTIVITY = defaultdict(lambda: {"last_activity": None, "daily": 0, "weekly": 0, "monthly": 0, "yearly": 0})
+
+# Function to update user activity
 def update_user_activity(user_id):
     now = datetime.utcnow()
-    user = user_activity_collection.find_one({"user_id": user_id})
-    if not user:
-        user_activity_collection.insert_one({
-            "user_id": user_id,
-            "last_activity": now,
-            "daily": 0,
-            "weekly": 0,
-            "monthly": 0,
-            "yearly": 0
-        })
-    else:
-        user_activity_collection.update_one(
-            {"user_id": user_id},
-            {"$set": {"last_activity": now}},
-            upsert=True
-        )
-        user_activity_collection.update_one(
-            {"user_id": user_id},
-            {"$inc": {"daily": 1, "weekly": 1, "monthly": 1, "yearly": 1}},
-        )
+    if USER_ACTIVITY[user_id]["last_activity"] is None:
+        USER_ACTIVITY[user_id]["last_activity"] = now
+    USER_ACTIVITY[user_id]["last_activity"] = now
+    USER_ACTIVITY[user_id]["daily"] += 1
+    USER_ACTIVITY[user_id]["weekly"] += 1
+    USER_ACTIVITY[user_id]["monthly"] += 1
+    USER_ACTIVITY[user_id]["yearly"] += 1
 
-# Function to handle the /send command (works in private)
+# Function to reset daily, weekly, monthly, and yearly counts
+def reset_user_activity():
+    now = datetime.utcnow()
+    for user_id, activity in USER_ACTIVITY.items():
+        if activity["last_activity"] < now - timedelta(days=1):
+            activity["daily"] = 0
+        if activity["last_activity"] < now - timedelta(weeks=1):
+            activity["weekly"] = 0
+        if activity["last_activity"] < now - timedelta(days=30):
+            activity["monthly"] = 0
+        if activity["last_activity"] < now - timedelta(days=365):
+            activity["yearly"] = 0
+
+# Function to handle all commands to update user activity
+async def command_handler(client: Client, message: Message):
+    update_user_activity(message.from_user.id)
+
+# Function to handle the /send command
 async def send_handler(client: Client, message: Message):
     if message.from_user.id not in OWNERS:
         return
@@ -79,10 +88,10 @@ async def send_handler(client: Client, message: Message):
     processing_msg = await message.reply_text("**Sending Broadcast Everywhere....**", parse_mode=ParseMode.MARKDOWN)
 
     sent_count = 0
-    for user in user_activity_collection.find():
+    for user_id in USER_ACTIVITY.keys():
         try:
             await client.send_message(
-                chat_id=user["user_id"],
+                chat_id=user_id,
                 text=message_text,
                 reply_markup=keyboard,
                 parse_mode=ParseMode.MARKDOWN,  # Use Markdown for formatting
@@ -90,46 +99,52 @@ async def send_handler(client: Client, message: Message):
             )
             sent_count += 1
         except Exception as e:
-            print(f"Failed to send message to {user['user_id']}: {e}")
+            print(f"Failed to send message to {user_id}: {e}")
 
     # Delete processing message and notify completion
     await processing_msg.delete()
     await message.reply_text(f"**Broadcast Successfully Sent to {sent_count} users**", parse_mode=ParseMode.MARKDOWN)
 
-# Function to handle the /stats command (works in both private and group)
+# Function to handle the /stats command
 async def stats_handler(client: Client, message: Message):
+    if message.from_user.id not in OWNERS:
+        return
+
     now = datetime.utcnow()
-    daily_users = user_activity_collection.count_documents({"last_activity": {"$gt": now - timedelta(days=1)}})
-    weekly_users = user_activity_collection.count_documents({"last_activity": {"$gt": now - timedelta(weeks=1)}})
-    monthly_users = user_activity_collection.count_documents({"last_activity": {"$gt": now - timedelta(days=30)}})
-    yearly_users = user_activity_collection.count_documents({"last_activity": {"$gt": now - timedelta(days=365)}})
-    total_users = user_activity_collection.count_documents({})
+    daily_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(days=1))
+    weekly_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(weeks=1))
+    monthly_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(days=30))
+    yearly_users = sum(1 for u in USER_ACTIVITY.values() if u["last_activity"] > now - timedelta(days=365))
+    total_users = len(USER_ACTIVITY)
 
-    stats_text = (
-        "Smart Bot Status ⇾ Report ✅\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "Name: <b>Smart Tool ⚙️</b>\n"
-        "Version: <b>3.0 (Beta Testing) 🛠</b>\n\n"
-        "Development Team:\n"
-        "- Creator: ⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻 <a href='https://t.me/abirxdhackz'>@abirxdhackz</a>\n"
-        "Technical Stack:\n"
-        "- Language: Python 🐍\n"
-        "- Libraries: Aiogram, Pyrogram, and Telethon 📚\n"
-        "- Database: MongoDB Database 🗄\n"
-        "- Hosting: Hostinger VPS 🌐\n\n"
-        "About: <b>Smart Tool ⚙️</b> The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!\n\n"
-        ">🔔 <a href='https://t.me/ModVipRM'>For Bot Update News: Join Now</a>\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"1 Day: <b>{daily_users}</b> users were active\n"
-        f"1 Week: <b>{weekly_users}</b> users were active\n"
-        f"1 Month: <b>{monthly_users}</b> users were active\n"
-        f"1 Year: <b>{yearly_users}</b> users were active\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"Total Smart Tools Users: <b>{total_users}</b>"
-    )
+    stats_message = f"""Smart Bot Status ⇾ Report ✅
+━━━━━━━━━━━━━━━━
+Name: Smart Tool ⚙️
+Version: 3.0 (Beta Testing) 🛠
 
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔔 Bot Updates", url="https://t.me/ModVipRM")]])
-    await message.reply_text(stats_text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
+Development Team:
+- Creator: ⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻 (https://t.me/abirxdhackz)
+Technical Stack:
+- Language: Python 🐍
+- Libraries: Aiogram, Pyrogram And Telethon 📚
+- Database: MongoDB Database 🗄
+- Hosting: Hostinger VPS 🌐
+
+About: Smart Tool ⚙️ The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!
+
+>🔔 For Bot Update News: Join Now (https://t.me/ModVipRM)
+
+━━━━━━━━━━━━━━━━
+1 Day: {daily_users} users were active
+1 Week: {weekly_users} users were active
+1 Month: {monthly_users} users were active
+1 Year: {yearly_users} users were active
+━━━━━━━━━━━━━━━━
+Total Smart Tools Users: {total_users}
+"""
+
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("👨‍💻 Updates Channel ☠️", url="https://t.me/abirxdhackz")]])
+    await message.reply_text(stats_message, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard, disable_web_page_preview=True)
 
 # Function to handle /reload or /restart command
 async def reload_handler(client: Client, message: Message):
@@ -154,8 +169,9 @@ async def reload_handler(client: Client, message: Message):
         await restart_msg.delete()
         await message.reply_text("**Smart Tool ⚙️ Bot Restarted Successfully And All Logs Cleaned... 👮🏻‍♂️**", parse_mode=ParseMode.MARKDOWN)
 
-        # Here you can restart the bot (you can use `os.execv` or another method)
+        # Now, stop the bot and restart it
         os.execv(sys.executable, ['python'] + sys.argv)  # Restarting the bot (make sure to add proper imports)
+
     except Exception as e:
         await restart_msg.delete()
         await message.reply_text(f"**Error during restart: {str(e)}**", parse_mode=ParseMode.MARKDOWN)
@@ -168,7 +184,7 @@ def setup_admin_handlers(app: Client):
     """
     # Add the /send command handler for broadcasting messages
     app.add_handler(
-        MessageHandler(send_handler, filters.command("send") & filters.private),
+        MessageHandler(send_handler, filters.command("send")),
         group=1,  # High priority to ensure it executes first
     )
     
@@ -182,10 +198,4 @@ def setup_admin_handlers(app: Client):
     app.add_handler(
         MessageHandler(reload_handler, filters.command("reload")),
         group=1,  # High priority to ensure it executes first
-    )
-    
-    # Add a general handler to track all user activity
-    app.add_handler(
-        MessageHandler(lambda client, message: update_user_activity(message.from_user.id), filters.all),
-        group=2,  # Lower priority so it runs after command handlers
     )
