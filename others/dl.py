@@ -37,7 +37,7 @@ class FacebookDownloader:
     async def download_video(self, url: str) -> Optional[str]:
         self.temp_dir.mkdir(exist_ok=True)
         ydl_opts = {
-            'format': 'best',
+            'format': 'bestvideo+bestaudio/best',
             'outtmpl': str(self.temp_dir / '%(title)s.%(ext)s'),
             'quiet': True,
             'no_warnings': True,
