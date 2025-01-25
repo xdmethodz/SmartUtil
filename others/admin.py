@@ -44,48 +44,23 @@ async def send_handler(client: Client, message: Message):
     if message.from_user.id not in OWNERS:
         return
 
-    if len(message.command) == 1:
-        await message.reply_text("**Please Enter The Message To Broadcast 😎**", parse_mode=ParseMode.MARKDOWN)
+    # Check if the message contains media (e.g., photo, video, document, etc.)
+    if not message.command and not message.text and not message.media:
+        await message.reply_text("**Please send a message or media to broadcast 😎**", parse_mode=ParseMode.MARKDOWN)
         return
-
-    broadcast_message = message.text.split(None, 1)[1]
-    buttons = []
-
-    # Extract buttons if present
-    if '\n' in broadcast_message:
-        lines = broadcast_message.split('\n')
-        message_text = []
-        for line in lines:
-            if line.startswith('(') and ')' in line and ':' in line:
-                try:
-                    button_name = line[line.find('(') + 1:line.find(')')].strip()
-                    button_url = line[line.find(':') + 1:].strip()
-                    buttons.append(InlineKeyboardButton(button_name, url=button_url))
-                except Exception as e:
-                    print(f"Failed to parse button: {line}. Error: {e}")
-            else:
-                message_text.append(line)
-        message_text = "\n".join(message_text)
-    else:
-        message_text = broadcast_message
-
-    # Group buttons into rows of 2
-    keyboard = InlineKeyboardMarkup(
-        [buttons[i:i + 2] for i in range(0, len(buttons), 2)]
-    ) if buttons else None
 
     # Send processing message
     processing_msg = await message.reply_text("**Sending Broadcast Everywhere....**", parse_mode=ParseMode.MARKDOWN)
 
     sent_count = 0
+
+    # Broadcast the exact copy of the owner's message to all users
     for user in user_activity_collection.find():
         try:
-            await client.send_message(
-                chat_id=user["user_id"],
-                text=message_text,
-                reply_markup=keyboard,
-                parse_mode=ParseMode.MARKDOWN,  # Use Markdown for formatting
-                disable_web_page_preview=True  # Disable link previews
+            await client.copy_message(
+                chat_id=user["user_id"],  # User ID to send the broadcast to
+                from_chat_id=message.chat.id,  # Owner's chat ID
+                message_id=message.message_id  # The message ID to copy
             )
             sent_count += 1
         except Exception as e:
