@@ -36,6 +36,8 @@ class Config:
 
 Config.TEMP_DIR.mkdir(exist_ok=True)
 
+executor = ThreadPoolExecutor()
+
 async def sanitize_filename(title: str) -> str:
     """
     Sanitize file name by removing invalid characters.
@@ -274,7 +276,8 @@ async def handle_download_request(client, message, url):
     search_message = await message.reply_text("`Searching the video...`", parse_mode=ParseMode.MARKDOWN)
 
     try:
-        result, error = await download_video(url)
+        loop = asyncio.get_event_loop()
+        result, error = await loop.run_in_executor(executor, download_video, url)
         if error:
             await search_message.delete()
             await message.reply_text(f"**An Error Occurred During Download**\n\n❌ {error}", parse_mode=ParseMode.MARKDOWN)
@@ -348,7 +351,8 @@ async def handle_audio_request(client, message):
     else:
         video_url = query
 
-    result, error = await download_audio(video_url)
+    loop = asyncio.get_event_loop()
+    result, error = await loop.run_in_executor(executor, download_audio, video_url)
     if error:
         await status_message.delete()
         await message.reply_text(f"**An Error Occurred During Download**\n\n❌ {error}", parse_mode=ParseMode.MARKDOWN)
