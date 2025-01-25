@@ -20,7 +20,6 @@ from aitools.gpt import setup_gpt_handlers
 from others.ip import setup_ip_handlers
 from others.admin import setup_admin_handlers
 from others.downloaders import setup_downloader_handler
-from others.downloaders import initialize_admin_handler
 from others.pin import setup_pinterest_handler
 from others.dl import setup_dl_handlers
 from others.spotify import setup_spotify_handler
@@ -82,7 +81,7 @@ setup_ss_handler(app)
 setup_q_handler(app)
 setup_git_handler(app)
 setup_string_handler(app)
-initialize_admin_handler(app)
+
 @app.on_message(filters.command("start") & filters.private)
 async def send_start_message(client, message):
     chat_id = message.chat.id
