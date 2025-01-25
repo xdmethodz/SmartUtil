@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 import yt_dlp
 import asyncio
+import aiofiles  # Import aiofiles
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
@@ -83,9 +84,9 @@ def setup_dl_handlers(app: Client):
                 async with aiofiles.open(filename, 'rb') as video_file:
                     file_size = os.path.getsize(filename)
                     if file_size > max_telegram_size:
-                        await message.reply_document(document=video_file, caption="Large Video")
+                        await message.reply_document(document=filename, caption="Large Video")
                     else:
-                        await message.reply_video(video=video_file, supports_streaming=True)
+                        await message.reply_video(video=filename, supports_streaming=True)
                 
                 await downloading_message.delete()
                 os.remove(filename)
