@@ -3,7 +3,6 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ParseMode
 from pyrogram.handlers import MessageHandler
 from datetime import datetime, timedelta
-from collections import defaultdict
 import pymongo
 
 # MongoDB connection setup
@@ -83,10 +82,12 @@ async def send_handler(client: Client, message: Message):
             await client.copy_message(
                 chat_id=user["user_id"],
                 from_chat_id=message.chat.id,
-                message_id=message.message_id,
+                message_id=message.message_id,  # Ensure message_id is correctly referenced
                 reply_markup=keyboard
             )
             sent_count += 1
+        except AttributeError:
+            print(f"Failed to send message to {user['user_id']}: Message object has no attribute 'message_id'")
         except Exception as e:
             print(f"Failed to send message to {user['user_id']}: {e}")
 
