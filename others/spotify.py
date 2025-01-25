@@ -8,6 +8,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 from typing import Optional
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 # Configure logging
 logging.basicConfig(
@@ -24,6 +25,9 @@ SPOTIFY_CLIENT_SECRET = '408f04b237aa4dd2ba1b8bfc5da9eff8'  # Replace this with 
 spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET))
 
 YT_COOKIES_PATH = "./cookies/cookies.txt"
+
+# ThreadPoolExecutor for blocking I/O operations
+executor = ThreadPoolExecutor(max_workers=10)
 
 async def sanitize_filename(title: str) -> str:
     """Sanitize file name by removing invalid characters."""
@@ -59,9 +63,9 @@ async def get_audio_opts(output_filename: str) -> dict:
 async def download_audio(url: str, output_filename: str) -> Optional[str]:
     """Download audio using yt-dlp."""
     opts = await get_audio_opts(output_filename)
+    loop = asyncio.get_event_loop()
     try:
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            ydl.download([url])
+        await loop.run_in_executor(executor, lambda: yt_dlp.YoutubeDL(opts).download([url]))
         output_path = f"{output_filename}.mp3"
         if os.path.exists(output_path):
             return output_path
@@ -99,13 +103,14 @@ async def handle_spotify_request(client, message, url):
             'simulate': True
         }
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(search_query, download=False)
-            if 'entries' in info and info['entries']:
-                yt_url = info['entries'][0]['webpage_url']
-            else:
-                await status_message.edit("❌ Could not find the track on YouTube.")
-                return
+        loop = asyncio.get_event_loop()
+        info = await loop.run_in_executor(executor, lambda: yt_dlp.YoutubeDL(ydl_opts).extract_info(search_query, download=False))
+
+        if 'entries' in info and info['entries']:
+            yt_url = info['entries'][0]['webpage_url']
+        else:
+            await status_message.edit("❌ Could not find the track on YouTube.")
+            return
 
         # Download audio using yt-dlp
         safe_title = await sanitize_filename(title)
