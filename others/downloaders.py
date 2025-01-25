@@ -129,8 +129,8 @@ async def download_video(url: str) -> tuple:
         return None, "Invalid YouTube URL"
 
     try:
-        with yt_dlp.YoutubeDL({'quiet': True, 'cookiefile': YT_COOKIES_PATH}) as ydl:
-            info = ydl.extract_info(url, download=False)
+        with yt_dlp.YoutubeDL(await get_ydl_opts('')) as ydl:
+            info = await asyncio.get_event_loop().run_in_executor(executor, ydl.extract_info, url, False)
 
         if not info:
             return None, "Could not fetch video information"
@@ -147,7 +147,7 @@ async def download_video(url: str) -> tuple:
 
         opts = await get_ydl_opts(output_path)
         with yt_dlp.YoutubeDL(opts) as ydl:
-            ydl.download([url])
+            await asyncio.get_event_loop().run_in_executor(executor, ydl.download, [url])
 
         if not os.path.exists(output_path):
             return None, "Download failed: File not created"
@@ -203,8 +203,8 @@ async def download_audio(url: str) -> tuple:
         return None, "Invalid YouTube URL"
 
     try:
-        with yt_dlp.YoutubeDL({'quiet': True, 'cookiefile': YT_COOKIES_PATH}) as ydl:
-            info = ydl.extract_info(url, download=False)
+        with yt_dlp.YoutubeDL(await get_ydl_opts('')) as ydl:
+            info = await asyncio.get_event_loop().run_in_executor(executor, ydl.extract_info, url, False)
 
         if not info:
             return None, "Could not fetch video information"
@@ -220,7 +220,7 @@ async def download_audio(url: str) -> tuple:
 
         opts = await get_audio_opts(base_path)
         with yt_dlp.YoutubeDL(opts) as ydl:
-            ydl.download([url])
+            await asyncio.get_event_loop().run_in_executor(executor, ydl.download, [url])
 
         output_path = f"{base_path}.mp3"
         if not os.path.exists(output_path):
@@ -431,7 +431,7 @@ async def search_youtube(query: str) -> Optional[str]:
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
+            info = await asyncio.get_event_loop().run_in_executor(executor, ydl.extract_info, query, False)
             if 'entries' in info and info['entries']:
                 return info['entries'][0]['webpage_url']
     except Exception as e:
