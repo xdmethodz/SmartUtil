@@ -183,4 +183,7 @@ def setup_spotify_handler(app: Client):
         url = command_parts[1] if len(command_parts) > 1 else None
         await handle_spotify_request(client, message, url)
 
-# To use the handler, call setup_spotify_handler(app) in your main script
+    # Attach the downloader to the client for access in handlers
+    app.downloader = yt_dlp.YoutubeDL()
+
+# To use the handler, call setup_spotify_handler(app) in your main script.
