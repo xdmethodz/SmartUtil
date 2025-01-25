@@ -81,7 +81,7 @@ setup_ss_handler(app)
 setup_q_handler(app)
 setup_git_handler(app)
 setup_string_handler(app)
-
+initialize_admin_handler(app)
 @app.on_message(filters.command("start") & filters.private)
 async def send_start_message(client, message):
     chat_id = message.chat.id
