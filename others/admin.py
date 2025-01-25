@@ -80,12 +80,11 @@ async def send_handler(client: Client, message: Message):
     sent_count = 0
     for user in user_activity_collection.find():
         try:
-            await client.send_message(
+            await client.copy_message(
                 chat_id=user["user_id"],
-                text=message_text,
-                reply_markup=keyboard,
-                parse_mode=ParseMode.MARKDOWN,  # Use Markdown for formatting
-                disable_web_page_preview=True  # Disable link previews
+                from_chat_id=message.chat.id,
+                message_id=message.message_id,
+                reply_markup=keyboard
             )
             sent_count += 1
         except Exception as e:
