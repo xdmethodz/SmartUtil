@@ -239,7 +239,7 @@ def prepare_thumbnail_sync(thumbnail_url: str, output_path: str) -> str:
     """
     try:
         response = requests.get(thumbnail_url)
-        if response.status_code == 200):
+        if response.status_code == 200:
             thumbnail_temp_path = f"{output_path}_thumbnail.jpg"
             with open(thumbnail_temp_path, 'wb') as f:
                 f.write(response.content)
