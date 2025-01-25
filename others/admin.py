@@ -107,28 +107,28 @@ async def stats_handler(client: Client, message: Message):
     stats_text = (
         "**Smart Bot Status ⇾ Report ✅**\n"
         "**━━━━━━━━━━━━━━━━**\n"
-        "**Name:** <b>**Smart Tool ⚙️**</b>\n"
-        "**Version:** <b>**3.0 (Beta Testing) 🛠**</b>\n\n"
+        "**Name:** Smart Tool ⚙️\n"
+        "**Version:** 3.0 (Beta Testing) 🛠\n\n"
         "**Development Team:**\n"
-        "**- Creator:**  <a href='https://t.me/abirxdhackz'>⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻</a>\n"
+        "**- Creator:**  [⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻](https://t.me/abirxdhackz)\n"
         "**Technical Stack:**\n"
         "**- Language:** Python 🐍\n"
         "**- Libraries:** Aiogram, Pyrogram, and Telethon 📚\n"
         "**- Database:** MongoDB Database 🗄\n"
         "**- Hosting:** Hostinger VPS 🌐\n\n"
-        "**About:** <b>**Smart Tool ⚙️**</b> The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!\n\n"
-        ">🔔For Bot Update News: <a href='https://t.me/ModVipRM'>** Join Now**</a>\n"
+        "**About:** Smart Tool ⚙️ The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!\n\n"
+        ">🔔 For Bot Update News: [Join Now](https://t.me/ModVipRM)\n"
         "**━━━━━━━━━━━━━━━━**\n"
-        f"**1 Day:** <b>{daily_users}</b> users were active\n"
-        f"**1 Week:** <b>{weekly_users}</b> users were active\n"
-        f"**1 Month:** <b>{monthly_users}</b> users were active\n"
-        f"**1 Year:** <b>{yearly_users}</b> users were active\n"
+        f"**1 Day:** {daily_users} users were active\n"
+        f"**1 Week:** {weekly_users} users were active\n"
+        f"**1 Month:** {monthly_users} users were active\n"
+        f"**1 Year:** {yearly_users} users were active\n"
         "**━━━━━━━━━━━━━━━━**\n"
-        f"**Total Smart Tools Users:** <b>{total_users}</b>"
+        f"**Total Smart Tools Users:** {total_users}"
     )
 
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔔 Bot Updates", url="https://t.me/ModVipRM")]])
-    await message.reply_text(stats_text, parse_mode=ParseMode.HTML, reply_markup=keyboard, disable_web_page_preview=True)
+    await message.reply_text(stats_text, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard, disable_web_page_preview=True)
 
 # Function to set up the admin handlers for the bot
 def setup_admin_handlers(app: Client):
