@@ -44,7 +44,7 @@ class FacebookDownloader:
             'simulate': False,
             'nooverwrites': True,
         }
-        
+
         try:
             loop = asyncio.get_event_loop()
             filename = await loop.run_in_executor(None, self._download_video, ydl_opts, url)
@@ -80,7 +80,7 @@ def setup_dl_handlers(app: Client):
                 await downloading_message.edit_text("`Downloading Your Video ...`", parse_mode=ParseMode.MARKDOWN)
                 max_telegram_size = 50 * 1024 * 1024
                 
-                with open(filename, 'rb') as video_file:
+                async with aiofiles.open(filename, 'rb') as video_file:
                     file_size = os.path.getsize(filename)
                     if file_size > max_telegram_size:
                         await message.reply_document(document=video_file, caption="Large Video")
