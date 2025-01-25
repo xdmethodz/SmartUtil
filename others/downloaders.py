@@ -239,7 +239,7 @@ def prepare_thumbnail_sync(thumbnail_url: str, output_path: str) -> str:
     """
     try:
         response = requests.get(thumbnail_url)
-        if response.status_code == 200:
+        if response.status_code == 200):
             thumbnail_temp_path = f"{output_path}_thumbnail.jpg"
             with open(thumbnail_temp_path, 'wb') as f:
                 f.write(response.content)
@@ -384,6 +384,9 @@ async def handle_audio_request(client, message):
 def setup_downloader_handler(app: Client):
     @app.on_message(filters.command(["video", "yt"]) & (filters.private | filters.group))
     async def video_command(client, message):
+        if message.from_user is None:
+            return
+        
         command_parts = message.text.split(maxsplit=1)
         if len(command_parts) == 1:
             await message.reply_text("**Please provide your video link ❌**", parse_mode=ParseMode.MARKDOWN)
@@ -396,6 +399,9 @@ def setup_downloader_handler(app: Client):
 
     @app.on_message(filters.command("song") & (filters.private | filters.group))
     async def song_command(client, message):
+        if message.from_user is None:
+            return
+        
         await handle_audio_request(client, message)
 
 async def search_youtube(query: str) -> Optional[str]:
