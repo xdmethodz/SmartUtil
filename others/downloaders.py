@@ -38,7 +38,7 @@ Config.TEMP_DIR.mkdir(exist_ok=True)
 
 executor = ThreadPoolExecutor()
 
-async def sanitize_filename(title: str) -> str:
+def sanitize_filename(title: str) -> str:
     """
     Sanitize file name by removing invalid characters.
     """
@@ -46,13 +46,13 @@ async def sanitize_filename(title: str) -> str:
     title = title.replace(' ', '_')
     return f"{title[:50]}_{int(time.time())}"
 
-async def validate_url(url: str) -> bool:
+def validate_url(url: str) -> bool:
     """
     Validate if the provided URL is a valid YouTube link.
     """
     return url.startswith(('https://www.youtube.com/', 'https://youtube.com/', 'https://youtu.be/'))
 
-async def format_size(size_bytes: int) -> str:
+def format_size(size_bytes: int) -> str:
     """
     Format file size into human-readable string.
     """
@@ -64,7 +64,7 @@ async def format_size(size_bytes: int) -> str:
     s = round(size_bytes / p, 2)
     return f"{s} {size_name[i]}"
 
-async def format_duration(seconds: int) -> str:
+def format_duration(seconds: int) -> str:
     """
     Format video duration into human-readable string.
     """
@@ -106,7 +106,7 @@ async def progress_bar(current, total, status_message, start_time, last_update_t
     except Exception as e:
         print(f"Error updating progress: {e}")
 
-async def get_ydl_opts(output_filename: str) -> dict:
+def get_ydl_opts(output_filename: str) -> dict:
     """
     Return yt-dlp options.
     """
@@ -121,16 +121,17 @@ async def get_ydl_opts(output_filename: str) -> dict:
         'postprocessors': [{'key': 'FFmpegVideoConvertor', 'preferedformat': 'mp4'}]
     }
 
-async def download_video(url: str) -> tuple:
+def download_video_sync(url: str) -> tuple:
     """
     Download a video using yt-dlp, along with its thumbnail.
+    This function is synchronous and can be run in an executor.
     """
-    if not await validate_url(url):
+    if not validate_url(url):
         return None, "Invalid YouTube URL"
 
     try:
-        with yt_dlp.YoutubeDL(await get_ydl_opts('')) as ydl:
-            info = await asyncio.get_event_loop().run_in_executor(executor, ydl.extract_info, url, False)
+        with yt_dlp.YoutubeDL({'quiet': True, 'cookiefile': YT_COOKIES_PATH}) as ydl:
+            info = ydl.extract_info(url, download=False)
 
         if not info:
             return None, "Could not fetch video information"
@@ -138,16 +139,16 @@ async def download_video(url: str) -> tuple:
         title = info.get('title', 'Unknown Title')
         views = info.get('view_count', 0)
         duration = info.get('duration', 0)
-        duration_str = await format_duration(duration)
+        duration_str = format_duration(duration)
         thumbnail_url = info.get('thumbnail', None)
 
-        safe_title = await sanitize_filename(title)
+        safe_title = sanitize_filename(title)
         output_path = f"temp_media/{safe_title}.mp4"
         os.makedirs("temp_media", exist_ok=True)
 
-        opts = await get_ydl_opts(output_path)
+        opts = get_ydl_opts(output_path)
         with yt_dlp.YoutubeDL(opts) as ydl:
-            await asyncio.get_event_loop().run_in_executor(executor, ydl.download, [url])
+            ydl.download([url])
 
         if not os.path.exists(output_path):
             return None, "Download failed: File not created"
@@ -160,14 +161,14 @@ async def download_video(url: str) -> tuple:
         # Download and prepare thumbnail
         thumbnail_path = None
         if thumbnail_url:
-            thumbnail_path = await prepare_thumbnail(thumbnail_url, output_path)
+            thumbnail_path = prepare_thumbnail_sync(thumbnail_url, output_path)
 
         return {
             'file_path': output_path,
             'title': title,
             'views': views,
             'duration': duration_str,
-            'file_size': await format_size(file_size),
+            'file_size': format_size(file_size),
             'thumbnail_path': thumbnail_path
         }, None
 
@@ -176,35 +177,17 @@ async def download_video(url: str) -> tuple:
     except Exception as e:
         return None, f"An unexpected error occurred: {str(e)}"
 
-async def get_audio_opts(output_filename: str) -> dict:
-    """
-    Return yt-dlp options for audio download.
-    """
-    return {
-        'format': 'bestaudio/best',
-        'outtmpl': f'{output_filename}.%(ext)s',
-        'cookiefile': YT_COOKIES_PATH,
-        'quiet': True,
-        'noprogress': True,
-        'no_warnings': True,
-        'nocheckcertificate': True,
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }]
-    }
-
-async def download_audio(url: str) -> tuple:
+def download_audio_sync(url: str) -> tuple:
     """
     Download audio from YouTube using yt-dlp.
+    This function is synchronous and can be run in an executor.
     """
-    if not await validate_url(url):
+    if not validate_url(url):
         return None, "Invalid YouTube URL"
 
     try:
-        with yt_dlp.YoutubeDL(await get_ydl_opts('')) as ydl:
-            info = await asyncio.get_event_loop().run_in_executor(executor, ydl.extract_info, url, False)
+        with yt_dlp.YoutubeDL({'quiet': True, 'cookiefile': YT_COOKIES_PATH}) as ydl:
+            info = ydl.extract_info(url, download=False)
 
         if not info:
             return None, "Could not fetch video information"
@@ -212,15 +195,15 @@ async def download_audio(url: str) -> tuple:
         title = info.get('title', 'Unknown Title')
         views = info.get('view_count', 0)
         duration = info.get('duration', 0)
-        duration_str = await format_duration(duration)
+        duration_str = format_duration(duration)
 
-        safe_title = await sanitize_filename(title)
+        safe_title = sanitize_filename(title)
         base_path = f"temp_media/{safe_title}"
         os.makedirs("temp_media", exist_ok=True)
 
-        opts = await get_audio_opts(base_path)
+        opts = get_audio_opts(base_path)
         with yt_dlp.YoutubeDL(opts) as ydl:
-            await asyncio.get_event_loop().run_in_executor(executor, ydl.download, [url])
+            ydl.download([url])
 
         output_path = f"{base_path}.mp3"
         if not os.path.exists(output_path):
@@ -241,7 +224,7 @@ async def download_audio(url: str) -> tuple:
             'title': title,
             'views': views,
             'duration': duration_str,
-            'file_size': await format_size(file_size)
+            'file_size': format_size(file_size)
         }, None
 
     except yt_dlp.utils.DownloadError as e:
@@ -249,9 +232,10 @@ async def download_audio(url: str) -> tuple:
     except Exception as e:
         return None, f"An unexpected error occurred: {str(e)}"
 
-async def prepare_thumbnail(thumbnail_url: str, output_path: str) -> str:
+def prepare_thumbnail_sync(thumbnail_url: str, output_path: str) -> str:
     """
     Download and prepare the thumbnail image.
+    This function is synchronous and can be run in an executor.
     """
     try:
         response = requests.get(thumbnail_url)
@@ -277,7 +261,7 @@ async def handle_download_request(client, message, url):
 
     try:
         loop = asyncio.get_event_loop()
-        result, error = await loop.run_in_executor(executor, download_video, url)
+        result, error = await loop.run_in_executor(executor, download_video_sync, url)
         if error:
             await search_message.delete()
             await message.reply_text(f"**An Error Occurred During Download**\n\n❌ {error}", parse_mode=ParseMode.MARKDOWN)
@@ -338,7 +322,7 @@ async def handle_audio_request(client, message):
 
     status_message = await message.reply_text("`Searching the audio...`", parse_mode=ParseMode.MARKDOWN)
 
-    if not await validate_url(query):
+    if not validate_url(query):
         await status_message.delete()
         searching_message = await message.reply_text("`Searching for the song...`", parse_mode=ParseMode.MARKDOWN)
         video_url = await search_youtube(query)
@@ -352,7 +336,7 @@ async def handle_audio_request(client, message):
         video_url = query
 
     loop = asyncio.get_event_loop()
-    result, error = await loop.run_in_executor(executor, download_audio, video_url)
+    result, error = await loop.run_in_executor(executor, download_audio_sync, video_url)
     if error:
         await status_message.delete()
         await message.reply_text(f"**An Error Occurred During Download**\n\n❌ {error}", parse_mode=ParseMode.MARKDOWN)
@@ -405,7 +389,7 @@ def setup_downloader_handler(app: Client):
             await message.reply_text("**Please provide your video link ❌**", parse_mode=ParseMode.MARKDOWN)
         else:
             url = command_parts[1]
-            if not await validate_url(url):
+            if not validate_url(url):
                 await message.reply_text("**Invalid YouTube URL ❌**", parse_mode=ParseMode.MARKDOWN)
             else:
                 await handle_download_request(client, message, url)
