@@ -384,6 +384,7 @@ async def handle_audio_request(client, message):
 def setup_downloader_handler(app: Client):
     @app.on_message(filters.command(["video", "yt"]) & (filters.private | filters.group))
     async def video_command(client, message):
+        # Check if message.from_user is not None
         if message.from_user is None:
             return
         
@@ -399,6 +400,7 @@ def setup_downloader_handler(app: Client):
 
     @app.on_message(filters.command("song") & (filters.private | filters.group))
     async def song_command(client, message):
+        # Check if message.from_user is not None
         if message.from_user is None:
             return
         
