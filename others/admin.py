@@ -105,30 +105,30 @@ async def stats_handler(client: Client, message: Message):
     total_users = user_activity_collection.count_documents({})
 
     stats_text = (
-        "Smart Bot Status ⇾ Report ✅\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "Name: <b>Smart Tool ⚙️</b>\n"
-        "Version: <b>3.0 (Beta Testing) 🛠</b>\n\n"
-        "Development Team:\n"
-        "- Creator: ⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻 <a href='https://t.me/abirxdhackz'>@abirxdhackz</a>\n"
-        "Technical Stack:\n"
-        "- Language: Python 🐍\n"
-        "- Libraries: Aiogram, Pyrogram, and Telethon 📚\n"
-        "- Database: MongoDB Database 🗄\n"
-        "- Hosting: Hostinger VPS 🌐\n\n"
-        "About: <b>Smart Tool ⚙️</b> The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!\n\n"
-        ">🔔 <a href='https://t.me/ModVipRM'>For Bot Update News: Join Now</a>\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"1 Day: <b>{daily_users}</b> users were active\n"
-        f"1 Week: <b>{weekly_users}</b> users were active\n"
-        f"1 Month: <b>{monthly_users}</b> users were active\n"
-        f"1 Year: <b>{yearly_users}</b> users were active\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"Total Smart Tools Users: <b>{total_users}</b>"
+        "**Smart Bot Status ⇾ Report ✅**\n"
+        "**━━━━━━━━━━━━━━━━**\n"
+        "**Name:** <b>**Smart Tool ⚙️**</b>\n"
+        "**Version:** <b>**3.0 (Beta Testing) 🛠**</b>\n\n"
+        "**Development Team:**\n"
+        "**- Creator:**  <a href='https://t.me/abirxdhackz'>⏤͟͞〲ᗩᗷiᖇ 𓊈乂ᗪ𓊉 👨‍💻</a>\n"
+        "**Technical Stack:**\n"
+        "**- Language:** Python 🐍\n"
+        "**- Libraries:** Aiogram, Pyrogram, and Telethon 📚\n"
+        "**- Database:** MongoDB Database 🗄\n"
+        "**- Hosting:** Hostinger VPS 🌐\n\n"
+        "**About:** <b>**Smart Tool ⚙️**</b> The ultimate Telegram toolkit! Education, AI, downloaders, temp mail, finance tools & more—simplify life!\n\n"
+        ">🔔For Bot Update News: <a href='https://t.me/ModVipRM'>** Join Now**</a>\n"
+        "**━━━━━━━━━━━━━━━━**\n"
+        f"**1 Day:** <b>{daily_users}</b> users were active\n"
+        f"**1 Week:** <b>{weekly_users}</b> users were active\n"
+        f"**1 Month:** <b>{monthly_users}</b> users were active\n"
+        f"**1 Year:** <b>{yearly_users}</b> users were active\n"
+        "**━━━━━━━━━━━━━━━━**\n"
+        f"**Total Smart Tools Users:** <b>{total_users}</b>"
     )
 
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔔 Bot Updates", url="https://t.me/ModVipRM")]])
-    await message.reply_text(stats_text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
+    await message.reply_text(stats_text, parse_mode=ParseMode.HTML, reply_markup=keyboard, disable_web_page_preview=True)
 
 # Function to set up the admin handlers for the bot
 def setup_admin_handlers(app: Client):
