@@ -79,15 +79,24 @@ async def send_handler(client: Client, message: Message):
     sent_count = 0
     for user in user_activity_collection.find():
         try:
-            await client.copy_message(
-                chat_id=user["user_id"],
-                from_chat_id=message.chat.id,
-                message_id=message.message_id,  # Ensure message_id is correctly referenced
-                reply_markup=keyboard
-            )
+            if message.reply_to_message:
+                await client.copy_message(
+                    chat_id=user["user_id"],
+                    from_chat_id=message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    reply_markup=keyboard
+                )
+            else:
+                await client.send_message(
+                    chat_id=user["user_id"],
+                    text=message_text,
+                    reply_markup=keyboard,
+                    parse_mode=ParseMode.MARKDOWN,
+                    disable_web_page_preview=True
+                )
             sent_count += 1
-        except AttributeError:
-            print(f"Failed to send message to {user['user_id']}: Message object has no attribute 'message_id'")
+        except AttributeError as e:
+            print(f"Failed to send message to {user['user_id']}: {e}")
         except Exception as e:
             print(f"Failed to send message to {user['user_id']}: {e}")
 
