@@ -18,7 +18,7 @@ YT_COOKIES_PATH = "./cookies/cookies.txt"
 
 # Configure logging
 logging.basicConfig(
-    format='%(asctime)s - %(name=s)s - %(levelname=s)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Corrected the logging format string
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
