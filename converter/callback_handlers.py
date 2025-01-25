@@ -499,33 +499,38 @@ async def handle_callback_query(client, callback_query):
 
         await call.message.edit_text(
             responses[call.data][0],  # text is the first element in the tuple
-            parse_mode=ParseMode.HTML,
-            disable_web_page_preview=True,
+            parse_mode=responses[call.data][1]['parse_mode'],
+            disable_web_page_preview=responses[call.data][1]['disable_web_page_preview'],
             reply_markup=back_button
         )
     elif call.data == "main_menu":
         await call.message.edit_text(
-            "Here are the Smart Tool ⚙️ Options:",
+            "<b>Here are the Smart Tool ⚙️ Options:</b>",
+            parse_mode=ParseMode.HTML,
             reply_markup=main_menu_keyboard
         )
     elif call.data == "next_1":
         await call.message.edit_text(
-            "Here are the Smart Tool ⚙️ Options:",
+            "<b>Here are the Smart Tool ⚙️ Options:</b>",
+            parse_mode=ParseMode.HTML,
             reply_markup=second_menu_keyboard
         )
     elif call.data == "next_2":
         await call.message.edit_text(
-            "Here are the Smart Tool ⚙️ Options:",
+            "<b>Here are the Smart Tool ⚙️ Options:</b>",
+            parse_mode=ParseMode.HTML,
             reply_markup=third_menu_keyboard
         )
     elif call.data == "previous_1":
         await call.message.edit_text(
-            "Here are the Smart Tool ⚙️ Options:",
+            "<b>Here are the Smart Tool ⚙️ Options:</b>",
+            parse_mode=ParseMode.HTML,
             reply_markup=main_menu_keyboard
         )
     elif call.data == "previous_2":
         await call.message.edit_text(
-            "Here are the Smart Tool ⚙️ Options:",
+            "<b>Here are the Smart Tool ⚙️ Options:</b>",
+            parse_mode=ParseMode.HTML,
             reply_markup=second_menu_keyboard
         )
     elif call.data == "close":
@@ -553,11 +558,13 @@ async def handle_callback_query(client, callback_query):
         )
     elif call.data == "second_menu":
         await call.message.edit_text(
-            "Here are the Smart Tool ⚙️ Options:",
+            "<b>Here are the Smart Tool ⚙️ Options:</b>",
+            parse_mode=ParseMode.HTML,
             reply_markup=second_menu_keyboard
         )
     elif call.data == "third_menu":
         await call.message.edit_text(
-            "Here are the Smart Tool ⚙️ Options:",
+            "<b>Here are the Smart Tool ⚙️ Options:</b>",
+            parse_mode=ParseMode.HTML,
             reply_markup=third_menu_keyboard
         )
