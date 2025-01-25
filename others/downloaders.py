@@ -18,7 +18,7 @@ YT_COOKIES_PATH = "./cookies/cookies.txt"
 
 # Configure logging
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Corrected the logging format string
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -384,7 +384,6 @@ async def handle_audio_request(client, message):
 def setup_downloader_handler(app: Client):
     @app.on_message(filters.command(["video", "yt"]) & (filters.private | filters.group))
     async def video_command(client, message):
-        # Check if message.from_user is not None
         if message.from_user is None:
             return
         
@@ -400,7 +399,6 @@ def setup_downloader_handler(app: Client):
 
     @app.on_message(filters.command("song") & (filters.private | filters.group))
     async def song_command(client, message):
-        # Check if message.from_user is not None
         if message.from_user is None:
             return
         
@@ -430,3 +428,15 @@ async def search_youtube(query: str) -> Optional[str]:
         print(f"YouTube search error: {e}")
     
     return None
+
+def update_user_activity(user_id):
+    # This function updates the user activity.
+    # Add your implementation for updating user activity here.
+    pass
+
+def initialize_admin_handler(app: Client):
+    @app.on_message(filters.all)
+    async def all_messages(client, message):
+        if message.from_user:
+            # Update user activity if from_user is not None
+            update_user_activity(message.from_user.id)
