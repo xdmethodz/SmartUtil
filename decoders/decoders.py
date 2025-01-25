@@ -59,7 +59,7 @@ def setup_decoders_handler(app: Client):
                 except Exception as e:
                     # Handle errors gracefully
                     await message.reply_text(
-                        f"<b>Error:</b> {str(e)}",
+                        "<b>Sorry Bro Invalid Text Provided ❌</b>",
                         parse_mode=ParseMode.HTML
                     )
 
