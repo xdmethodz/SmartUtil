@@ -16,7 +16,9 @@ def setup_info_handler(app: Client):
             )
             await message.reply_text(response, parse_mode=ParseMode.HTML)
         else:
-            username = message.command[1].strip('@')
+            # Extract username from the command
+            username = message.command[1].strip('@').replace('https://', '').replace('http://', '').replace('t.me/', '').replace('/', '').replace(':', '')
+
             try:
                 # First, attempt to get user info
                 user = await client.get_users([username])
@@ -33,10 +35,8 @@ def setup_info_handler(app: Client):
                     # If not a user, try fetching chat info (group/channel)
                     try:
                         chat = await client.get_chat(username)
-                        print(f"Chat info: {chat}")  # Debugging output to inspect chat data
-                        print(f"Chat type: {chat.type}")  # Print the type to help debug
 
-                        if chat.type == ChatType.CHANNEL:  # Correct check using ChatType constant
+                        if chat.type == ChatType.CHANNEL:
                             response = (
                                 f"📛 <b>{chat.title}</b>\n"
                                 f"━━━━━━━━━━━━━━━━━━\n"
@@ -57,18 +57,18 @@ def setup_info_handler(app: Client):
                         await message.reply_text(response, parse_mode=ParseMode.HTML)
                     except (ChannelInvalid, PeerIdInvalid):
                         await message.reply_text(
-                            "<b>Invalid username or chat not found</b>",
+                            "<b>Sorry Bro Wrong Username ❌</b>",
                             parse_mode=ParseMode.HTML
                         )
                     except Exception as e:
-                        await message.reply_text(f"<b>Error:</b> {str(e)}", parse_mode=ParseMode.HTML)
+                        await message.reply_text(f"<b>Sorry Bro Wrong Username ❌</b>", parse_mode=ParseMode.HTML)
             
             except (PeerIdInvalid, UsernameNotOccupied):
                 await message.reply_text(
-                    "<b>Invalid username or user not found</b>",
+                    "<b>Sorry Bro Wrong Username ❌</b>",
                     parse_mode=ParseMode.HTML
                 )
             except Exception as e:
-                await message.reply_text(f"<b>Error:</b> {str(e)}", parse_mode=ParseMode.HTML)
+                await message.reply_text(f"<b>Sorry Bro Wrong Username ❌</b>", parse_mode=ParseMode.HTML)
 
 # To use the handler, call setup_info_handler(app) in your main script
