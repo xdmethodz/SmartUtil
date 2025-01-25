@@ -155,7 +155,7 @@ def setup_time_handler(app: Client):
                     f"<b>Error:</b> {str(e)}", parse_mode=ParseMode.HTML
                 )
 
-    @app.on_callback_query()
+    @app.on_callback_query(filters.regex(r'^(calendar_|holiday_)'))
     async def handle_calendar_callback(client, callback_query):
         if callback_query.data.startswith("calendar_"):
             _, country_code, year, month = callback_query.data.split("_")
