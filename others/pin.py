@@ -10,7 +10,7 @@ import re
 from urllib.parse import unquote
 import json
 import time
-from pyrogram import Client, filters, enums
+from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
@@ -31,8 +31,8 @@ class Config:
         'Connection': 'keep-alive',
         'Referer': 'https://www.pinterest.com/',
     }
-    MAX_WORKERS = 1000
-    MAX_CONCURRENT_DOWNLOADS = 500
+    MAX_WORKERS = 100
+    MAX_CONCURRENT_DOWNLOADS = 10
     DOWNLOAD_TIMEOUT = 60
     MAX_RETRIES = 3
     RETRY_DELAY = 2  # Delay in seconds between retries
@@ -409,4 +409,4 @@ def setup_pinterest_handler(app: Client):
     app.downloader = PinterestDownloader()
     app.download_semaphore = asyncio.Semaphore(Config.MAX_CONCURRENT_DOWNLOADS)
 
-# To use the handler, call setup_pinterest_handler(app) in your main script
+# To use the handler, call setup_pinterest_handler(app) in your main script.
