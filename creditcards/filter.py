@@ -42,19 +42,34 @@ async def handle_fcc_command(client, message: Message):
         os.remove(file_path)
         return
 
-    formatted_ccs = "\n".join(valid_ccs)
     user_full_name = f"{message.from_user.first_name or ''} {message.from_user.last_name or ''}".strip()
     user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
     user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
 
-    response_message = (
-        f"<b>Total cards found: {len(valid_ccs)}</b>\n\n"
-        f"<code>{formatted_ccs}</code>\n\n"
-        f"<b>Filtered By:</b> {user_link}"
-    )
-
-    await temp_msg.delete()
-    await message.reply_text(response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    if len(valid_ccs) > 10:
+        file_name = "Smart_Tool_⚙️_CC_Results.txt"
+        with open(file_name, 'w') as f:
+            f.write("\n".join(valid_ccs))
+        caption = (
+            f"<b>Here are the filtered cards:</b>\n"
+            f"<b>━━━━━━━━━━━━━━</b>\n"
+            f"<b>Total cards found:</b> <code>{len(valid_ccs)}</code>\n"
+            f"<b>━━━━━━━━━━━━━━</b>\n"
+            f"<b>Filter By:</b> <a href='tg://user?id={message.from_user.id}'>{user_full_name}</a>\n"
+        )
+        await temp_msg.delete()
+        await client.send_document(message.chat.id, file_name, caption=caption, parse_mode=ParseMode.HTML)
+        os.remove(file_name)
+    else:
+        formatted_ccs = "\n".join(valid_ccs)
+        response_message = (
+            f"<b>Total cards found: {len(valid_ccs)}</b>\n\n"
+            f"<code>{formatted_ccs}</code>\n\n"
+            f"<b>Filtered By:</b> {user_link}"
+        )
+        await temp_msg.delete()
+        await message.reply_text(response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    
     os.remove(file_path)
 
 # Command to display top bins from a file
