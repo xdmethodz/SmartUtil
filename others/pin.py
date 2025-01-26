@@ -1,15 +1,18 @@
-import re
 import os
-import asyncio
-import requests
 import logging
-from collections import Counter
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional
+import aiohttp
+import asyncio
+from concurrent.futures import ThreadPoolExecutor  # Add this import
+import re
+from urllib.parse import unquote
+import json
+import time
 from pyrogram import Client, filters
-from pyrogram.enums import ParseMode
 from pyrogram.types import Message
+from pyrogram.enums import ParseMode
 
 # Configure logging
 logging.basicConfig(
