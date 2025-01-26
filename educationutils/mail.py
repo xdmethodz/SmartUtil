@@ -39,17 +39,25 @@ async def handle_fmail_command(client, message: Message):
         os.remove(file_path)
         return
 
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
+        user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
+    else:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_link = f'<a href="{group_url}">{group_name}</a>'
+
     if len(emails) > 10:
         file_name = "Smart_Tool_⚙️_Email_Results.txt"
         with open(file_name, 'w') as f:
             f.write("\n".join(emails))
-        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
         caption = (
             f"<b>Here are the extracted emails:</b>\n"
             f"<b>━━━━━━━━━━━━━━━━</b>\n"
             f"<b>Total Emails:</b> <code>{len(emails)}</code>\n"
             f"<b>━━━━━━━━━━━━━━━━</b>\n"
-            f"<b>Filter By:</b> <a href='tg://user?id={message.from_user.id}'>{user_full_name}</a>\n"
+            f"<b>Filter By:</b> {user_link}\n"
         )
         await temp_msg.delete()
         await client.send_document(message.chat.id, file_name, caption=caption, parse_mode=ParseMode.HTML)
@@ -81,17 +89,25 @@ async def handle_fpass_command(client, message: Message):
         os.remove(file_path)
         return
 
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
+        user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
+    else:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_link = f'<a href="{group_url}">{group_name}</a>'
+
     if len(email_passes) > 10:
         file_name = "Smart_Tool_⚙️_Email_Pass_Results.txt"
         with open(file_name, 'w') as f:
             f.write("\n".join(email_passes))
-        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
         caption = (
             f"<b>Here are the extracted mail pass:</b>\n"
             f"<b>━━━━━━━━━━━━━━━━</b>\n"
             f"<b>Total Mail pass:</b> <code>{len(email_passes)}</code>\n"
             f"<b>━━━━━━━━━━━━━━━━</b>\n"
-            f"<b>Filter By:</b> <a href='tg://user?id={message.from_user.id}'>{user_full_name}</a>\n"
+            f"<b>Filter By:</b> {user_link}\n"
         )
         await temp_msg.delete()
         await client.send_document(message.chat.id, file_name, caption=caption, parse_mode=ParseMode.HTML)
@@ -107,3 +123,5 @@ async def handle_fpass_command(client, message: Message):
 def setup_mail_handlers(app: Client):
     app.add_handler(handlers.MessageHandler(handle_fmail_command, filters.command("fmail") & (filters.private | filters.group)))
     app.add_handler(handlers.MessageHandler(handle_fpass_command, filters.command("fpass") & (filters.private | filters.group)))
+
+# To use the handler, call setup_mail_handlers(app) in your main script
