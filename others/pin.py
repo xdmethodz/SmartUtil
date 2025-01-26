@@ -1,8 +1,3 @@
-I understand the frustration. It seems there's a mix-up with the PinterestDownloader and YoutubeDL instances. Let's make sure the PinterestDownloader is correctly assigned and used.
-
-Here's the complete and fixed version of your script:
-
-Python
 import os
 import logging
 from pathlib import Path
