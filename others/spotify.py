@@ -132,7 +132,7 @@ async def handle_spotify_request(client, message, url):
             f"👤 **Artist:** `{artists}`\n"
             f"⏱️ **Duration:** `{duration}`\n"
             f"━━━━━━━━━━━━━━━━━━━\n"
-            f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+            f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
         )
 
         last_update_time = [0]
