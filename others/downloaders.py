@@ -389,7 +389,7 @@ async def handle_audio_request(client, message):
             audio=audio_path,
             caption=audio_caption,
             title=title,
-            performer="YouTube Downloader",
+            performer="Smart Tool ⚙️",
             parse_mode=ParseMode.MARKDOWN,
             progress=progress_bar,
             progress_args=(status_message, start_time, last_update_time)
