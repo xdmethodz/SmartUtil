@@ -89,7 +89,7 @@ async def progress_bar(current, total, status_message, start_time, last_update_t
     uploaded = current / 1024 / 1024  # Uploaded size in MB
     total_size = total / 1024 / 1024  # Total size in MB
 
-    # Throttle updates: Only update if at least 2 seconds have passed since the last update
+    # Throttle updates: Only update if at least  seconds have passed since the last update
     if time.time() - last_update_time[0] < 2:
         return
     last_update_time[0] = time.time()  # Update the last update time
@@ -119,6 +119,25 @@ def get_ydl_opts(output_filename: str) -> dict:
         'no_warnings': True,
         'nocheckcertificate': True,
         'postprocessors': [{'key': 'FFmpegVideoConvertor', 'preferedformat': 'mp4'}]
+    }
+
+def get_audio_opts(output_filename: str) -> dict:
+    """
+    Return yt-dlp options for audio download.
+    """
+    return {
+        'format': 'bestaudio/best',
+        'outtmpl': f'{output_filename}.%(ext)s',
+        'cookiefile': YT_COOKIES_PATH,
+        'quiet': True,
+        'noprogress': True,
+        'no_warnings': True,
+        'nocheckcertificate': True,
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }]
     }
 
 def download_video_sync(url: str) -> tuple:
@@ -280,9 +299,9 @@ async def handle_download_request(client, message, url):
         video_caption = (
             f"🎵 **Title:** `{title}`\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"👁️‍🗨️ **Views:** `{views}` views\n"
+            f"👁️‍🗨️ **Views:** **{views}** views\n"
             f"🔗 [Watch On YouTube]({url})\n"
-            f"⏱️ **Duration:** `{duration}`\n"
+            f"⏱️ **Duration:** **{duration}**\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
             f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
         )
@@ -351,9 +370,9 @@ async def handle_audio_request(client, message):
     audio_caption = (
         f"🎵 **Title:** `{title}`\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👁️‍🗨️ **Views:** `{views}` views\n"
+        f"👁️‍🗨️ **Views:** **{views}** views\n"
         f"🔗 [Listen On YouTube]({video_url})\n"
-        f"⏱️ **Duration:** `{duration}`\n"
+        f"⏱️ **Duration:** **{duration}**\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
         f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     )
@@ -421,4 +440,6 @@ async def search_youtube(query: str) -> Optional[str]:
     except Exception as e:
         print(f"YouTube search error: {e}")
     
-    return None
+    return None    
+
+# To use the handler, call setup_downloader_handler(app) in your main script.
