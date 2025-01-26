@@ -9,14 +9,14 @@ from pyrogram.types import Message
 async def filter_emails(content):
     """Filter and fetch email addresses from the file content."""
     email_pattern = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
-    emails = [line.strip() for line in content if email_pattern.search(line)]
+    emails = [line.strip() for line in content if email_pattern.match(line.split(':')[0])]
     return emails
 
 # Function to filter and fetch email:password pairs from file content
 async def filter_email_pass(content):
     """Filter and fetch email:password pairs from the file content."""
-    email_pass_pattern = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}:[^\s]+')
-    email_passes = [line.strip() for line in content if email_pass_pattern.search(line)]
+    email_pass_pattern = re.compile(r'^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}):(.+)$')
+    email_passes = [line.strip() for line in content if email_pass_pattern.match(line)]
     return email_passes
 
 # Command to handle fetching and filtering emails
@@ -26,7 +26,7 @@ async def handle_fmail_command(client, message: Message):
         return
 
     # Temporary message
-    temp_msg = await message.reply_text("<b>Fetching And Filtering Mails From File... This Message Will Be Deleted After filtering</b>", parse_mode=ParseMode.HTML)
+    temp_msg = await message.reply_text("<b>Fetching And Filtering Mails...</b>", parse_mode=ParseMode.HTML)
     
     file_path = await message.reply_to_message.download()
     with open(file_path, 'r') as file:
