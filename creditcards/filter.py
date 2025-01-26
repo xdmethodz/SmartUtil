@@ -42,9 +42,14 @@ async def handle_fcc_command(client, message: Message):
         os.remove(file_path)
         return
 
-    user_full_name = f"{message.from_user.first_name or ''} {message.from_user.last_name or ''}".strip()
-    user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
-    user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name or ''} {message.from_user.last_name or ''}".strip()
+        user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
+        user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
+    else:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_link = f'<a href="{group_url}">{group_name}</a>'
 
     if len(valid_ccs) > 10:
         file_name = "Smart_Tool_⚙️_CC_Results.txt"
@@ -55,7 +60,7 @@ async def handle_fcc_command(client, message: Message):
             f"<b>━━━━━━━━━━━━━━</b>\n"
             f"<b>Total cards found:</b> <code>{len(valid_ccs)}</code>\n"
             f"<b>━━━━━━━━━━━━━━</b>\n"
-            f"<b>Filter By:</b> <a href='tg://user?id={message.from_user.id}'>{user_full_name}</a>\n"
+            f"<b>Filter By:</b> {user_link}\n"
         )
         await temp_msg.delete()
         await client.send_document(message.chat.id, file_name, caption=caption, parse_mode=ParseMode.HTML)
@@ -92,9 +97,23 @@ async def handle_topbin_command(client, message: Message):
         os.remove(file_path)
         return
 
-    response_message = "<b>Here are the top 20 bins:</b>\n━━━━━━━━━━━━━━━━\n"
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name or ''} {message.from_user.last_name or ''}".strip()
+        user_profile_url = f"https://t.me/{message.from_user.username}" if message.from_user.username else None
+        user_link = f'<a href="{user_profile_url}">{user_full_name}</a>' if user_profile_url else user_full_name
+    else:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_link = f'<a href="{group_url}">{group_name}</a>'
+
+    response_message = (
+        f"<b>Here are the top 20 bins:</b>\n"
+        f"━━━━━━━━━━━━━━━━\n"
+    )
     for i, (bin, count) in enumerate(top_bins, 1):
         response_message += f"{i:02d}. BIN: `{bin}` - Count: `{count}`\n"
+
+    response_message += f"\n<b>Checked By:</b> {user_link}"
 
     await temp_msg.delete()
     await message.reply_text(response_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
@@ -104,3 +123,5 @@ async def handle_topbin_command(client, message: Message):
 def setup_filter_handlers(app: Client):
     app.add_handler(handlers.MessageHandler(handle_fcc_command, filters.command("fcc") & (filters.private | filters.group)))
     app.add_handler(handlers.MessageHandler(handle_topbin_command, filters.command("topbin") & (filters.private | filters.group)))
+
+# To use the handler, call setup_filter_handlers(app) in your main script
