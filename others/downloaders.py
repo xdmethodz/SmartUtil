@@ -420,7 +420,12 @@ def setup_downloader_handler(app: Client):
     async def video_command(client, message):
         command_parts = message.text.split(maxsplit=1)
         if len(command_parts) == 1:
-            await message.reply_text("**Please provide your video link ❌**", parse_mode=ParseMode.MARKDOWN)
+            if message.from_user:
+                await message.reply_text("**Please provide your video link ❌**", parse_mode=ParseMode.MARKDOWN)
+            else:
+                group_name = message.chat.title or "this group"
+                group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+                await message.reply_text(f"**Please provide your video link, {group_name} ❌**", parse_mode=ParseMode.MARKDOWN)
         else:
             url = command_parts[1]
             if not validate_url(url):
@@ -457,4 +462,4 @@ async def search_youtube(query: str) -> Optional[str]:
     
     return None    
 
-# To use the handler, call setup_downloader_handler(app) in your main script.
+# To use the handler, call setup
