@@ -13,7 +13,7 @@ import time
 import requests
 from PIL import Image
 from concurrent.futures import ThreadPoolExecutor
-
+from pyrogram.errors import PeerIdInvalid
 YT_COOKIES_PATH = "./cookies/cookies.txt"
 
 # Configure logging
@@ -295,7 +295,13 @@ async def handle_download_request(client, message, url):
         file_size = result['file_size']
         thumbnail_path = result.get('thumbnail_path')
 
-        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        try:
+            user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+            user_info = f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
+        except PeerIdInvalid:
+            group_name = message.chat.title or "this group"
+            group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+            user_info = f"Downloaded By: [{group_name}]({group_url})"
 
         video_caption = (
             f"🎵 **Title:** `{title}`\n"
@@ -304,7 +310,7 @@ async def handle_download_request(client, message, url):
             f"🔗 [Watch On YouTube]({url})\n"
             f"⏱️ **Duration:** **{duration}**\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
+            f"{user_info}"
         )
 
         last_update_time = [0]
@@ -368,7 +374,13 @@ async def handle_audio_request(client, message):
     duration = result['duration']
     file_size = result['file_size']
 
-    user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+    try:
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        user_info = f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
+    except PeerIdInvalid:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_info = f"Downloaded By: [{group_name}]({group_url})"
 
     audio_caption = (
         f"🎵 **Title:** `{title}`\n"
@@ -377,7 +389,7 @@ async def handle_audio_request(client, message):
         f"🔗 [Listen On YouTube]({video_url})\n"
         f"⏱️ **Duration:** **{duration}**\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
-        f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
+        f"{user_info}"
     )
 
     try:
