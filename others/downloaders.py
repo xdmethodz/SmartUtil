@@ -295,8 +295,8 @@ async def handle_download_request(client, message, url):
         file_size = result['file_size']
         thumbnail_path = result.get('thumbnail_path')
 
-        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
-        if user_full_name:
+        if message.from_user:
+            user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
             user_info = f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
         else:
             group_name = message.chat.title or "this group"
@@ -374,8 +374,8 @@ async def handle_audio_request(client, message):
     duration = result['duration']
     file_size = result['file_size']
 
-    user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
-    if user_full_name:
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
         user_info = f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
     else:
         group_name = message.chat.title or "this group"
