@@ -126,7 +126,13 @@ async def handle_spotify_request(client, message, url):
 
         downloading_message = await message.reply_text("`Found ☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
 
-        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        if message.from_user:
+            user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+            user_info = f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
+        else:
+            group_name = message.chat.title or "this group"
+            group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+            user_info = f"Downloaded By: [{group_name}]({group_url})"
 
         audio_caption = (
             f"🎵 **Title:** `{title}`\n"
@@ -134,7 +140,7 @@ async def handle_spotify_request(client, message, url):
             f"👤 **Artist:** `{artists}`\n"
             f"⏱️ **Duration:** `{duration}`\n"
             f"━━━━━━━━━━━━━━━━━━━\n"
-            f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
+            f"{user_info}"
         )
 
         last_update_time = [0]
