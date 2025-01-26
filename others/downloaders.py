@@ -89,7 +89,7 @@ async def progress_bar(current, total, status_message, start_time, last_update_t
     uploaded = current / 1024 / 1024  # Uploaded size in MB
     total_size = total / 1024 / 1024  # Total size in MB
 
-    # Throttle updates: Only update if at least  seconds have passed since the last update
+    # Throttle updates: Only update if at least 2 seconds have passed since the last update
     if time.time() - last_update_time[0] < 2:
         return
     last_update_time[0] = time.time()  # Update the last update time
@@ -111,7 +111,7 @@ def get_ydl_opts(output_filename: str) -> dict:
     Return yt-dlp options.
     """
     return {
-        'format': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
+        'format': 'bestvideo+bestaudio/best',
         'outtmpl': output_filename,
         'cookiefile': YT_COOKIES_PATH,
         'quiet': True,
@@ -266,7 +266,6 @@ def prepare_thumbnail_sync(thumbnail_url: str, output_path: str) -> str:
             thumbnail_resized_path = f"{output_path}_thumb.jpg"
             with Image.open(thumbnail_temp_path) as img:
                 img = img.convert('RGB')
-                img = img.resize((1280, 720), Image.Resampling.LANCZOS)
                 img.save(thumbnail_resized_path, "JPEG", quality=85)
 
             os.remove(thumbnail_temp_path)
@@ -303,7 +302,7 @@ async def handle_download_request(client, message, url):
             f"🔗 [Watch On YouTube]({url})\n"
             f"⏱️ **Duration:** **{duration}**\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+            f"Downloaded By: [{message.from_user.first_name} {message.from_user.last_name}](tg://user?id={message.from_user.id})"
         )
 
         last_update_time = [0]
@@ -374,7 +373,7 @@ async def handle_audio_request(client, message):
         f"🔗 [Listen On YouTube]({video_url})\n"
         f"⏱️ **Duration:** **{duration}**\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
-        f"Downloaded By: [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+        f"Downloaded By: [{message.from_user.first_name} {message.from_user.last_name}](tg://user?id={message.from_user.id})"
     )
 
     try:
