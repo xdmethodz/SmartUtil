@@ -111,7 +111,7 @@ def get_ydl_opts(output_filename: str) -> dict:
     Return yt-dlp options.
     """
     return {
-        'format': 'bestvideo+bestaudio/best',
+        'format': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
         'outtmpl': output_filename,
         'cookiefile': YT_COOKIES_PATH,
         'quiet': True,
@@ -295,6 +295,8 @@ async def handle_download_request(client, message, url):
         file_size = result['file_size']
         thumbnail_path = result.get('thumbnail_path')
 
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+
         video_caption = (
             f"🎵 **Title:** `{title}`\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
@@ -302,7 +304,7 @@ async def handle_download_request(client, message, url):
             f"🔗 [Watch On YouTube]({url})\n"
             f"⏱️ **Duration:** **{duration}**\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Downloaded By: [{message.from_user.first_name} {message.from_user.last_name}](tg://user?id={message.from_user.id})"
+            f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
         )
 
         last_update_time = [0]
@@ -366,6 +368,8 @@ async def handle_audio_request(client, message):
     duration = result['duration']
     file_size = result['file_size']
 
+    user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+
     audio_caption = (
         f"🎵 **Title:** `{title}`\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
@@ -373,7 +377,7 @@ async def handle_audio_request(client, message):
         f"🔗 [Listen On YouTube]({video_url})\n"
         f"⏱️ **Duration:** **{duration}**\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
-        f"Downloaded By: [{message.from_user.first_name} {message.from_user.last_name}](tg://user?id={message.from_user.id})"
+        f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
     )
 
     try:
