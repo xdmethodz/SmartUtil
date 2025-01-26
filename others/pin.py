@@ -1,18 +1,15 @@
+import re
 import os
+import asyncio
+import requests
 import logging
+from collections import Counter
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional
-import aiohttp
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-import re
-from urllib.parse import unquote
-import json
-import time
 from pyrogram import Client, filters
-from pyrogram.types import Message
 from pyrogram.enums import ParseMode
+from pyrogram.types import Message
 
 # Configure logging
 logging.basicConfig(
@@ -408,5 +405,3 @@ def setup_pinterest_handler(app: Client):
     # Link the downloader and semaphore to the app for access in handlers
     app.downloader = PinterestDownloader()
     app.download_semaphore = asyncio.Semaphore(Config.MAX_CONCURRENT_DOWNLOADS)
-
-# To use the handler, call setup_pinterest_handler(app) in your main script.
