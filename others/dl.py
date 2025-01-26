@@ -86,7 +86,15 @@ def setup_dl_handlers(app: Client):
                     if file_size > max_telegram_size:
                         await message.reply_document(document=filename, caption="Large Video")
                     else:
-                        await message.reply_video(video=filename, supports_streaming=True)
+                        if message.from_user:
+                            user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+                            user_info = f"Downloaded By: [{user_full_name}](tg://user?id={message.from_user.id})"
+                        else:
+                            group_name = message.chat.title or "this group"
+                            group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+                            user_info = f"Downloaded By: [{group_name}]({group_url})"
+
+                        await message.reply_video(video=filename, supports_streaming=True, caption=user_info)
                 
                 await downloading_message.delete()
                 os.remove(filename)
