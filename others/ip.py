@@ -1,16 +1,29 @@
-import requests
+import os
+import logging
+from pathlib import Path
+from typing import Optional
+import yt_dlp
+import asyncio
+import aiofiles
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 from PIL import Image
 import pytesseract
-import io
+import requests
+import aiohttp
 from bs4 import BeautifulSoup
 import json
-import yt_dlp
 
 # Path to your YouTube cookies file
 YT_COOKIES_PATH = "./cookie/nm.txt"
+
+# Configure logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 # Function to get IP information
 def get_ip_info(ip: str) -> str:
@@ -125,14 +138,19 @@ async def ocr_handler(client: Client, message: Message):
     img = Image.open(photo)
     text = pytesseract.image_to_string(img, lang='eng')
 
-    user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
-    user_profile_link = f"https://t.me/{message.from_user.username}"
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        user_info = f"Text Extracted By: [{user_full_name}](tg://user?id={message.from_user.id})"
+    else:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_info = f"Text Extracted By: [{group_name}]({group_url})"
 
     if not text.strip():
-        response = f"**No readable text found in the image**\n\n**Text Extracted By:** [{user_full_name}]({user_profile_link})"
+        response = f"**No readable text found in the image**\n\n{user_info}"
     else:
         text = f"```\n{text}\n```"  # Convert text to code format
-        response = f"**Here's the Extracted Text:**\n━━━━━━━━━━━━━━━━\n{text}\n\n**Text Extracted By:** [{user_full_name}]({user_profile_link})"
+        response = f"**Here's the Extracted Text:**\n━━━━━━━━━━━━━━━━\n{text}\n\n{user_info}"
 
     await fetching_msg.delete()
     await message.reply_text(response, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
@@ -220,10 +238,15 @@ async def ip_info_handler(client: Client, message: Message):
     
     details = get_ip_info(ip)
 
-    user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
-    user_profile_link = f"https://t.me/{message.from_user.username}"
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        user_info = f"\n**Ip-Info Grab By:** [{user_full_name}](tg://user?id={message.from_user.id})"
+    else:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_info = f"\n**Ip-Info Grab By:** [{group_name}]({group_url})"
 
-    details += f"\n**Ip-Info Grab By:** [{user_full_name}]({user_profile_link})"
+    details += user_info
 
     await fetching_msg.delete()
     await message.reply_text(details, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
@@ -243,10 +266,15 @@ async def domain_info_handler(client: Client, message: Message):
     
     details_combined = "\n".join(details_list)
 
-    user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
-    user_profile_link = f"https://t.me/{message.from_user.username}"
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        user_info = f"\n**Domain Info Grab By:** [{user_full_name}](tg://user?id={message.from_user.id})"
+    else:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_info = f"\n**Domain Info Grab By:** [{group_name}]({group_url})"
 
-    details_combined += f"\n**Domain Info Grab By:** [{user_full_name}]({user_profile_link})"
+    details_combined += user_info
 
     await fetching_msg.delete()
     await message.reply_text(details_combined, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
@@ -274,10 +302,15 @@ async def proxy_info_handler(client: Client, message: Message):
     
     details_combined = "\n".join(details_list)
 
-    user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
-    user_profile_link = f"https://t.me/{message.from_user.username}"
+    if message.from_user:
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        user_info = f"\n**Proxies Checked By:** [{user_full_name}](tg://user?id={message.from_user.id})"
+    else:
+        group_name = message.chat.title or "this group"
+        group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "this group"
+        user_info = f"\n**Proxies Checked By:** [{group_name}]({group_url})"
 
-    details_combined += f"\n**Proxies Checked By:** [{user_full_name}]({user_profile_link})"
+    details_combined += user_info
 
     await fetching_msg.delete()
     await message.reply_text(details_combined, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
