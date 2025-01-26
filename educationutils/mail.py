@@ -22,7 +22,7 @@ async def filter_email_pass(content):
 # Command to handle fetching and filtering emails
 async def handle_fmail_command(client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.document or not message.reply_to_message.document.file_name.endswith('.txt'):
-        await message.reply_text("<b>⚠️ Reply to a message or a text file.</b>", parse_mode=ParseMode.HTML)
+        await message.reply_text("<b>⚠️ Reply to a message with a text file.</b>", parse_mode=ParseMode.HTML)
         return
 
     # Temporary message
@@ -39,17 +39,32 @@ async def handle_fmail_command(client, message: Message):
         os.remove(file_path)
         return
 
-    formatted_emails = '\n'.join(f'`{email}`' for email in emails)
-    response_message = f"{formatted_emails}"
-
-    await temp_msg.delete()
-    await message.reply_text(response_message, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+    if len(emails) > 10:
+        file_name = "Smart_Tool_⚙️_Email_Results.txt"
+        with open(file_name, 'w') as f:
+            f.write("\n".join(emails))
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        caption = (
+            f"<b>Here are the extracted emails:</b>\n"
+            f"<b>━━━━━━━━━━━━━━━━</b>\n"
+            f"<b>Total Emails:</b> <code>{len(emails)}</code>\n"
+            f"<b>━━━━━━━━━━━━━━━━</b>\n"
+            f"<b>Filter By:</b> <a href='tg://user?id={message.from_user.id}'>{user_full_name}</a>\n"
+        )
+        await temp_msg.delete()
+        await client.send_document(message.chat.id, file_name, caption=caption, parse_mode=ParseMode.HTML)
+        os.remove(file_name)
+    else:
+        formatted_emails = '\n'.join(f'`{email}`' for email in emails)
+        await temp_msg.delete()
+        await message.reply_text(formatted_emails, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+    
     os.remove(file_path)
 
 # Command to handle filtering and extracting email:password pairs
 async def handle_fpass_command(client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.document or not message.reply_to_message.document.file_name.endswith('.txt'):
-        await message.reply_text("<b>⚠️ Reply to a message or a text file.</b>", parse_mode=ParseMode.HTML)
+        await message.reply_text("<b>⚠️ Reply to a message with a text file.</b>", parse_mode=ParseMode.HTML)
         return
 
     # Temporary message
@@ -66,11 +81,26 @@ async def handle_fpass_command(client, message: Message):
         os.remove(file_path)
         return
 
-    formatted_email_passes = '\n'.join(f'`{email_pass}`' for email_pass in email_passes)
-    response_message = f"{formatted_email_passes}"
-
-    await temp_msg.delete()
-    await message.reply_text(response_message, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+    if len(email_passes) > 10:
+        file_name = "Smart_Tool_⚙️_Email_Pass_Results.txt"
+        with open(file_name, 'w') as f:
+            f.write("\n".join(email_passes))
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+        caption = (
+            f"<b>Here are the extracted mail pass:</b>\n"
+            f"<b>━━━━━━━━━━━━━━━━</b>\n"
+            f"<b>Total Mail pass:</b> <code>{len(email_passes)}</code>\n"
+            f"<b>━━━━━━━━━━━━━━━━</b>\n"
+            f"<b>Filter By:</b> <a href='tg://user?id={message.from_user.id}'>{user_full_name}</a>\n"
+        )
+        await temp_msg.delete()
+        await client.send_document(message.chat.id, file_name, caption=caption, parse_mode=ParseMode.HTML)
+        os.remove(file_name)
+    else:
+        formatted_email_passes = '\n'.join(f'`{email_pass}`' for email_pass in email_passes)
+        await temp_msg.delete()
+        await message.reply_text(formatted_email_passes, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+    
     os.remove(file_path)
 
 # Setup handlers
