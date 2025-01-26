@@ -335,6 +335,10 @@ async def handle_pinterest_request(client, message, url):
             # Send initial processing message
             status_msg = await message.reply_text("`Processing your request...`", parse_mode=ParseMode.MARKDOWN)
             
+            # Ensure the downloader is an instance of PinterestDownloader
+            if not hasattr(client, 'downloader') or not isinstance(client.downloader, PinterestDownloader):
+                client.downloader = PinterestDownloader()
+            
             pin_id = await client.downloader.extract_pin_id(url)
             if not pin_id:
                 await status_msg.edit_text('Invalid Pinterest URL. Please send a valid pin URL.')
