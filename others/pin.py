@@ -335,6 +335,7 @@ async def handle_pinterest_request(client, message, url):
             # Send initial processing message
             status_msg = await message.reply_text("`Processing your request...`", parse_mode=ParseMode.MARKDOWN)
             
+            # Correctly use `extract_pin_id` from `PinterestDownloader`
             pin_id = await client.downloader.extract_pin_id(url)
             if not pin_id:
                 await status_msg.edit_text('Invalid Pinterest URL. Please send a valid pin URL.')
@@ -394,7 +395,7 @@ async def handle_pinterest_request(client, message, url):
         except Exception as e:
             logger.error(f"Error processing message: {e}", exc_info=True)
             await message.reply_text('An error occurred while processing your request.')
-
+            
 def setup_pinterest_handler(app: Client):
     @app.on_message(filters.command(["pin", "pnt"]) & (filters.private | filters.group))
     async def pin_command(client, message):
