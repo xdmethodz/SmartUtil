@@ -460,6 +460,6 @@ async def search_youtube(query: str) -> Optional[str]:
     except Exception as e:
         print(f"YouTube search error: {e}")
     
-    return None    
+    return None
 
-# To use the handler, call setup
+# To use the handler, call setup_downloader_handler(app) in your main script.
