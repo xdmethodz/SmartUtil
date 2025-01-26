@@ -126,6 +126,8 @@ async def handle_spotify_request(client, message, url):
 
         downloading_message = await message.reply_text("`Found ☑️ Downloading...`", parse_mode=enums.ParseMode.MARKDOWN)
 
+        user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+
         audio_caption = (
             f"🎵 **Title:** `{title}`\n"
             f"━━━━━━━━━━━━━━━━━━━\n"
