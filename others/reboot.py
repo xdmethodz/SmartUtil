@@ -9,8 +9,8 @@ async def restart_bot(client: Client, message: Message):
     # Send initial "Bot Restarting..." message
     restarting_message = await message.reply_text("**Bot Restarting...**", parse_mode=enums.ParseMode.MARKDOWN)
     
-    # Wait for 30 seconds
-    await asyncio.sleep(10)
+    # Wait for 4 seconds
+    await asyncio.sleep(4)
     
     # Delete the initial message and send "Bot Restarted Successfully" message
     await restarting_message.delete()
