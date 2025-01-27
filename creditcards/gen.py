@@ -16,7 +16,7 @@ def get_bin_info(bin):
 def generate_credit_card(bin, amount, month=None, year=None):
     cards = []
     for _ in range(amount):
-        card = bin + ''.join([str(random.randint(0, 9)) for _ in range(16-len(bin))])
+        card = bin + ''.join([str(random.randint(0, 9)) for _ in range(16 - len(bin))])
         card_month = month or f"{random.randint(1, 12):02}"
         card_year = year or random.randint(2024, 2029)
         cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
@@ -86,9 +86,8 @@ def setup_credit_handlers(app: Client):
         else:
             cards = generate_credit_card(bin, amount, month, year)
 
-        card_text = "\n".join([f"`{card}`" for card in cards[:10]])
-
-        if amount <= 10 or 'x' in bin.lower():
+        if amount <= 10:
+            card_text = "\n".join([f"`{card}`" for card in cards])
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
             callback_data = f"regenerate|{bin}|{month or ''}|{year or ''}|{amount}"
