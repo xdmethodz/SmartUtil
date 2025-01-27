@@ -116,12 +116,15 @@ class URLDownloader:
 executor = ThreadPoolExecutor(max_workers=5)  # You can adjust the number of workers
 
 async def download_web_source(client: Client, message: Message):
+    # Get the command and its arguments
+    command_parts = message.text.split()
+
     # Check if the user provided a URL
-    if len(message.command) <= 1:
+    if len(command_parts) <= 1:
         await message.reply_text("**❌ Provide at least one URL.**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
         return
 
-    url = message.command[1]
+    url = command_parts[1]
 
     # Notify the user that the source code is being downloaded
     downloading_msg = await message.reply_text("**Downloading Source Code...**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
