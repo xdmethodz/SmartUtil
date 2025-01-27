@@ -2,8 +2,8 @@ import asyncio
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 
-# Admin ID
-ADMIN_ID = 7303810912
+# List of owner ids (add your owner ids here)
+OWNERS = [7303810912, 7886711162]  # Replace with actual owner IDs
 
 async def restart_bot(client: Client, message: Message):
     # Send initial "Bot Restarting..." message
@@ -19,14 +19,14 @@ async def restart_bot(client: Client, message: Message):
 def setup_reboot_handler(app: Client):
     @app.on_message(filters.command("restart") & (filters.private | filters.group))
     async def restart_command(client, message):
-        if message.from_user.id == ADMIN_ID:
+        if message.from_user.id == OWNERS:
             await restart_bot(client, message)
         else:
             await message.reply_text("You are not authorized to use this command.")
     
     @app.on_message(filters.command("reload") & (filters.private | filters.group))
     async def reload_command(client, message):
-        if message.from_user.id == ADMIN_ID:
+        if message.from_user.id == OWNERS:
             await restart_bot(client, message)
         else:
             await message.reply_text("You are not authorized to use this command.")
