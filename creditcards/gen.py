@@ -29,11 +29,11 @@ def parse_input(user_input):
     year = None
     amount = 10
 
-    match = re.match(r"(\d{6,16})(\d{0,10}[xX]{0,4})?\|?(\d{2})?\|?(\d{2,4})?\s*(\d+)?", user_input)
+    match = re.match(r"(\d{6,12})(x{4})?\|?(\d{2})?\|?(\d{2,4})?\s*(\d+)?", user_input)
     if match:
         bin, suffix, month, year, amount = match.groups()
         if suffix:
-            bin = bin + suffix
+            bin += suffix
         year = f"20{year}" if year and len(year) == 2 else year
         amount = int(amount) if amount else 10
         
@@ -62,10 +62,6 @@ def setup_credit_handlers(app: Client):
             await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
             return
 
-        # Ensure proper randomization for 'xxxx' part
-        if 'x' in bin.lower():
-            bin = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
-
         # Fetch BIN info
         bin_info = get_bin_info(bin[:6])
         if not bin_info or bin_info.get("Status") != "SUCCESS":
@@ -83,11 +79,14 @@ def setup_credit_handlers(app: Client):
         progress_message = await message.reply_text("**Generating Credit Cards...☑️**")
 
         # Generate credit cards
-        cards = generate_credit_card(bin, amount, month, year)
+        if 'x' in bin.lower():
+            cards = generate_custom_cards(bin, month, year)
+        else:
+            cards = generate_credit_card(bin, amount, month, year)
 
         card_text = "\n".join([f"`{card}`" for card in cards])
 
-        if amount <= 10:
+        if amount <= 10 or 'x' in bin.lower():
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
             callback_data = f"regenerate|{bin}|{month or ''}|{year or ''}|{amount}"
@@ -121,7 +120,7 @@ def setup_credit_handlers(app: Client):
                 if os.path.exists(file_name):
                     os.remove(file_name)
 
-    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6,16})\|(\d{2})?\|(\d{4})?\|(\d+)"))
+    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6,12}x{4})\|(\d{2})?\|(\d{4})?\|(\d+)"))
     async def regenerate_callback(client: Client, callback_query):
         _, bin, month, year, amount = callback_query.data.split('|')
         amount = int(amount)
@@ -139,6 +138,10 @@ def setup_credit_handlers(app: Client):
         card_type = bin_info.get("Type", "Unknown")
         card_scheme = bin_info.get("Scheme", "Unknown")
         bank_text = bank.upper() if bank else "Unknown"
+
+        # Ensure proper randomization for 'xxxx' part
+        if 'x' in bin.lower():
+            bin = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
 
         # Generate new credit cards
         cards = generate_credit_card(bin, amount, month, year)
