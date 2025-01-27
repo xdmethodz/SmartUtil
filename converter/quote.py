@@ -22,9 +22,12 @@ async def generate_quote(client: Client, message: Message):
     text = " ".join(command_parts[1:])
     
     user = message.from_user
+    avatar_file_path = None
     if user:
         full_name = f"{user.first_name} {user.last_name}" if user.last_name else user.first_name
         user_id = user.id
+        if user.photo:
+            avatar_file_path = await client.download_media(user.photo.big_file_id)
     else:
         # If user info cannot be fetched, use group name and avatar
         if message.chat.type in [ChatType.SUPERGROUP, ChatType.GROUP]:
@@ -38,14 +41,6 @@ async def generate_quote(client: Client, message: Message):
         else:
             await message.reply_text("**You do not have a profile photo set.**", parse_mode=ParseMode.MARKDOWN)
             return
-
-    # Get the user's profile photo
-    avatar_file_path = None
-    if user and user.photo:
-        avatar_file_path = await client.download_media(user.photo.big_file_id)
-    elif not avatar_file_path:
-        await message.reply_text("**You do not have a profile photo set.**", parse_mode=ParseMode.MARKDOWN)
-        return
 
     # Convert the avatar to base64
     with open(avatar_file_path, "rb") as file:
