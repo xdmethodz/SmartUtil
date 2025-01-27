@@ -1,11 +1,12 @@
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode, ChatType
 from pyrogram.errors import PeerIdInvalid, UsernameNotOccupied, ChannelInvalid
+from pyrogram.types import Message
 
 def setup_info_handler(app: Client):
     @app.on_message(filters.command("info") & (filters.private | filters.group))
-    async def handle_info_command(client, message):
-        if len(message.command) == 1:
+    async def handle_info_command(client, message: Message):
+        if len(message.command) == 1 and not message.reply_to_message:
             # No username or chat provided, show current user info
             user = message.from_user
             response = (
@@ -15,12 +16,28 @@ def setup_info_handler(app: Client):
                 f"💬 <b>Chat Id:</b> <code>{user.id}</code>"
             )
             await message.reply_text(response, parse_mode=ParseMode.HTML)
+        elif message.reply_to_message:
+            # Show info of the replied user or bot
+            user = message.reply_to_message.from_user
+            response = (
+                f"🌟 <b>Full Name:</b> <code>{user.first_name} {user.last_name or ''}</code>\n"
+                f"🆔 <b>User ID:</b> <code>{user.id}</code>\n"
+                f"🔖 <b>Username:</b> <code>@{user.username}</code>\n"
+                f"💬 <b>Chat Id:</b> <code>{user.id}</code>"
+            )
+            if user.is_bot:
+                response = (
+                    f"🤖 <b>Bot Name:</b> <code>{user.first_name} {user.last_name or ''}</code>\n"
+                    f"🆔 <b>Bot ID:</b> <code>{user.id}</code>\n"
+                    f"🔖 <b>Username:</b> <code>@{user.username}</code>"
+                )
+            await message.reply_text(response, parse_mode=ParseMode.HTML)
         else:
             # Extract username from the command
             username = message.command[1].strip('@').replace('https://', '').replace('http://', '').replace('t.me/', '').replace('/', '').replace(':', '')
 
             try:
-                # First, attempt to get user info
+                # First, attempt to get user or bot info
                 user = await client.get_users([username])
                 if user:
                     user = user[0]
@@ -30,6 +47,12 @@ def setup_info_handler(app: Client):
                         f"🔖 <b>Username:</b> <code>@{user.username}</code>\n"
                         f"💬 <b>Chat Id:</b> <code>{user.id}</code>"
                     )
+                    if user.is_bot:
+                        response = (
+                            f"🤖 <b>Bot Name:</b> <code>{user.first_name} {user.last_name or ''}</code>\n"
+                            f"🆔 <b>Bot ID:</b> <code>{user.id}</code>\n"
+                            f"🔖 <b>Username:</b> <code>@{user.username}</code>"
+                        )
                     await message.reply_text(response, parse_mode=ParseMode.HTML)
                 else:
                     # If not a user, try fetching chat info (group/channel)
@@ -60,7 +83,7 @@ def setup_info_handler(app: Client):
                             "<b>Sorry Bro Wrong Username ❌</b>",
                             parse_mode=ParseMode.HTML
                         )
-                    except Exception as e:
+                    except Exception:
                         await message.reply_text(f"<b>Sorry Bro Wrong Username ❌</b>", parse_mode=ParseMode.HTML)
             
             except (PeerIdInvalid, UsernameNotOccupied):
@@ -68,7 +91,7 @@ def setup_info_handler(app: Client):
                     "<b>Sorry Bro Wrong Username ❌</b>",
                     parse_mode=ParseMode.HTML
                 )
-            except Exception as e:
+            except Exception:
                 await message.reply_text(f"<b>Sorry Bro Wrong Username ❌</b>", parse_mode=ParseMode.HTML)
 
 # To use the handler, call setup_info_handler(app) in your main script
