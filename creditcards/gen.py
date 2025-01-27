@@ -90,7 +90,7 @@ def setup_credit_handlers(app: Client):
             card_text = "\n".join([f"`{card}`" for card in cards])
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
-            callback_data = f"regenerate|{bin}|{month or ''}|{year or ''}|{amount}"
+            callback_data = f"regenerate|{user_input}|{amount}"
 
             reply_markup = InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Regenerate", callback_data=callback_data)]]
@@ -121,26 +121,37 @@ def setup_credit_handlers(app: Client):
                 if os.path.exists(file_name):
                     os.remove(file_name)
 
-    @app.on_callback_query(filters.regex(r"regenerate\|(\d{6,12}x{4})\|(\d{2})?\|(\d{4})?\|(\d+)"))
+    @app.on_callback_query(filters.regex(r"regenerate\|(.+?)\|(\d+)"))
     async def regenerate_callback(client: Client, callback_query):
-        _, bin, month, year, amount = callback_query.data.split('|')
+        original_input, amount = callback_query.data.split('|')[1:]
         amount = int(amount)
-        month = month if month else f"{random.randint(1, 12):02}"
-        year = year if year else random.randint(2024, 2029)
+        bin, month, year, _ = parse_input(original_input)
 
-        # Ensure proper randomization for 'xxxx' part
-        bin = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
+        # Fetch BIN info again
+        bin_info = get_bin_info(bin[:6])
+        if not bin_info or bin_info.get("Status") != "SUCCESS":
+            await callback_query.answer("BIN info retrieval failed!", show_alert=True)
+            return
+
+        bank = bin_info.get("Issuer")
+        country_name = bin_info["Country"].get("Name", "Unknown")
+        card_type = bin_info.get("Type", "Unknown")
+        card_scheme = bin_info.get("Scheme", "Unknown")
+        bank_text = bank.upper() if bank else "Unknown"
 
         # Generate new credit cards
-        cards = generate_credit_card(bin, amount, month, year)
+        if 'x' in bin.lower():
+            cards = generate_custom_cards(bin, amount, month, year)
+        else:
+            cards = generate_credit_card(bin, amount, month, year)
         
         card_text = "\n".join([f"`{card}`" for card in cards[:10]])
 
-        bin_info_text = f"**Bank:** `{bin_info.get('Issuer', 'Unknown')}`\n**Country:** `{bin_info['Country'].get('Name', 'Unknown')}`\n**BIN Info:** `{bin_info.get('Scheme', 'Unknown').upper()} - {bin_info.get('Type', 'Unknown').upper()}`"
+        bin_info_text = f"**Bank:** `{bank_text}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
         response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
 
         reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{bin}|{month}|{year}|{amount}")]]
+            [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate|{original_input}|{amount}")]]
         )
 
         await callback_query.message.edit_text(response_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
