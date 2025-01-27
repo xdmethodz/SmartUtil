@@ -4,6 +4,10 @@ from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 from asyncio import sleep
 import pycountry
+from faker import Faker
+
+# Initialize Faker
+fake = Faker()
 
 # Keep only Algeria's information
 countries_info = [
@@ -22,6 +26,62 @@ countries_info = [
         }
     }
 ]
+
+# Dictionary of phone number formats by country code
+phone_formats = {
+    "AF": "+93 70XXXXXXX",
+    "AL": "+355 67XXXXXXX",
+    "DZ": "+213 55XXXXXXX",
+    "AR": "+54 911XXXXXXXX",
+    "AU": "+61 41XXXXXXX",
+    "AT": "+43 650XXXXXXX",
+    "BD": "+88 17XXXXXXXX",
+    "BE": "+32 49XXXXXXX",
+    "BR": "+55 119XXXXXXXX",
+    "CA": "+1 416XXXXXXX",
+    "CN": "+86 13XXXXXXXXX",
+    "CO": "+57 321XXXXXXX",
+    "DK": "+45 20XXXXXX",
+    "EG": "+20 100XXXXXXX",
+    "FR": "+33 6XXXXXXXX",
+    "DE": "+49 15XXXXXXXXX",
+    "GR": "+30 69XXXXXXXX",
+    "IN": "+91 91XXXXXXXX",
+    "ID": "+62 81XXXXXXXXX",
+    "IR": "+98 91XXXXXXXX",
+    "IE": "+353 85XXXXXXX",
+    "IL": "+972 50XXXXXXX",
+    "IT": "+39 33XXXXXXXX",
+    "JP": "+81 80XXXXXXXX",
+    "KZ": "+7 70XXXXXXXX",
+    "KE": "+254 71XXXXXXX",
+    "MY": "+60 12XXXXXXXX",
+    "MX": "+52 12XXXXXXXXX",
+    "NP": "+977 98XXXXXXXX",
+    "NL": "+31 6XXXXXXXX",
+    "NZ": "+64 21XXXXXXX",
+    "NG": "+234 70XXXXXXXX",
+    "PK": "+92 3XXXXXXXXX",
+    "PH": "+63 917XXXXXXX",
+    "PL": "+48 51XXXXXXX",
+    "PT": "+351 91XXXXXXX",
+    "RU": "+7 91XXXXXXXX",
+    "SA": "+966 50XXXXXXX",
+    "SG": "+65 81XXXXXX",
+    "ZA": "+27 72XXXXXXX",
+    "KR": "+82 10XXXXXXXX",
+    "ES": "+34 6XXXXXXXX",
+    "LK": "+94 71XXXXXXX",
+    "SE": "+46 70XXXXXXX",
+    "CH": "+41 79XXXXXXX",
+    "TH": "+66 81XXXXXXX",
+    "TR": "+90 53XXXXXXXX",
+    "UA": "+380 50XXXXXXX",
+    "AE": "+971 50XXXXXXX",
+    "GB": "+44 79XXXXXXXX",
+    "US": "+1 202XXXXXXX",
+    "VN": "+84 91XXXXXXX"
+}
 
 def get_country_info(alpha_2):
     for country in countries_info:
@@ -51,8 +111,8 @@ def setup_fake_handler(app: Client):
                 return
 
             fake_address = {
-                "full_name": "N/A",
-                "gender": "N/A",
+                "full_name": fake.name(),
+                "gender": fake.random_element(elements=("Male", "Female")),
                 "street": country_info["working_address"]["street"],
                 "city": country_info["working_address"]["city"],
                 "state": "N/A",
@@ -63,7 +123,8 @@ def setup_fake_handler(app: Client):
 
         else:
             # Fetch fake address from API for other countries
-            api_url = f"https://fakerapi.it/api/v2/addresses?_quantity=1&_locale={country.alpha_2.lower()}_{country.alpha_2.upper()}&_country_code={country.alpha_2}"
+            locale = f"{country.alpha_2.lower()}_{country.alpha_2.upper()}"
+            api_url = f"https://fakerapi.it/api/v2/addresses?_quantity=1&_locale={locale}&_country_code={country.alpha_2}"
             response = requests.get(api_url)
             
             if response.status_code != 200:
@@ -74,13 +135,13 @@ def setup_fake_handler(app: Client):
 
             # Parse the API response correctly
             fake_address = {
-                "full_name": "N/A",  # Assuming the API does not provide name and gender
-                "gender": "N/A",
+                "full_name": fake.name(),
+                "gender": fake.random_element(elements=("Male", "Female")),
                 "street": data.get('street', 'N/A'),
                 "city": data.get('city', 'N/A'),
                 "state": "N/A",  # Assuming the API does not provide state
                 "postal_code": data.get('zipcode', 'N/A'),
-                "phone_number": generate_phone_number("+XXXXXXXXXXX"),  # Assuming the API does not provide phone number
+                "phone_number": generate_phone_number(phone_formats.get(country.alpha_2, "+XXXXXXXXXXX")),
                 "country_name": data.get('country', 'N/A')
             }
         
@@ -105,8 +166,6 @@ def generate_phone_number(phone_format):
     """
     Generate a phone number based on the country phone format.
     """
-    from faker import Faker
-    fake = Faker()
     phone_number = phone_format
     for _ in range(phone_number.count('X')):
         phone_number = phone_number.replace('X', str(fake.random_digit()), 1)
