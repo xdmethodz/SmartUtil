@@ -19,14 +19,14 @@ async def restart_bot(client: Client, message: Message):
 def setup_reboot_handler(app: Client):
     @app.on_message(filters.command("restart") & (filters.private | filters.group))
     async def restart_command(client, message):
-        if message.from_user.id == OWNERS:
+        if message.from_user.id in OWNERS:
             await restart_bot(client, message)
         else:
             await message.reply_text("You are not authorized to use this command.")
     
     @app.on_message(filters.command("reload") & (filters.private | filters.group))
     async def reload_command(client, message):
-        if message.from_user.id == OWNERS:
+        if message.from_user.id in OWNERS:
             await restart_bot(client, message)
         else:
             await message.reply_text("You are not authorized to use this command.")
