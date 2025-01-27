@@ -1,67 +1,26 @@
-import pycountry
+import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from faker import Faker
 from pyrogram.enums import ParseMode
 from asyncio import sleep
+import pycountry
 
-# List of countries with fundamental information
+# Keep only Algeria's information
 countries_info = [
     {
-        "name": "Bangladesh", 
-        "alpha_2": "BD", 
-        "phone_format": "+880XXXXXXXXXX",
-        "cities": ["Dhaka", "Chittagong", "Khulna"],
-        "regions": ["Dhaka Division", "Chittagong Division", "Khulna Division"],
-        "postal_codes": ["1000", "4000", "9000"],
-        "streets": ["Main Road", "Station Road", "Lake Road"]
-    },
-    {
-        "name": "India", 
-        "alpha_2": "IN", 
-        "phone_format": "+91XXXXXXXXXX",
-        "cities": ["Mumbai", "Delhi", "Bangalore"],
-        "regions": ["Maharashtra", "Delhi", "Karnataka"],
-        "postal_codes": ["400001", "110001", "560001"],
-        "streets": ["MG Road", "Ring Road", "Brigade Road"]
-    },
-    {
-        "name": "Pakistan", 
-        "alpha_2": "PK", 
-        "phone_format": "+92XXXXXXXXXX",
-        "cities": ["Karachi", "Lahore", "Islamabad"],
-        "regions": ["Sindh", "Punjab", "Islamabad Capital Territory"],
-        "postal_codes": ["74000", "54000", "44000"],
-        "streets": ["Shahrah-e-Faisal", "Mall Road", "Constitution Avenue"]
-    },
-    {
-        "name": "Algeria", 
-        "alpha_2": "DZ", 
+        "name": "Algeria",
+        "alpha_2": "DZ",
         "phone_format": "+213XXXXXXXXX",
         "cities": ["Algiers", "Oran", "Constantine"],
         "regions": ["Algiers Province", "Oran Province", "Constantine Province"],
         "postal_codes": ["16000", "25100", "25000"],
-        "streets": ["Rue Didouche Mourad", "Rue Larbi Ben M'hidi", "Rue Hassiba Ben Bouali"]
-    },
-    {
-        "name": "United States", 
-        "alpha_2": "US", 
-        "phone_format": "+1XXXXXXXXXX",
-        "cities": ["New York", "Los Angeles", "Chicago"],
-        "regions": ["New York", "California", "Illinois"],
-        "postal_codes": ["10001", "90001", "60601"],
-        "streets": ["5th Avenue", "Sunset Boulevard", "Michigan Avenue"]
-    },
-    {
-        "name": "United Kingdom", 
-        "alpha_2": "GB", 
-        "phone_format": "+44XXXXXXXXXX",
-        "cities": ["London", "Manchester", "Birmingham"],
-        "regions": ["England", "Greater Manchester", "West Midlands"],
-        "postal_codes": ["EC1A", "M1", "B1"],
-        "streets": ["Baker Street", "Oxford Road", "High Street"]
-    },
-    # Add more countries with their details similarly...
+        "streets": ["Rue Didouche Mourad", "Rue Larbi Ben M'hidi", "Rue Hassiba Ben Bouali"],
+        "working_address": {
+            "street": "20 centre Culturel 99 Islamique",
+            "city": "Chlef",
+            "postal_code": "02000"
+        }
+    }
 ]
 
 def get_country_info(alpha_2):
@@ -84,46 +43,69 @@ def setup_fake_handler(app: Client):
             await message.reply_text("**❌ Provide a valid country name or country code.**")
             return
 
-        # Get country info from the predefined list
-        country_info = get_country_info(country.alpha_2)
-        
-        if not country_info:
-            await message.reply_text("**❌ Country details not available.**")
-            return
+        # Check if the country is Algeria
+        if country.alpha_2 == "DZ":
+            country_info = get_country_info(country.alpha_2)
+            if not country_info:
+                await message.reply_text("**❌ Country details not available.**")
+                return
 
-        fake = Faker()
+            fake_address = {
+                "full_name": "N/A",
+                "gender": "N/A",
+                "street": country_info["working_address"]["street"],
+                "city": country_info["working_address"]["city"],
+                "state": "N/A",
+                "postal_code": country_info["working_address"]["postal_code"],
+                "phone_number": generate_phone_number(country_info["phone_format"]),
+                "country_name": country.name
+            }
 
-        # Generate fake details
-        full_name = fake.name() or "N/A"
-        gender = fake.random_element(elements=("Male", "Female")) or "N/A"
-        street = fake.random_element(elements=country_info["streets"]) or "N/A"
-        city = fake.random_element(elements=country_info["cities"]) or "N/A"
-        state = fake.random_element(elements=country_info["regions"]) or "N/A"
-        postal_code = fake.random_element(elements=country_info["postal_codes"]) or "N/A"
-        phone_number = generate_phone_number(fake, country_info["phone_format"]) or "N/A"
-        country_name = country.name
+        else:
+            # Fetch fake address from API for other countries
+            api_url = f"https://fakerapi.it/api/v2/addresses?_quantity=1&_locale={country.alpha_2.lower()}_{country.alpha_2.upper()}&_country_code={country.alpha_2}"
+            response = requests.get(api_url)
+            
+            if response.status_code != 200:
+                await message.reply_text("**❌ Failed to fetch fake address. Try again later.**")
+                return
+
+            data = response.json()['data'][0]
+
+            fake_address = {
+                "full_name": data['firstname'] + " " + data['lastname'],
+                "gender": data['gender'],
+                "street": data['street'],
+                "city": data['city'],
+                "state": data['county'],
+                "postal_code": data['zipcode'],
+                "phone_number": data['phone'],
+                "country_name": country.name
+            }
         
-        generating_message = await message.reply_text(f"**Generating Fake Address For {country_name}...**")
+        generating_message = await message.reply_text(f"**Generating Fake Address For {fake_address['country_name']}...**")
         await sleep(2)
         await generating_message.delete()
         
         await message.reply_text(f"""
-**Address for {country_name}:**
+**Address for {fake_address['country_name']}:**
 ━━━━━━━━━━━━━━━━━
-**Full Name:** `{full_name}`
-**Gender:** `{gender}`
-**Street:** `{street}`
-**City/Town/Village:** `{city}`
-**State/Province/Region:** `{state}`
-**Postal code:** `{postal_code}`
-**Phone Number:** `{phone_number}`
-**Country:** `{country_name}`
+**Full Name:** `{fake_address['full_name']}`
+**Gender:** `{fake_address['gender']}`
+**Street:** `{fake_address['street']}`
+**City/Town/Village:** `{fake_address['city']}`
+**State/Province/Region:** `{fake_address['state']}`
+**Postal code:** `{fake_address['postal_code']}`
+**Phone Number:** `{fake_address['phone_number']}`
+**Country:** `{fake_address['country_name']}`
 """, parse_mode=ParseMode.MARKDOWN)
 
-def generate_phone_number(fake, phone_format):
+def generate_phone_number(phone_format):
     """
     Generate a phone number based on the country phone format.
     """
+    from faker import Faker
+    fake = Faker()
     phone_number = phone_format
     for _ in range(phone_number.count('X')):
         phone_number = phone_number.replace('X', str(fake.random_digit()), 1)
