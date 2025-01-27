@@ -41,7 +41,7 @@ def parse_input(user_input):
 def generate_custom_cards(bin, month, year):
     cards = []
     for _ in range(10):
-        card = bin.replace('x', lambda _: str(random.randint(0, 9)))
+        card = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
         cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
         cards.append(f"{card}|{month}|{year}|{cvv}")
     return cards
