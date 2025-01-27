@@ -11,12 +11,15 @@ from pyrogram.enums import ParseMode
 executor = ThreadPoolExecutor(max_workers=5)  # You can adjust the number of workers
 
 async def generate_quote(client: Client, message: Message):
-    # Get the text to quote from the message
-    if len(message.command) < 2:
+    # Get the command and its arguments
+    command_parts = message.text.split()
+
+    # Check if the user provided the text to quote
+    if len(command_parts) < 2:
         await message.reply_text("**Please provide the text to quote.**", parse_mode=ParseMode.MARKDOWN)
         return
 
-    text = " ".join(message.command[1:])
+    text = " ".join(command_parts[1:])
     user = message.from_user
     full_name = f"{user.first_name} {user.last_name}" if user.last_name else user.first_name
 
