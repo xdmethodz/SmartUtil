@@ -22,6 +22,12 @@ special_addresses = {
         "postal_code": "020101",
         "city": "Semipalatinsk",
         "country": "Kazakhstan"
+    },
+    "BD": {
+        "street": "বিল্ডিং নং ৯৯৯, পশ্চিম হরিরামমহাসড়ক",
+        "postal_code": "৬৪৪৯",
+        "city": "নড়াইল",
+        "country": "বাংলাদেশ"
     }
 }
 
@@ -33,7 +39,7 @@ phone_formats = {
     "AR": "+54 911XXXXXXXX",
     "AU": "+61 41XXXXXXX",
     "AT": "+43 650XXXXXXX",
-    "BD": "+88 17XXXXXXXX",
+    "BD": "+880 18XXXXXXXX",
     "BE": "+32 49XXXXXXX",
     "BR": "+55 119XXXXXXXX",
     "CA": "+1 416XXXXXXX",
@@ -123,7 +129,7 @@ def setup_fake_handler(app: Client):
             special_address = special_addresses[country.alpha_2]
             fake_address = {
                 "full_name": fake.name(),
-                "gender": fake.random_element(elements=("Male", "Female")),
+                "gender": fake.random_element(elements=("Male", "Female", "Other")),
                 "street": special_address["street"],
                 "city": special_address["city"],
                 "state": "N/A",
@@ -146,7 +152,7 @@ def setup_fake_handler(app: Client):
             # Parse the API response correctly
             fake_address = {
                 "full_name": fake.name(),
-                "gender": fake.random_element(elements=("Male", "Female")),
+                "gender": fake.random_element(elements=("Male", "Female", "Other")),
                 "street": data.get('street', 'N/A'),
                 "city": data.get('city', 'N/A'),
                 "state": "N/A",
