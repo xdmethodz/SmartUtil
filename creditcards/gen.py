@@ -39,9 +39,9 @@ def parse_input(user_input):
         
     return bin, month, year, amount
 
-def generate_custom_cards(bin, month, year):
+def generate_custom_cards(bin, amount, month, year):
     cards = []
-    for _ in range(10):
+    for _ in range(amount):
         card = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
         card_month = month or f"{random.randint(1, 12):02}"
         card_year = year or random.randint(2024, 2029)
@@ -82,11 +82,11 @@ def setup_credit_handlers(app: Client):
 
         # Generate credit cards
         if 'x' in bin.lower():
-            cards = generate_custom_cards(bin, month, year)
+            cards = generate_custom_cards(bin, amount, month, year)
         else:
             cards = generate_credit_card(bin, amount, month, year)
 
-        card_text = "\n".join([f"`{card}`" for card in cards])
+        card_text = "\n".join([f"`{card}`" for card in cards[:10]])
 
         if amount <= 10 or 'x' in bin.lower():
             await progress_message.delete()
@@ -148,7 +148,7 @@ def setup_credit_handlers(app: Client):
         # Generate new credit cards
         cards = generate_credit_card(bin, amount, month, year)
         
-        card_text = "\n".join([f"`{card}`" for card in cards])
+        card_text = "\n".join([f"`{card}`" for card in cards[:10]])
 
         bin_info_text = f"**Bank:** `{bank_text}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
         response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
