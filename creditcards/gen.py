@@ -38,6 +38,14 @@ def parse_input(user_input):
         
     return bin, month, year, amount
 
+def generate_custom_cards(bin, month, year):
+    cards = []
+    for _ in range(10):
+        card = bin.replace('x', lambda _: str(random.randint(0, 9)))
+        cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
+        cards.append(f"{card}|{month}|{year}|{cvv}")
+    return cards
+
 def setup_credit_handlers(app: Client):
     @app.on_message(filters.command(["gen", ".gen"]) & (filters.private | filters.group))
     async def generate_handler(client: Client, message: Message):
@@ -70,10 +78,14 @@ def setup_credit_handlers(app: Client):
         progress_message = await message.reply_text("**Generating Credit Cards...☑️**")
 
         # Generate credit cards
-        cards = generate_credit_card(bin, amount, month, year)
+        if 'x' in bin.lower():
+            cards = generate_custom_cards(bin, month, year)
+        else:
+            cards = generate_credit_card(bin, amount, month, year)
+
         card_text = "\n".join([f"`{card}`" for card in cards])
 
-        if amount <= 10:
+        if amount <= 10 or 'x' in bin.lower():
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
             callback_data = f"regenerate|{bin}|{month or ''}|{year or ''}|{amount}"
@@ -127,7 +139,11 @@ def setup_credit_handlers(app: Client):
         bank_text = bank.upper() if bank else "Unknown"
 
         # Generate new credit cards
-        cards = generate_credit_card(bin, amount, month, year)
+        if 'x' in bin.lower():
+            cards = generate_custom_cards(bin, month, year)
+        else:
+            cards = generate_credit_card(bin, amount, month, year)
+        
         card_text = "\n".join([f"`{card}`" for card in cards])
 
         bin_info_text = f"**Bank:** `{bank_text}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
