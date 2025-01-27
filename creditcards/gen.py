@@ -33,7 +33,7 @@ def parse_input(user_input):
     if match:
         bin, suffix, month, year, amount = match.groups()
         if suffix:
-            bin += ''.join([str(random.randint(0, 9)) if x in 'xX' else x for x in suffix])
+            bin = bin + suffix
         year = f"20{year}" if year and len(year) == 2 else year
         amount = int(amount) if amount else 10
         
@@ -62,6 +62,10 @@ def setup_credit_handlers(app: Client):
             await message.reply_text("**Provide a valid BIN at least 6 digits ❌**")
             return
 
+        # Ensure proper randomization for 'xxxx' part
+        if 'x' in bin.lower():
+            bin = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
+
         # Fetch BIN info
         bin_info = get_bin_info(bin[:6])
         if not bin_info or bin_info.get("Status") != "SUCCESS":
@@ -79,14 +83,11 @@ def setup_credit_handlers(app: Client):
         progress_message = await message.reply_text("**Generating Credit Cards...☑️**")
 
         # Generate credit cards
-        if 'x' in bin.lower():
-            cards = generate_custom_cards(bin, month, year)
-        else:
-            cards = generate_credit_card(bin, amount, month, year)
+        cards = generate_credit_card(bin, amount, month, year)
 
         card_text = "\n".join([f"`{card}`" for card in cards])
 
-        if amount <= 10 or 'x' in bin.lower():
+        if amount <= 10:
             await progress_message.delete()
             response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
             callback_data = f"regenerate|{bin}|{month or ''}|{year or ''}|{amount}"
@@ -140,10 +141,7 @@ def setup_credit_handlers(app: Client):
         bank_text = bank.upper() if bank else "Unknown"
 
         # Generate new credit cards
-        if 'x' in bin.lower():
-            cards = generate_custom_cards(bin, month, year)
-        else:
-            cards = generate_credit_card(bin, amount, month, year)
+        cards = generate_credit_card(bin, amount, month, year)
         
         card_text = "\n".join([f"`{card}`" for card in cards])
 
