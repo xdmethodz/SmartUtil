@@ -43,8 +43,10 @@ def generate_custom_cards(bin, month, year):
     cards = []
     for _ in range(10):
         card = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
+        card_month = month or f"{random.randint(1, 12):02}"
+        card_year = year or random.randint(2024, 2029)
         cvv = ''.join([str(random.randint(0, 9)) for _ in range(3)])
-        cards.append(f"{card}|{month}|{year}|{cvv}")
+        cards.append(f"{card}|{card_month}|{card_year}|{cvv}")
     return cards
 
 def setup_credit_handlers(app: Client):
