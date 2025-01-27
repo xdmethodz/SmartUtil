@@ -9,23 +9,21 @@ from faker import Faker
 # Initialize Faker
 fake = Faker()
 
-# Keep only Algeria's information
-countries_info = [
-    {
-        "name": "Algeria",
-        "alpha_2": "DZ",
-        "phone_format": "+213XXXXXXXXX",
-        "cities": ["Algiers", "Oran", "Constantine"],
-        "regions": ["Algiers Province", "Oran Province", "Constantine Province"],
-        "postal_codes": ["16000", "25100", "25000"],
-        "streets": ["Rue Didouche Mourad", "Rue Larbi Ben M'hidi", "Rue Hassiba Ben Bouali"],
-        "working_address": {
-            "street": "20 centre Culturel 99 Islamique",
-            "city": "Chlef",
-            "postal_code": "02000"
-        }
+# Special information for specific countries
+special_addresses = {
+    "DZ": {
+        "street": "20 centre Culturel 99 Islamique",
+        "postal_code": "02000",
+        "city": "Chlef",
+        "country": "Algeria"
+    },
+    "KZ": {
+        "street": "IND,0062",
+        "postal_code": "020101",
+        "city": "Semipalatinsk",
+        "country": "Kazakhstan"
     }
-]
+}
 
 # Dictionary of phone number formats by country code
 phone_formats = {
@@ -100,12 +98,6 @@ locales = [
     "vi_VN", "zh_CN", "zh_TW"
 ]
 
-def get_country_info(alpha_2):
-    for country in countries_info:
-        if country["alpha_2"] == alpha_2:
-            return country
-    return None
-
 def get_locale_for_country(alpha_2):
     locale = f"{alpha_2.lower()}_{alpha_2.upper()}"
     if locale in locales:
@@ -119,31 +111,26 @@ def setup_fake_handler(app: Client):
             await message.reply_text("**❌ Provide a valid country name or country code.**")
             return
         
-        country_code = message.command[1]
-        country = pycountry.countries.get(alpha_2=country_code.upper()) or pycountry.countries.get(name=country_code.title())
+        country_code = message.command[1].upper()
+        country = pycountry.countries.get(alpha_2=country_code) or pycountry.countries.get(name=country_code)
         
         if not country:
             await message.reply_text("**❌ Provide a valid country name or country code.**")
             return
 
-        # Check if the country is Algeria
-        if country.alpha_2 == "DZ":
-            country_info = get_country_info(country.alpha_2)
-            if not country_info:
-                await message.reply_text("**❌ Country details not available.**")
-                return
-
+        # Check if the country has special address information
+        if country.alpha_2 in special_addresses:
+            special_address = special_addresses[country.alpha_2]
             fake_address = {
                 "full_name": fake.name(),
                 "gender": fake.random_element(elements=("Male", "Female")),
-                "street": country_info["working_address"]["street"],
-                "city": country_info["working_address"]["city"],
+                "street": special_address["street"],
+                "city": special_address["city"],
                 "state": "N/A",
-                "postal_code": country_info["working_address"]["postal_code"],
-                "phone_number": generate_phone_number(country_info["phone_format"]),
-                "country_name": country.name
+                "postal_code": special_address["postal_code"],
+                "phone_number": generate_phone_number(phone_formats[country.alpha_2]),
+                "country_name": special_address["country"]
             }
-
         else:
             # Fetch fake address from API for other countries
             locale = get_locale_for_country(country.alpha_2) or f"{country.alpha_2.lower()}_{country.alpha_2.upper()}"
@@ -162,7 +149,7 @@ def setup_fake_handler(app: Client):
                 "gender": fake.random_element(elements=("Male", "Female")),
                 "street": data.get('street', 'N/A'),
                 "city": data.get('city', 'N/A'),
-                "state": data.get('state', 'N/A'),
+                "state": "N/A",
                 "postal_code": data.get('zipcode', 'N/A'),
                 "phone_number": generate_phone_number(phone_formats.get(country.alpha_2, "+XXXXXXXXXXX")),
                 "country_name": data.get('country', 'N/A')
