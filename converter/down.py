@@ -2,13 +2,21 @@ import os
 import re
 import aiohttp
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 import zipfile
 import shutil
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from pyrogram.enums import ParseMode
+from pyrogram.enums import ParseMode, ChatType
+
+# Directory to save the downloaded files temporarily
+DOWNLOAD_DIRECTORY = "./downloads/"
+
+# Ensure the download directory exists
+if not os.path.exists(DOWNLOAD_DIRECTORY):
+    os.makedirs(DOWNLOAD_DIRECTORY)
 
 class URLDownloader:
     """Download the webpage components based on the input URL."""
@@ -104,6 +112,9 @@ class URLDownloader:
         """Remove a folder and its contents."""
         shutil.rmtree(folder_path)
 
+# ThreadPoolExecutor instance
+executor = ThreadPoolExecutor(max_workers=5)  # You can adjust the number of workers
+
 async def download_web_source(client: Client, message: Message):
     # Check if the user provided a URL
     if len(message.command) <= 1:
@@ -119,21 +130,38 @@ async def download_web_source(client: Client, message: Message):
         # Download the webpage components
         downloader = URLDownloader()
         page_folder = os.path.join("downloads", urlparse(url).netloc)
-        zip_path = await downloader.save_page(url, page_folder)
+        
+        # Run the save_page method in a separate thread
+        loop = asyncio.get_event_loop()
+        zip_path = await loop.run_in_executor(executor, asyncio.run, downloader.save_page(url, page_folder))
 
         if zip_path:
             # Send the zip file to the user
-            user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
-            user_profile_link = f"https://t.me/{message.from_user.username}"
-            caption = (
-                f"**Source code Download**\n"
-                f"━━━━━━━━━━━━━━━━━━\n"
-                f"**Site:** {url}\n"
-                f"**Type:** HTML, CSS, JS\n"
-                f"━━━━━━━━━━━━━━━━━━\n"
-                f"**Source Downloaded By:** [{user_full_name}]({user_profile_link})"
-            )
-
+            if message.chat.type in [ChatType.SUPERGROUP, ChatType.GROUP] and not message.from_user:
+                # In a group chat where user info is not available, link the group name with its URL
+                group_name = message.chat.title
+                group_url = f"https://t.me/{message.chat.username}" if message.chat.username else "Group"
+                caption = (
+                    f"**Source code Download**\n"
+                    f"━━━━━━━━━━━━━━━━━━\n"
+                    f"**Site:** {url}\n"
+                    f"**Type:** HTML, CSS, JS\n"
+                    f"━━━━━━━━━━━━━━━━━━\n"
+                    f"**Source Downloaded By:** [{group_name}]({group_url})"
+                )
+            else:
+                # In private chat or where user info is available
+                user_full_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
+                user_profile_link = f"https://t.me/{message.from_user.username}"
+                caption = (
+                    f"**Source code Download**\n"
+                    f"━━━━━━━━━━━━━━━━━━\n"
+                    f"**Site:** {url}\n"
+                    f"**Type:** HTML, CSS, JS\n"
+                    f"━━━━━━━━━━━━━━━━━━\n"
+                    f"**Source Downloaded By:** [{user_full_name}]({user_profile_link})"
+                )
+            
             await client.send_document(
                 chat_id=message.chat.id,
                 document=zip_path,
@@ -157,4 +185,5 @@ async def download_web_source(client: Client, message: Message):
 def setup_ws_handler(app: Client):
     @app.on_message(filters.command("ws") & (filters.private | filters.group))
     async def ws_command(client: Client, message: Message):
-        await download_web_source(client, message)
+        # Run the download_web_source in the background to handle multiple requests simultaneously
+        asyncio.create_task(download_web_source(client, message))
