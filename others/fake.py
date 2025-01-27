@@ -72,15 +72,16 @@ def setup_fake_handler(app: Client):
 
             data = response.json()['data'][0]
 
+            # Parse the API response correctly
             fake_address = {
-                "full_name": data['firstname'] + " " + data['lastname'],
-                "gender": data['gender'],
-                "street": data['street'],
-                "city": data['city'],
-                "state": data['county'],
-                "postal_code": data['zipcode'],
-                "phone_number": data['phone'],
-                "country_name": country.name
+                "full_name": "N/A",  # Assuming the API does not provide name and gender
+                "gender": "N/A",
+                "street": data.get('street', 'N/A'),
+                "city": data.get('city', 'N/A'),
+                "state": "N/A",  # Assuming the API does not provide state
+                "postal_code": data.get('zipcode', 'N/A'),
+                "phone_number": generate_phone_number("+XXXXXXXXXXX"),  # Assuming the API does not provide phone number
+                "country_name": data.get('country', 'N/A')
             }
         
         generating_message = await message.reply_text(f"**Generating Fake Address For {fake_address['country_name']}...**")
