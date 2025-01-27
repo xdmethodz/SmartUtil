@@ -21,16 +21,19 @@ async def aud_handler(client: Client, message: Message):
         await message.reply_text("**Reply to a video with the command followed by an audio file name.**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
         return
 
+    # Get the command and its arguments
+    command_parts = message.text.split()
+
     # Check if the user provided an audio file name
-    if len(message.command) <= 1:
+    if len(command_parts) <= 1:
         await message.reply_text("**Reply to a video with the command followed by an audio file name.**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
         return
 
     # Get the audio file name from the command
-    audio_file_name = message.command[1]
+    audio_file_name = command_parts[1]
 
     # Notify the user that the video is being downloaded
-    downloading_msg = await message.reply_text("** ⌛️ Downloading Video...**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+    downloading_msg = await message.reply_text("**Downloading Video...**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
     try:
         # Download the video
@@ -40,7 +43,7 @@ async def aud_handler(client: Client, message: Message):
         await downloading_msg.delete()
 
         # Notify the user that the video is being converted to audio
-        converting_msg = await message.reply_text("** ⌛️ Converting To MP3....**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+        converting_msg = await message.reply_text("**Converting To .mp3 ....**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
         # Define the output audio file path
         audio_file_path = os.path.join(DOWNLOAD_DIRECTORY, f"{audio_file_name}.mp3")
@@ -53,7 +56,7 @@ async def aud_handler(client: Client, message: Message):
         await converting_msg.delete()
 
         # Notify the user that the audio is being uploaded
-        uploading_msg = await message.reply_text("** ⌛️ Uploading Audio...**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+        uploading_msg = await message.reply_text("**Uploading Audio...**", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
         # Upload the audio file to the user
         await client.send_audio(
