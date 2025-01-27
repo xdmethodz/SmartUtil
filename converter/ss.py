@@ -2,17 +2,20 @@ import os
 import aiohttp
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from pyrogram.enums import ParseMode
+from pyrogram.enums import ParseMode, ChatType
 
 API_BASE_URL = "https://webss.yasirapi.eu.org/api"
 
 async def capture_screenshot(client: Client, message: Message):
+    # Get the command and its arguments
+    command_parts = message.text.split()
+    
     # Check if a URL is provided
-    if len(message.command) < 2:
+    if len(command_parts) < 2:
         await message.reply_text("**Please Give At Least One URL**", parse_mode=ParseMode.MARKDOWN)
         return
     
-    url = message.command[1]
+    url = command_parts[1]
     
     # Add "https://www." to the URL if it's not present
     if not url.startswith("https://www."):
@@ -29,8 +32,13 @@ async def capture_screenshot(client: Client, message: Message):
         async with aiohttp.ClientSession() as session:
             async with session.get(api_url) as resp:
                 if resp.status == 200:
+                    # Generate a file name using user or group information
+                    if message.from_user:
+                        file_name = f"screenshot_{message.from_user.id}.png"
+                    else:
+                        file_name = f"screenshot_{message.chat.id}.png"
+                    
                     # Save the screenshot to a file
-                    file_name = f"screenshot_{message.from_user.id}.png"
                     with open(file_name, 'wb') as f:
                         f.write(await resp.read())
                     
