@@ -128,28 +128,15 @@ def setup_credit_handlers(app: Client):
         month = month if month else f"{random.randint(1, 12):02}"
         year = year if year else random.randint(2024, 2029)
 
-        # Fetch BIN info again
-        bin_info = get_bin_info(bin[:6])
-        if not bin_info or bin_info.get("Status") != "SUCCESS":
-            await callback_query.answer("BIN info retrieval failed!", show_alert=True)
-            return
-
-        bank = bin_info.get("Issuer")
-        country_name = bin_info["Country"].get("Name", "Unknown")
-        card_type = bin_info.get("Type", "Unknown")
-        card_scheme = bin_info.get("Scheme", "Unknown")
-        bank_text = bank.upper() if bank else "Unknown"
-
         # Ensure proper randomization for 'xxxx' part
-        if 'x' in bin.lower():
-            bin = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
+        bin = ''.join([str(random.randint(0, 9)) if c in 'xX' else c for c in bin])
 
         # Generate new credit cards
         cards = generate_credit_card(bin, amount, month, year)
         
         card_text = "\n".join([f"`{card}`" for card in cards[:10]])
 
-        bin_info_text = f"**Bank:** `{bank_text}`\n**Country:** `{country_name}`\n**BIN Info:** `{card_scheme.upper()} - {card_type.upper()}`"
+        bin_info_text = f"**Bank:** `{bin_info.get('Issuer', 'Unknown')}`\n**Country:** `{bin_info['Country'].get('Name', 'Unknown')}`\n**BIN Info:** `{bin_info.get('Scheme', 'Unknown').upper()} - {bin_info.get('Type', 'Unknown').upper()}`"
         response_text = f"**BIN ⇾ {bin}**\n**Amount ⇾ {amount}**\n\n{card_text}\n\n{bin_info_text}"
 
         reply_markup = InlineKeyboardMarkup(
