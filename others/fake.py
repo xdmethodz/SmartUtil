@@ -162,7 +162,7 @@ def setup_fake_handler(app: Client):
                 "gender": fake.random_element(elements=("Male", "Female")),
                 "street": data.get('street', 'N/A'),
                 "city": data.get('city', 'N/A'),
-                "state": "N/A",  # Assuming the API does not provide state
+                "state": data.get('state', 'N/A'),
                 "postal_code": data.get('zipcode', 'N/A'),
                 "phone_number": generate_phone_number(phone_formats.get(country.alpha_2, "+XXXXXXXXXXX")),
                 "country_name": data.get('country', 'N/A')
