@@ -40,7 +40,7 @@ countries_info = [
         "phone_format": "+213XXXXXXXXX",
         "cities": ["Algiers", "Oran", "Constantine"],
         "regions": ["Algiers Province", "Oran Province", "Constantine Province"],
-        "postal_codes": ["16000", "31000", "25000"],
+        "postal_codes": ["16000", "25100", "25000"],
         "streets": ["Rue Didouche Mourad", "Rue Larbi Ben M'hidi", "Rue Hassiba Ben Bouali"]
     },
     {
