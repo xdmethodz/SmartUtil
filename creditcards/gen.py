@@ -32,7 +32,8 @@ def parse_input(user_input):
     match = re.match(r"(\d{6,16})(\d{0,10}[xX]{0,4})?\|?(\d{2})?\|?(\d{2,4})?\s*(\d+)?", user_input)
     if match:
         bin, suffix, month, year, amount = match.groups()
-        bin = bin + ''.join([str(random.randint(0, 9)) if x in 'xX' else x for x in suffix]) if suffix else bin
+        if suffix:
+            bin += ''.join([str(random.randint(0, 9)) if x in 'xX' else x for x in suffix])
         year = f"20{year}" if year and len(year) == 2 else year
         amount = int(amount) if amount else 10
         
