@@ -1,9 +1,14 @@
 import requests
 import os
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 
-async def fetch_repo_info(url):
+# ThreadPoolExecutor instance
+executor = ThreadPoolExecutor(max_workers=5)  # You can adjust the number of workers
+
+def fetch_repo_info(url):
     api_url = url.replace("https://github.com/", "https://api.github.com/repos/")
     response = requests.get(api_url)
 
@@ -12,7 +17,7 @@ async def fetch_repo_info(url):
 
     return response.json()
 
-async def fetch_repo_branches(url):
+def fetch_repo_branches(url):
     api_url = url.replace("https://github.com/", "https://api.github.com/repos/")
     branches_url = f"{api_url}/branches"
     response = requests.get(branches_url)
@@ -23,7 +28,7 @@ async def fetch_repo_branches(url):
     branches = response.json()
     return [branch['name'] for branch in branches]
 
-async def download_repo(repo_info, branch):
+def download_repo(repo_info, branch):
     download_url = f"https://github.com/{repo_info['full_name']}/archive/refs/heads/{branch}.zip"
     response = requests.get(download_url, stream=True)
 
@@ -43,8 +48,10 @@ async def handle_git_command(client, message, url, branch):
     )
 
     try:
-        repo_info = await fetch_repo_info(url)
-        zip_file_path = await download_repo(repo_info, branch)
+        loop = asyncio.get_event_loop()
+        repo_info = await loop.run_in_executor(executor, fetch_repo_info, url)
+        zip_file_path = await loop.run_in_executor(executor, download_repo, repo_info, branch)
+        branches = await loop.run_in_executor(executor, fetch_repo_branches, url)
 
         await downloading_message.delete()
 
@@ -59,7 +66,7 @@ async def handle_git_command(client, message, url, branch):
                 f"<b>Repo URL:</b> <code>{repo_info['html_url']}</code>\n"
                 f"<b>Description:</b> <code>{repo_info['description']}</code>\n"
                 f"<b>Downloaded Branch:</b> <code>{branch}</code>\n"
-                f"<b>Available Branches:</b> <code>{', '.join(await fetch_repo_branches(url))}</code>"
+                f"<b>Available Branches:</b> <code>{', '.join(branches)}</code>"
             ),
             parse_mode=ParseMode.HTML
         )
@@ -89,4 +96,5 @@ def setup_git_handler(app: Client):
             url = "https://" + url
         branch = command_parts[2] if len(command_parts) > 2 else "main"
 
-        await handle_git_command(client, message, url, branch)
+        # Run the handle_git_command in the background to handle multiple requests simultaneously
+        asyncio.create_task(handle_git_command(client, message, url, branch))
