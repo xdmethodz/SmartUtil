@@ -8,6 +8,9 @@ import string
 from pyrogram.handlers import MessageHandler
 
 async def kang_sticker(client: Client, message: Message):
+    # Log message for debugging
+    print("Received /kang command")
+
     if not message.reply_to_message:
         await message.reply_text("**Reply to a sticker or image to kang it.**", parse_mode=enums.ParseMode.MARKDOWN)
         return
@@ -68,5 +71,6 @@ async def kang_sticker(client: Client, message: Message):
 
 # Set up the message handler
 def setup_kang_handler(app: Client):
+    # Add a message handler to listen for the /kang command and reply to a sticker/photo
     handler = MessageHandler(kang_sticker, filters.command("kang") & filters.reply)
     app.add_handler(handler)
