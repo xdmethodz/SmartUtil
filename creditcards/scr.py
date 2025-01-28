@@ -124,7 +124,81 @@ def setup_scr_handler(app):
             await temporary_msg.delete()
             await client.send_message(message.chat.id, "<b>Sorry Bro ❌ No Credit Card Found</b>")
 
+    @app.on_message(filters.command(["mc"]) & (filters.group | filters.private))
+    async def mc_cmd(client, message):
+        args = message.text.split()[1:]
+        if len(args) < 2:
+            await message.reply_text("<b>⚠️ Provide at least one channel username and amount to scrape</b>")
+            return
+        channel_identifiers = args[:-1]
+        limit = int(args[-1])
 
+        # Check if from_user is available
+        if message.from_user is None:
+            max_lim = DEFAULT_LIMIT
+        else:
+            max_lim = ADMIN_LIMIT if message.from_user.id in ADMIN_IDS else DEFAULT_LIMIT
+
+        if limit > max_lim:
+            await message.reply_text(f"<b>Sorry Bro! Amount over Max limit is {max_lim} ❌</b>")
+            return
+
+        temporary_msg = await message.reply_text("<b>Scraping in progress wait.....</b>")
+        all_messages = []
+        for channel_identifier in channel_identifiers:
+            parsed_url = urlparse(channel_identifier)
+            channel_username = parsed_url.path.lstrip('/') if not parsed_url.scheme else channel_identifier
+
+            try:
+                chat = await user.get_chat(channel_username)
+                channel_name = chat.title
+            except Exception:
+                await message.reply_text(f"<b>Hey Bro! 🥲 Incorrect username for {channel_identifier} ❌</b>")
+                continue
+
+            scrapped_results = await scrape_messages(user, chat.id, limit)
+            all_messages.extend(scrapped_results)
+
+        unique_messages, duplicates_removed = remove_duplicates(all_messages)
+        unique_messages = unique_messages[:limit]
+
+        if unique_messages:
+            file_name = f"x{len(unique_messages)}_multiple_chats.txt"
+            with open(file_name, 'w') as f:
+                f.write("\n".join(unique_messages))
+            with open(file_name, 'rb') as f:
+                if message.chat.type in ["group", "supergroup"]:
+                    if message.from_user is None:
+                        user_link = '<a href="https://t.me/ItsSmartToolBot">Smart Tool ⚙️</a>'
+                    else:
+                        user_first_name = message.from_user.first_name
+                        user_last_name = message.from_user.last_name if message.from_user.last_name else ""
+                        user_full_name = f"{user_first_name} {user_last_name}".strip()
+                        user_link = f'<a href="tg://user?id={message.from_user.id}">{user_full_name}</a>'
+                else:
+                    if message.from_user is None:
+                        user_link = '<a href="https://t.me/ItsSmartToolBot">Smart Tool ⚙️</a>'
+                    else:
+                        user_first_name = message.from_user.first_name
+                        user_last_name = message.from_user.last_name if message.from_user.last_name else ""
+                        user_full_name = f"{user_first_name} {user_last_name}".strip()
+                        user_link = f'<a href="tg://user?id={message.from_user.id}">{user_full_name}</a>'
+
+                caption = (
+                    f"<b>CC Scrapped Successful ✅</b>\n"
+                    f"<b>━━━━━━━━━━━━━━━━</b>\n"
+                    f"<b>Source:</b> <code>Multiple Chats</code>\n"
+                    f"<b>Amount:</b> <code>{len(unique_messages)}</code>\n"
+                    f"<b>Duplicates Removed:</b> <code>{duplicates_removed}</code>\n"
+                    f"<b>━━━━━━━━━━━━━━━━</b>\n"
+                    f"<b>Card-Scrapper By: {user_link}</b>\n"
+                )
+                await temporary_msg.delete()
+                await client.send_document(message.chat.id, f, caption=caption)
+            os.remove(file_name)
+        else:
+            await temporary_msg.delete()
+            await client.send_message(message.chat.id, "<b>Sorry Bro ❌ No Credit Card Found</b>")
 
 # Ensure the user client is started
 user.start()
