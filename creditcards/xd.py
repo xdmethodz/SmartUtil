@@ -60,7 +60,7 @@ async def check_bin(client: Client, message: Message):
     else:
         bins = message.text.split()[1:]
 
-    bins = bins[:20]
+    bins = bins[:20]  # Limit to 20 BINs at a time
     if not bins:
         await message.reply_text("Please provide BINs to check.")
         return
@@ -72,7 +72,7 @@ async def check_bin(client: Client, message: Message):
 
     bin_details = []
     for bin_prefix in bins:
-        data = get_bin_info(bin_prefix)
+        data = get_bin_info(bin_prefix)  # Call the helper function for each BIN
         if data:
             bin_info = (
                 f"• BIN: {data.get('bin')}\n"
@@ -87,6 +87,7 @@ async def check_bin(client: Client, message: Message):
     await fetching_message.delete()
     result_message = "🔍 BIN Details 📋\n━━━━━━━━━━━━━━━━━━\n" + "\n".join(bin_details)
     await message.reply_text(result_message, parse_mode=ParseMode.HTML)
+
 
 
 async def extrapolate_bin(client: Client, message: Message):
