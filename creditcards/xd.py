@@ -1,11 +1,11 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 import requests
 import random
 
 API_URL = "https://data.handyapi.com/bin/"
-
 
 # Helper Functions
 def luhn_checksum(card_number):
@@ -55,7 +55,8 @@ async def check_bin(client: Client, message: Message):
         return
 
     fetching_message = await message.reply_text(
-        "<b>FETCHING ALL BINS DETAILS FROM DATABASE PLEASE WAIT ⚡️</b>", parse_mode="html"
+        "<b>FETCHING ALL BINS DETAILS FROM DATABASE PLEASE WAIT ⚡️</b>", 
+        parse_mode=ParseMode.HTML
     )
 
     bin_details = []
@@ -75,7 +76,7 @@ async def check_bin(client: Client, message: Message):
 
     await fetching_message.delete()
     result_message = "🔍 BIN Details 📋\n━━━━━━━━━━━━━━━━━━\n" + "\n".join(bin_details)
-    await message.reply_text(result_message, parse_mode="html")
+    await message.reply_text(result_message, parse_mode=ParseMode.HTML)
 
 
 async def extrapolate_bin(client: Client, message: Message):
@@ -111,7 +112,7 @@ async def extrapolate_bin(client: Client, message: Message):
 
     await message.reply_text(
         response_message,
-        parse_mode="html",
+        parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Regenerate", callback_data=f"regenerate_{bin_prefix}")]]
         )
