@@ -60,28 +60,32 @@ def setup_scr_handler(app):
             return
         channel_identifier = args[0]
         limit = int(args[1])
-        
+
         # Check if from_user is available
         if message.from_user is None:
             max_lim = DEFAULT_LIMIT
         else:
             max_lim = ADMIN_LIMIT if message.from_user.id in ADMIN_IDS else DEFAULT_LIMIT
-        
+
         if limit > max_lim:
             await message.reply_text(f"<b>Sorry Bro! Amount over Max limit is {max_lim} ❌</b>")
             return
+
         start_number = args[2] if len(args) == 3 else None
         parsed_url = urlparse(channel_identifier)
         channel_username = parsed_url.path.lstrip('/') if not parsed_url.scheme else channel_identifier
+
         try:
             chat = await user.get_chat(channel_username)
             channel_name = chat.title
         except Exception:
             await message.reply_text("<b>Hey Bro! 🥲 Incorrect username ❌</b>")
             return
+
         temporary_msg = await message.reply_text("<b>Scraping in progress wait.....</b>")
         scrapped_results = await scrape_messages(user, chat.id, limit, start_number)
         unique_messages, duplicates_removed = remove_duplicates(scrapped_results)
+
         if unique_messages:
             file_name = f"x{len(unique_messages)}_{channel_name.replace(' ', '_')}.txt"
             with open(file_name, 'w') as f:
@@ -90,7 +94,10 @@ def setup_scr_handler(app):
                 if message.chat.type in ["group", "supergroup"]:
                     if message.from_user is None:
                         group_title = message.chat.title
-                        group_link = f'<a href="https://t.me/{message.chat.username}">{group_title}</a>' if message.chat.username else group_title
+                        group_link = (
+                            f'<a href="https://t.me/{message.chat.username}">{group_title}</a>'
+                            if message.chat.username else group_title
+                        )
                         user_link = group_link
                     else:
                         user_first_name = message.from_user.first_name
@@ -102,7 +109,7 @@ def setup_scr_handler(app):
                     user_last_name = message.from_user.last_name if message.from_user.last_name else ""
                     user_full_name = f"{user_first_name} {user_last_name}".strip()
                     user_link = f'<a href="tg://user?id={message.from_user.id}">{user_full_name}</a>'
-                
+
                 caption = (
                     f"<b>CC Scrapped Successful ✅</b>\n"
                     f"<b>━━━━━━━━━━━━━━━━</b>\n"
@@ -118,6 +125,7 @@ def setup_scr_handler(app):
         else:
             await temporary_msg.delete()
             await client.send_message(message.chat.id, "<b>Sorry Bro ❌ No Credit Card Found</b>")
+
 
 # Ensure the user client is started
 user.start()
