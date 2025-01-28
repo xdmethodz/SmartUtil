@@ -60,7 +60,13 @@ def setup_scr_handler(app):
             return
         channel_identifier = args[0]
         limit = int(args[1])
-        max_lim = ADMIN_LIMIT if message.from_user.id in ADMIN_IDS else DEFAULT_LIMIT
+        
+        # Check if from_user is available
+        if message.from_user is None:
+            max_lim = DEFAULT_LIMIT
+        else:
+            max_lim = ADMIN_LIMIT if message.from_user.id in ADMIN_IDS else DEFAULT_LIMIT
+        
         if limit > max_lim:
             await message.reply_text(f"<b>Sorry Bro! Amount over Max limit is {max_lim} ❌</b>")
             return
