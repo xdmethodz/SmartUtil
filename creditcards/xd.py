@@ -6,6 +6,7 @@ import requests
 import random
 
 API_URL = "https://data.handyapi.com/bin/"
+HEADERS = {'Referer': 'your-domain'}
 
 # Helper Functions
 def luhn_checksum(card_number):
@@ -36,6 +37,16 @@ def generate_credit_card(bin_prefix, count=5):
     return cards
 
 
+def get_bin_info(bin_prefix):
+    """
+    Fetch BIN information from the API with headers.
+    """
+    response = requests.get(f"{API_URL}{bin_prefix}", headers=HEADERS)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
+
 # Command Handlers
 async def check_bin(client: Client, message: Message):
     bins = []
@@ -55,15 +66,14 @@ async def check_bin(client: Client, message: Message):
         return
 
     fetching_message = await message.reply_text(
-        "<b>FETCHING ALL BINS DETAILS FROM DATABASE PLEASE WAIT ⚡️</b>", 
+        "<b>FETCHING ALL BIN DETAILS FROM DATABASE PLEASE WAIT ⚡️</b>", 
         parse_mode=ParseMode.HTML
     )
 
     bin_details = []
     for bin_prefix in bins:
-        response = requests.get(f"{API_URL}{bin_prefix}")
-        if response.status_code == 200:
-            data = response.json()
+        data = get_bin_info(bin_prefix)
+        if data:
             bin_info = (
                 f"• BIN: {data.get('bin')}\n"
                 f"• INFO: {data.get('info')}\n"
@@ -87,12 +97,11 @@ async def extrapolate_bin(client: Client, message: Message):
         return
 
     bin_prefix = bins[0]
-    response = requests.get(f"{API_URL}{bin_prefix}")
-    if response.status_code != 200:
+    data = get_bin_info(bin_prefix)
+    if not data:
         await message.reply_text("Error fetching BIN details.")
         return
 
-    data = response.json()
     bank = data.get('bank', 'Unknown')
     country = data.get('country', 'Unknown')
     country_code = data.get('country_code', '')
