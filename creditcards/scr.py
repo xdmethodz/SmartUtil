@@ -25,7 +25,7 @@ async def scrape_messages(client, channel_username, limit, start_number=None):
     messages = []
     count = 0
     pattern = r'\d{16}\D*\d{2}\D*\d{2,4}\D*\d{3,4}'
-    async for message in client.search_messages(channel_username):
+    async for message in user.search_messages(channel_username):
         if count >= limit:
             break
         text = message.text if message.text else message.caption
@@ -96,3 +96,6 @@ def setup_scr_handler(app):
         else:
             await temporary_msg.delete()
             await client.send_message(message.chat.id, "<b>Sorry Bro ❌ No Credit Card Found</b>")
+
+# Ensure the user client is started
+user.start()
