@@ -52,7 +52,7 @@ def remove_duplicates(messages):
     return unique_messages, duplicates_removed
 
 def setup_scr_handler(app):
-    @app.on_message(filters.command(["scr", "ccscr", "scrcc"]))
+    @app.on_message(filters.command(["scr", "ccscr", "scrcc"]) & (filters.group | filters.private))
     async def scr_cmd(client, message):
         args = message.text.split()[1:]
         if len(args) < 2 or len(args) > 3:
@@ -81,6 +81,22 @@ def setup_scr_handler(app):
             with open(file_name, 'w') as f:
                 f.write("\n".join(unique_messages))
             with open(file_name, 'rb') as f:
+                if message.chat.type in ["group", "supergroup"]:
+                    try:
+                        user_first_name = message.from_user.first_name
+                        user_last_name = message.from_user.last_name if message.from_user.last_name else ""
+                        user_full_name = f"{user_first_name} {user_last_name}".strip()
+                        user_link = f'<a href="tg://user?id={message.from_user.id}">{user_full_name}</a>'
+                    except:
+                        group_title = message.chat.title
+                        group_link = f'<a href="https://t.me/{message.chat.username}">{group_title}</a>' if message.chat.username else group_title
+                        user_link = group_link
+                else:
+                    user_first_name = message.from_user.first_name
+                    user_last_name = message.from_user.last_name if message.from_user.last_name else ""
+                    user_full_name = f"{user_first_name} {user_last_name}".strip()
+                    user_link = f'<a href="tg://user?id={message.from_user.id}">{user_full_name}</a>'
+                
                 caption = (
                     f"<b>CC Scrapped Successful ✅</b>\n"
                     f"<b>━━━━━━━━━━━━━━━━</b>\n"
@@ -88,7 +104,7 @@ def setup_scr_handler(app):
                     f"<b>Amount:</b> <code>{len(unique_messages)}</code>\n"
                     f"<b>Duplicates Removed:</b> <code>{duplicates_removed}</code>\n"
                     f"<b>━━━━━━━━━━━━━━━━</b>\n"
-                    f"<b>Card-Scrapper By: <a href='https://t.me/ItsSmartToolBot'>Smart Tool ⚙️</a></b>\n"
+                    f"<b>Card-Scrapper By: {user_link}</b>\n"
                 )
                 await temporary_msg.delete()
                 await client.send_document(message.chat.id, f, caption=caption)
