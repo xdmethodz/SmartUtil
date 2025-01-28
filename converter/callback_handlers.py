@@ -158,7 +158,7 @@ responses = {
         "   - Example: Reply to a message or a .txt file containing BINs and use <code>/mbin</code> to validate all.\n\n"
         "➢ <b>/scr [Chat Link or Username] [Amount]</b> - Scrape credit cards from a chat.\n"
         "   - Example: <code>/scr @abir_x_official 100</code> (Scrapes 100 CC details from the specified chat)\n"
-        "   - Target BIN Example: <code>/scr @abir_x_official 460827 100</code> (Scrapes 100 CC details with BIN 460827 from the chat)\n\n"
+        "   - Target BIN Example: <code>/scr @abir_x_official 100 460827 </code> (Scrapes 100 CC details with BIN 460827 from the chat)\n\n"
         "➢ <b>/fcc [File]</b> - Filter CC details from a file.\n"
         "   - Example: Reply to a .txt file containing CC details with <code>/fcc</code> to extract valid CC data.\n\n"
         "➢ <b>/extp [File or BIN]</b> - Extrapolate credit card data from a BIN.\n"
