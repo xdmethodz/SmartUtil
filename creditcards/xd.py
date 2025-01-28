@@ -41,8 +41,8 @@ async def kang_sticker(client: Client, message: Message):
         await message.reply_text("**Reply to a sticker or image to kang it.**", parse_mode=enums.ParseMode.MARKDOWN)
         return
 
-    # Upload the file to Telegram servers
-    uploaded_file = await client.upload_media(sticker_file)
+    # Send the sticker to the bot to upload it
+    sent_sticker = await client.send_sticker(chat_id=message.chat.id, sticker=sticker_file)
 
     user = await client.resolve_peer(message.from_user.id)
     try:
@@ -53,7 +53,7 @@ async def kang_sticker(client: Client, message: Message):
                 title=title,
                 short_name=short_name,
                 stickers=[InputStickerSetItem(
-                    document=InputDocument(id=uploaded_file.id, access_hash=uploaded_file.access_hash, file_reference=uploaded_file.file_reference),
+                    document=InputDocument(id=sent_sticker.sticker.file_id, access_hash=0, file_reference=b""),
                     emoji=emoji
                 )]
             )
