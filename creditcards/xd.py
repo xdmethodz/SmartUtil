@@ -5,6 +5,7 @@ from pyrogram.raw.functions.stickers import CreateStickerSet
 from pyrogram.raw.types import InputStickerSetItem, InputDocument, InputUser
 import random
 import string
+from pyrogram.handlers import MessageHandler
 
 async def kang_sticker(client: Client, message: Message):
     if not message.reply_to_message:
@@ -65,6 +66,7 @@ async def kang_sticker(client: Client, message: Message):
         ]])
     )
 
-# This function sets up the message handler using filters
+# Set up the message handler
 def setup_kang_handler(app: Client):
-    app.add_handler(filters.command("kang") & filters.reply, kang_sticker)
+    handler = MessageHandler(kang_sticker, filters.command("kang") & filters.reply)
+    app.add_handler(handler)
