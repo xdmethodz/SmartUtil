@@ -39,17 +39,16 @@ async def kang_sticker(client: Client, message: Message):
 
     user = await client.resolve_peer(message.from_user.id)
     try:
+        # The following invocation sends a request to create a sticker set
         await client.invoke(
             CreateStickerSet(
                 user_id=InputUser(user_id=user.user_id, access_hash=user.access_hash),
                 title=title,
                 short_name=short_name,
-                stickers=[
-                    InputStickerSetItem(
-                        document=InputDocument(id=sticker_file, access_hash=0, file_reference=b""),
-                        emoji=emoji
-                    )
-                ]
+                stickers=[InputStickerSetItem(
+                    document=InputDocument(id=sticker_file, access_hash=0, file_reference=b""),
+                    emoji=emoji
+                )]
             )
         )
     except BadRequest as e:
@@ -61,10 +60,11 @@ async def kang_sticker(client: Client, message: Message):
     await message.reply_text(
         f"**Sticker Kannged**\n**Sticker Emoji {emoji}**",
         parse_mode=enums.ParseMode.MARKDOWN,
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("View Sticker Pack", url=f"t.me/addstickers/{short_name}")]
-        ])
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("View Sticker Pack", url=f"t.me/addstickers/{short_name}")
+        ]])
     )
 
+# This function sets up the message handler using filters
 def setup_kang_handler(app: Client):
-    app.add_handler(filters.command("kang"), kang_sticker)
+    app.add_handler(filters.command("kang") & filters.reply, kang_sticker)
