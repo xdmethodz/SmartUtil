@@ -159,6 +159,6 @@ def setup_admin_handlers(app: Client):
     
     # Add a general handler to track all user activity
     app.add_handler(
-        MessageHandler(lambda client, message: update_user_activity(message.from_user.id), filters.all),
+        MessageHandler(lambda client, message: update_user_activity(message.from_user.id) if message.from_user else None, filters.all),
         group=2,  # Lower priority so it runs after command handlers
     )
