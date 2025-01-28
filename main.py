@@ -40,6 +40,7 @@ from others.reboot import setup_reboot_handler
 from others.alive import setup_alive_handler 
 from creditcards.scr import setup_scr_handler
 from educationutils.email import setup_email_handler
+from creditcards.xd import setup_xd_handlers
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -88,6 +89,7 @@ setup_reboot_handler(app)
 setup_alive_handler(app)
 setup_scr_handler(app)
 setup_email_handler(app)
+setup_xd_handlers(app)
 @app.on_message(filters.command("start") & filters.private)
 async def send_start_message(client, message):
     chat_id = message.chat.id
