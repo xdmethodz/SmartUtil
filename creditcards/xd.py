@@ -160,6 +160,6 @@ async def regenerate_cards(client: Client, callback_query):
     )
 
 def setup_xd_handlers(app: Client):
-    app.add_handler(filters.command("mbin"), check_bin)
-    app.add_handler(filters.command("extp"), extrapolate_bin)
-    app.add_handler(filters.regex("^regenerate_"), regenerate_cards)
+    app.add_handler(filters.command("mbin"), check_bin, group=1)
+    app.add_handler(filters.command("extp"), extrapolate_bin, group=2)
+    app.add_handler(filters.regex("^regenerate_"), regenerate_cards, group=3)
