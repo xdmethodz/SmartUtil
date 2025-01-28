@@ -88,15 +88,15 @@ def setup_scr_handler(app):
                 f.write("\n".join(unique_messages))
             with open(file_name, 'rb') as f:
                 if message.chat.type in ["group", "supergroup"]:
-                    try:
+                    if message.from_user is None:
+                        group_title = message.chat.title
+                        group_link = f'<a href="https://t.me/{message.chat.username}">{group_title}</a>' if message.chat.username else group_title
+                        user_link = group_link
+                    else:
                         user_first_name = message.from_user.first_name
                         user_last_name = message.from_user.last_name if message.from_user.last_name else ""
                         user_full_name = f"{user_first_name} {user_last_name}".strip()
                         user_link = f'<a href="tg://user?id={message.from_user.id}">{user_full_name}</a>'
-                    except:
-                        group_title = message.chat.title
-                        group_link = f'<a href="https://t.me/{message.chat.username}">{group_title}</a>' if message.chat.username else group_title
-                        user_link = group_link
                 else:
                     user_first_name = message.from_user.first_name
                     user_last_name = message.from_user.last_name if message.from_user.last_name else ""
