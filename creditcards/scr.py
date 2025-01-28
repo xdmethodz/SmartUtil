@@ -88,7 +88,7 @@ def setup_scr_handler(app):
                     f"<b>Amount:</b> <code>{len(unique_messages)}</code>\n"
                     f"<b>Duplicates Removed:</b> <code>{duplicates_removed}</code>\n"
                     f"<b>━━━━━━━━━━━━━━━━</b>\n"
-                    f"<b>Card-Scrapper By: <a href='https://t.me/itsSmartDev'>Smart Dev</a></b>\n"
+                    f"<b>Card-Scrapper By: <a href='https://t.me/ItsSmartToolBot'>Smart Tool ⚙️</a></b>\n"
                 )
                 await temporary_msg.delete()
                 await client.send_document(message.chat.id, f, caption=caption)
