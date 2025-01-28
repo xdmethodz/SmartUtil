@@ -166,7 +166,7 @@ responses = {
         "➢ <b>/mgen [BINs] [Amount]</b> - Generate CC details using multiple BINs.\n"
         "   - Example: <code>/mgen 460827,537637 10</code> (Generates 10 CC details for each BIN provided)\n\n"
         "➢ <b>/mc [Chat Link or Usernames] [Amount]</b> - Scrape CC details from multiple chats.\n"
-        "   - Example: <code>/mc @Group1 @Group2 200</code> (Scrapes 200 CC details from both chats)\n\n"
+        "   - Example: <code>/mc @abir_x_official_chat @ModVipRM_Discussion 200</code> (Scrapes 200 CC details from both chats)\n\n"
         "➢ <b>/topbin [File]</b> - Find the top 20 most used BINs from a combo.\n"
         "   - Example: Reply to a .txt file with <code>/topbin</code> to extract the top 20 BINs.\n\n"
         "➢ <b>/binbank [Bank Name]</b> - Find BIN database by bank name.\n"
