@@ -38,6 +38,7 @@ from converter.git import setup_git_handler
 from stringsession.string import setup_string_handler
 from others.reboot import setup_reboot_handler
 from others.alive import setup_alive_handler 
+from creditcards.scr import setup_scr_handler
 # Replace these with your actual API details
 API_ID = "24602058"  # Replace with your API ID
 API_HASH = "b976a44ccb8962b20113113f84aeebf6"  # Replace with your API Hash
@@ -84,6 +85,7 @@ setup_git_handler(app)
 setup_string_handler(app)
 setup_reboot_handler(app)
 setup_alive_handler(app)
+setup_scr_handler(app)
 @app.on_message(filters.command("start") & filters.private)
 async def send_start_message(client, message):
     chat_id = message.chat.id
